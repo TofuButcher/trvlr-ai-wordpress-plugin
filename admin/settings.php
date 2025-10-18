@@ -31,6 +31,10 @@ add_action('admin_menu', 'trvlr_add_admin_menu');
 function trvlr_settings_init()
 {
    register_setting('trvlr_settings', 'trvlr_base_domain');
+   register_setting('trvlr_settings', 'trvlr_enable_frontend', array(
+      'type' => 'boolean',
+      'default' => true
+   ));
 
    add_settings_section(
       'trvlr_settings_section',
@@ -46,6 +50,14 @@ function trvlr_settings_init()
       'trvlr_settings',
       'trvlr_settings_section'
    );
+
+   add_settings_field(
+      'trvlr_enable_frontend',
+      'Enable Frontend',
+      'trvlr_enable_frontend_render',
+      'trvlr_settings',
+      'trvlr_settings_section'
+   );
 }
 add_action('admin_init', 'trvlr_settings_init');
 
@@ -55,6 +67,18 @@ function trvlr_base_domain_render()
 ?>
    <input type="text" name="trvlr_base_domain" value="<?php echo esc_attr($value); ?>" class="regular-text" placeholder="https://example.trvlr.ai">
    <p class="description">Enter the base domain for your trvlr booking system iframes (e.g., https://yourdomain.trvlr.ai)</p>
+<?php
+}
+
+function trvlr_enable_frontend_render()
+{
+   $value = get_option('trvlr_enable_frontend', true);
+?>
+   <label>
+      <input type="checkbox" name="trvlr_enable_frontend" value="1" <?php checked($value, true); ?>>
+      Enable booking modals and frontend JavaScript
+   </label>
+   <p class="description">Uncheck this to disable the plugin's frontend elements, allowing you to develop custom integrations.</p>
 <?php
 }
 

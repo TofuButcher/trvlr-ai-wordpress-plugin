@@ -3,8 +3,9 @@
 function trvlr_inject_booking_modals()
 {
    $base_iframe_url = get_option('trvlr_base_domain', '');
+   $frontend_enabled = get_option('trvlr_enable_frontend', true);
 
-   if (empty($base_iframe_url)) {
+   if (empty($base_iframe_url) || !$frontend_enabled) {
       return;
    }
 ?>
