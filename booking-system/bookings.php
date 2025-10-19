@@ -93,17 +93,11 @@ function trvlr_render_booking_calendar($atts)
    $base_iframe_url = get_option('trvlr_base_domain', '');
 
    if (empty($base_iframe_url)) {
-      return '<p>Please configure the trvlr base domain in the plugin settings.</p>';
+      return '<p>Sorry, no trvlr domain configured.</p>';
    }
 
-   $atts = shortcode_atts(array(
-      'attraction_id' => '',
-      'width' => '450px',
-      'height' => '600px'
-   ), $atts);
-
    if (empty($atts['attraction_id'])) {
-      return '<p>Please provide an attraction_id attribute.</p>';
+      return '<p>Sorry, no attraction id found.</p>';
    }
 
    ob_start();
@@ -117,4 +111,15 @@ function trvlr_render_booking_calendar($atts)
 <?php
    return ob_get_clean();
 }
-add_shortcode('trvlr_booking_calendar', 'trvlr_render_booking_calendar');
+
+function output_booking_calendar_shortcode($atts)
+{
+   $atts = shortcode_atts(array(
+      'attraction_id' => get_field("attraction_id", get_the_ID()),
+      'width' => '450px',
+      'height' => '600px'
+   ), $atts);
+
+   echo trvlr_render_booking_calendar($atts);
+}
+add_shortcode('trvlr_booking_calendar', 'output_booking_calendar_shortcode');
