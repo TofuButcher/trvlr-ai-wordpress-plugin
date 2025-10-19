@@ -56,7 +56,7 @@ require TRVLR_PLUGIN_DIR . 'plugin-update-checker/plugin-update-checker.php';
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
 $myUpdateChecker = PucFactory::buildUpdateChecker(
-   'https://github.com/TofuButcher/trvlr-ai-wordpress-plugin.git',
+   'https://github.com/TofuButcher/trvlr-ai-wordpress-plugin/',
    __FILE__,
    'trvlr'
 );
