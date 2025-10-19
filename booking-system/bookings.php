@@ -3,9 +3,9 @@
 function trvlr_inject_booking_modals()
 {
    $base_iframe_url = get_option('trvlr_base_domain', '');
-   $frontend_enabled = get_option('trvlr_enable_frontend', true);
+   $frontend_disabled = get_option('trvlr_disable_frontend', false);
 
-   if (empty($base_iframe_url) || !$frontend_enabled) {
+   if (empty($base_iframe_url) || $frontend_disabled) {
       return;
    }
 ?>
@@ -93,11 +93,11 @@ function trvlr_render_booking_calendar($atts)
    $base_iframe_url = get_option('trvlr_base_domain', '');
 
    if (empty($base_iframe_url)) {
-      return '<p>Sorry, no trvlr domain configured.</p>';
+      return '<p>Please configure the trvlr base domain in the plugin settings.</p>';
    }
 
    if (empty($atts['attraction_id'])) {
-      return '<p>Sorry, no attraction id found.</p>';
+      return '<p>No attraction ID found. Please provide an attraction_id attribute or add an Attraction ID field to this post.</p>';
    }
 
    ob_start();
@@ -114,8 +114,14 @@ function trvlr_render_booking_calendar($atts)
 
 function output_booking_calendar_shortcode($atts)
 {
+   $default_attraction_id = '';
+
+   if (is_singular()) {
+      $default_attraction_id = trvlr_get_attraction_id(get_the_ID());
+   }
+
    $atts = shortcode_atts(array(
-      'attraction_id' => get_field("attraction_id", get_the_ID()),
+      'attraction_id' => $default_attraction_id,
       'width' => '450px',
       'height' => '600px'
    ), $atts);
