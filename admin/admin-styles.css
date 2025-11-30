@@ -28,7 +28,7 @@ h1.trvlr-title {
    font-weight: 800;
    margin-left: 15px;
    padding: 0;
-   color: #3f91ac;
+   color: #005570;
    letter-spacing: -0.02em;
 }
 
@@ -38,6 +38,8 @@ h1.trvlr-title {
 
 .trvlr-content h2 {
    font-size: 1.8em;
+   font-weight: 700;
+   color: #005570;
 }
 
 .trvlr-separator {

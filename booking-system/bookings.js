@@ -85,7 +85,9 @@ class TrvlrBookingSystem {
    }
 
    handleBookNowClick(button) {
-      this.state.currentAttractionId = button.getAttribute('attraction-id');
+      const attractionId = button.getAttribute('attraction-id');
+      if (attractionId === '' || attractionId === null || attractionId === undefined) return;
+      this.state.currentAttractionId = attractionId;
       this.showBookNowForm();
       this.elements.modal.showModal();
    }
