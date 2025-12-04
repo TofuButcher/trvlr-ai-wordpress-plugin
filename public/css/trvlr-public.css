@@ -42,7 +42,6 @@ body {
    --attraction-card-popular-badge-border-radius: 6px;
 
    --attraction-card-title-font-size: 18px;
-   --attraction-card-title-line-height: 1.33;
    --attraction-card-title-font-weight: 600;
    --attraction-card-focus-color: #000;
 
@@ -457,7 +456,7 @@ body {
 .attraction-card__title {
    font-family: var(--trvlr-heading-font-family);
    font-size: var(--attraction-card-title-font-size);
-   line-height: var(--attraction-card-title-line-height);
+   line-height: 1.33;
    font-weight: var(--attraction-card-title-font-weight);
    letter-spacing: var(--trvlr-heading-letter-spacing);
    text-wrap: balance;

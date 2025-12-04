@@ -15,53 +15,13 @@ if (! defined('ABSPATH')) exit;
 
     <?php include_once plugin_dir_path(__FILE__) . 'trvlr-settings-setup-status.php'; ?>
 
-    <form method="post" action="options.php" class="trvlr-settings-form">
-        <?php
-        settings_fields('trvlr_settings_group');
-        do_settings_sections('trvlr_settings_group');
-        ?>
+    <hr style="margin: 20px 0;">
 
-        <table class="form-table" role="presentation">
-            <tr valign="top">
-                <th scope="row">
-                    <label for="trvlr_organisation_id"><?php esc_html_e('Organisation ID', 'trvlr'); ?></label>
-                </th>
-                <td>
-                    <input type="text"
-                        id="trvlr_organisation_id"
-                        name="trvlr_organisation_id"
-                        value="<?php echo esc_attr(get_option('trvlr_organisation_id')); ?>"
-                        class="regular-text" />
-                    <p class="description">
-                        <?php esc_html_e('Your Organisation ID from TRVLR AI.', 'trvlr'); ?>
-                    </p>
-                </td>
-            </tr>
+    <!-- React Setup Settings Component -->
+    <div id="trvlr-setup-settings-root"></div>
 
-            <tr valign="top">
-                <th scope="row">
-                    <label for="trvlr_api_key"><?php esc_html_e('API Key', 'trvlr'); ?></label>
-                </th>
-                <td>
-                    <input type="text"
-                        id="trvlr_api_key"
-                        name="trvlr_api_key"
-                        value="<?php echo esc_attr(get_option('trvlr_api_key')); ?>"
-                        class="regular-text" />
-                    <p class="description">
-                        <?php esc_html_e('API Key for authentication (if required).', 'trvlr'); ?>
-                    </p>
-                </td>
-            </tr>
-        </table>
-
-        <?php submit_button(); ?>
-    </form>
+    <hr style="margin: 30px 0;">
 
     <?php include_once plugin_dir_path(__FILE__) . 'trvlr-settings-setup-instructions.php'; ?>
-
-    <hr>
-
-    <?php include_once plugin_dir_path(__FILE__) . 'trvlr-settings-notifications.php'; ?>
 
 </div>

@@ -95,9 +95,14 @@
 }
 
 .trvlr-tab-content h2 {
-    margin-top: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.trvlr-tabs-content .description {
     padding-bottom: 10px;
-    border-bottom: 1px solid #e5e5e5;
+    width: 100%;
+    border-bottom: 1px solid #e0e0e0;
 }
 
 .trvlr-sync-section {
@@ -172,8 +177,13 @@ h1.trvlr-title {
     font-size: 28px;
     font-weight: 700;
     line-height: 1.6;
+    margin: 0;
     color: hsl(0, 0%, 2%);
     text-transform: uppercase;
+}
+
+.trvlr-content p {
+    margin-bottom: 24px;
 }
 
 .trvlr-separator {
@@ -440,4 +450,18 @@ h1.trvlr-title {
     display: inline-block;
     color: #646970;
     font-size: 0.95em;
+}
+
+.trvlr-theme-settings-inner {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 40px;
+}
+
+.trvlr-theme-settings-preview-wrap {
+    position: sticky;
+    top: 40px;
+    padding: 20px;
+    margin-top: 55px;
+    border: 1px solid #e0e0e0;
 }

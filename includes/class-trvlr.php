@@ -122,6 +122,11 @@ class Trvlr
 		require_once plugin_dir_path(dirname(__FILE__)) . 'admin/class-trvlr-admin.php';
 
 		/**
+		 * The class responsible for React-based admin app functionality.
+		 */
+		require_once plugin_dir_path(dirname(__FILE__)) . 'admin/class-trvlr-admin-app.php';
+
+		/**
 		 * The class responsible for defining all actions that occur in the public-facing side.
 		 */
 		require_once plugin_dir_path(dirname(__FILE__)) . 'public/class-trvlr-public.php';
@@ -186,8 +191,16 @@ class Trvlr
 		$this->loader->add_action('admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts');
 		$this->loader->add_action('admin_menu', $plugin_admin, 'add_plugin_admin_menu');
 		$this->loader->add_action('admin_init', $plugin_admin, 'register_settings');
+		$this->loader->add_action('rest_api_init', $plugin_admin, 'register_theme_rest_routes');
 		// Initialize Meta Boxes
 		$this->loader->add_action('admin_init', $plugin_admin, 'init_meta_boxes');
+
+		// React-based admin app
+		$plugin_admin_app = new Trvlr_Admin_App($this->get_plugin_name(), $this->get_version());
+		$this->loader->add_action('admin_enqueue_scripts', $plugin_admin_app, 'enqueue_styles');
+		$this->loader->add_action('admin_enqueue_scripts', $plugin_admin_app, 'enqueue_scripts');
+		$this->loader->add_action('admin_menu', $plugin_admin_app, 'add_plugin_admin_menu');
+		$this->loader->add_action('admin_footer', $plugin_admin_app, 'output_admin_svg_icons');
 
 		// AJAX Hooks
 		$this->loader->add_action('wp_ajax_trvlr_manual_sync', $plugin_admin, 'ajax_manual_sync');
@@ -229,6 +242,9 @@ class Trvlr
 
 		// Google Fonts
 		$this->loader->add_action('wp_head', $plugin_public, 'add_google_fonts');
+
+		// Theme CSS Variables
+		$this->loader->add_action('wp_head', $plugin_public, 'output_theme_css_variables');
 
 		// Data Formatters
 		$this->loader->add_filter('trvlr_duration', $plugin_public, 'filter_trvlr_duration', 10, 2);

@@ -59,10 +59,8 @@ class Trvlr_Admin
 	 */
 	public function enqueue_scripts()
 	{
-
 		wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/trvlr-admin.js', array('jquery'), $this->version, false);
 
-		// Localize script for AJAX
 		wp_localize_script($this->plugin_name, 'trvlr_admin_vars', array(
 			'nonce' => wp_create_nonce('trvlr_admin_nonce')
 		));
@@ -125,9 +123,127 @@ class Trvlr_Admin
 	 */
 	public function register_settings()
 	{
-		register_setting('trvlr_settings_group', 'trvlr_api_key');
-		register_setting('trvlr_settings_group', 'trvlr_organisation_id');
-		// Add more settings here as needed
+		// Core settings (traditional form + REST API)
+		register_setting('trvlr_settings_group', 'trvlr_api_key', array(
+			'type' => 'string',
+			'default' => '',
+			'show_in_rest' => true,
+		));
+
+		register_setting('trvlr_settings_group', 'trvlr_organisation_id', array(
+			'type' => 'string',
+			'default' => '',
+			'show_in_rest' => true,
+		));
+
+		// Notification settings for React component
+		register_setting('trvlr_settings_group', 'trvlr_notification_settings', array(
+			'type' => 'object',
+			'default' => array(),
+			'show_in_rest' => array(
+				'schema' => array(
+					'type' => 'object',
+					'properties' => array(
+						'email' => array('type' => 'string'),
+						'notify_errors' => array('type' => 'boolean'),
+						'notify_complete' => array('type' => 'boolean'),
+						'notify_weekly' => array('type' => 'boolean'),
+					),
+				),
+			),
+		));
+
+		// Theme settings for React component (must be registered with proper REST schema)
+		register_setting('trvlr_theme_settings', 'trvlr_theme_settings', array(
+			'type' => 'object',
+			'default' => array(),
+			'sanitize_callback' => array($this, 'sanitize_theme_settings'),
+			'show_in_rest' => array(
+				'name' => 'trvlr_theme_settings',
+				'schema' => array(
+					'type' => 'object',
+					'properties' => array(
+						'primaryColor' => array('type' => 'string', 'default' => 'hsl(245, 90%, 50%)'),
+						'primaryActiveColor' => array('type' => 'string', 'default' => 'hsl(245, 100%, 40%)'),
+						'accentColor' => array('type' => 'string', 'default' => 'hsl(57, 100%, 50%)'),
+						'textMutedColor' => array('type' => 'string', 'default' => 'hsl(0, 0%, 40%)'),
+						'headingColor' => array('type' => 'string', 'default' => 'hsl(0, 0%, 0%)'),
+						'cardBackground' => array('type' => 'string', 'default' => 'transparent'),
+						'headingLetterSpacing' => array('type' => 'number', 'default' => -0.04),
+						'attractionGridGap' => array('type' => 'number', 'default' => 40),
+						'attractionGridRowGap' => array('type' => 'number', 'default' => 80),
+						'cardPadding' => array('type' => 'number', 'default' => 4),
+						'cardBorderRadius' => array('type' => 'number', 'default' => 8),
+						'cardImageBorderRadius' => array('type' => 'number', 'default' => 8),
+						'popularBadgeColor' => array('type' => 'string', 'default' => '#fff'),
+						'popularBadgeBackground' => array('type' => 'string', 'default' => '#000'),
+						'popularBadgeFontSize' => array('type' => 'number', 'default' => 16),
+					),
+				),
+			),
+		));
+	}
+
+	/**
+	 * Sanitize theme settings
+	 */
+	public function sanitize_theme_settings($settings)
+	{
+		if (!is_array($settings)) {
+			return array();
+		}
+
+		return $settings;
+	}
+
+	/**
+	 * Register custom REST API endpoints for theme settings
+	 */
+	public function register_theme_rest_routes()
+	{
+		register_rest_route('trvlr/v1', '/theme-settings', array(
+			'methods' => 'GET',
+			'callback' => array($this, 'get_theme_settings_rest'),
+			'permission_callback' => function () {
+				return current_user_can('manage_options');
+			},
+		));
+
+		register_rest_route('trvlr/v1', '/theme-settings', array(
+			'methods' => 'POST',
+			'callback' => array($this, 'update_theme_settings_rest'),
+			'permission_callback' => function () {
+				return current_user_can('manage_options');
+			},
+		));
+	}
+
+	/**
+	 * REST API: Get theme settings
+	 */
+	public function get_theme_settings_rest($request)
+	{
+		$settings = get_option('trvlr_theme_settings', array());
+		return rest_ensure_response($settings);
+	}
+
+	/**
+	 * REST API: Update theme settings
+	 */
+	public function update_theme_settings_rest($request)
+	{
+		$settings = $request->get_json_params();
+
+		if (empty($settings) || !is_array($settings)) {
+			return new WP_Error('invalid_data', 'Invalid settings data', array('status' => 400));
+		}
+
+		update_option('trvlr_theme_settings', $settings);
+
+		return rest_ensure_response(array(
+			'success' => true,
+			'settings' => $settings,
+		));
 	}
 
 	/**
@@ -146,7 +262,7 @@ class Trvlr_Admin
 		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-logger.php';
 		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-notifier.php';
 		require_once plugin_dir_path(dirname(__FILE__)) . 'core/class-trvlr-sync.php';
-		
+
 		$syncer = new Trvlr_Sync();
 		$syncer->sync_all();
 
@@ -269,7 +385,7 @@ class Trvlr_Admin
 		foreach ($force_sync_fields as $post_id => $fields) {
 			$post_id = absint($post_id);
 			$fields = array_map('sanitize_text_field', $fields);
-			
+
 			if (!empty($fields)) {
 				update_post_meta($post_id, '_trvlr_force_sync_fields', $fields);
 				$count++;
