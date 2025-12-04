@@ -8,61 +8,80 @@
  * Text Domain: trvlr
  */
 
-if (!defined('ABSPATH')) {
-   exit;
+if (! defined('ABSPATH')) {
+	exit;
 }
 
+// Define Constants
 define('TRVLR_VERSION', '0.0.3');
 define('TRVLR_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('TRVLR_PLUGIN_URL', plugin_dir_url(__FILE__));
 
-require_once TRVLR_PLUGIN_DIR . 'admin/settings.php';
-require_once TRVLR_PLUGIN_DIR . 'admin/meta-fields.php';
-require_once TRVLR_PLUGIN_DIR . 'booking-system/bookings.php';
-
-function trvlr_enqueue_scripts()
+/**
+ * The code that runs during plugin activation.
+ * This action is documented in includes/class-trvlr-activator.php
+ */
+function activate_trvlr()
 {
-   $base_domain = get_option('trvlr_base_domain', '');
-   $frontend_disabled = get_option('trvlr_disable_frontend', false);
-
-   if (empty($base_domain) || $frontend_disabled) {
-      return;
-   }
-
-   wp_enqueue_script(
-      'trvlr-bookings',
-      TRVLR_PLUGIN_URL . 'booking-system/bookings.js',
-      array(),
-      TRVLR_VERSION,
-      true
-   );
-
-   wp_localize_script('trvlr-bookings', 'trvlrConfig', array(
-      'baseIframeUrl' => $base_domain,
-      'homeUrl' => home_url()
-   ));
-
-   wp_enqueue_style(
-      'trvlr-modal-styles',
-      TRVLR_PLUGIN_URL . 'booking-system/modal-styles.css',
-      array(),
-      TRVLR_VERSION
-   );
+	require_once plugin_dir_path(__FILE__) . 'includes/class-trvlr-activator.php';
+	Trvlr_Activator::activate();
 }
-add_action('wp_enqueue_scripts', 'trvlr_enqueue_scripts');
+
+/**
+ * The code that runs during plugin deactivation.
+ * This action is documented in includes/class-trvlr-deactivator.php
+ */
+function deactivate_trvlr()
+{
+	require_once plugin_dir_path(__FILE__) . 'includes/class-trvlr-deactivator.php';
+	Trvlr_Deactivator::deactivate();
+}
+
+register_activation_hook(__FILE__, 'activate_trvlr');
+register_deactivation_hook(__FILE__, 'deactivate_trvlr');
+
+/**
+ * The core plugin class that is used to define internationalization,
+ * admin-specific hooks, and public-facing site hooks.
+ */
+require_once plugin_dir_path(__FILE__) . 'includes/class-trvlr.php';
+
+/**
+ * Begins execution of the plugin.
+ *
+ * Since everything within the plugin is registered via hooks,
+ * then kicking off the plugin from this point in the file does
+ * not affect the page life cycle.
+ */
+function run_trvlr()
+{
+
+	$plugin = new Trvlr();
+	$plugin->run();
+}
+run_trvlr();
 
 /* Update Checker */
-require TRVLR_PLUGIN_DIR . 'plugin-update-checker/plugin-update-checker.php';
+require_once TRVLR_PLUGIN_DIR . 'plugin-update-checker/plugin-update-checker.php';
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
 $myUpdateChecker = PucFactory::buildUpdateChecker(
-   'https://github.com/TofuButcher/trvlr-ai-wordpress-plugin/',
-   __FILE__,
-   'trvlr'
+	'https://github.com/TofuButcher/trvlr-ai-wordpress-plugin/',
+	__FILE__,
+	'trvlr'
 );
 
 $myUpdateChecker->setBranch('main');
 
-// Optional: For private repos, add authentication
-// $myUpdateChecker->setAuthentication('your-github-token-here');
+// Temp test files
+if (file_exists(TRVLR_PLUGIN_DIR . 'test-api.php')) {
+	require_once TRVLR_PLUGIN_DIR . 'test-api.php';
+}
+
+// Data transform testing (access with ?testing=1)
+add_action('init', function () {
+	if (isset($_GET['testing']) && $_GET['testing'] == '1') {
+		require_once TRVLR_PLUGIN_DIR . 'core/data-transform-testing.php';
+	}
+});

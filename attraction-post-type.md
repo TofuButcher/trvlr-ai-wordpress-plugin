@@ -1,38 +1,54 @@
 Post type: Attraction
 Slug: attraction
 
-** Standard Fields
+## Native Fields
+
 Title
 Slug
 Featured Image
-
-description: rich text
-
-short_description: rich text
+Categories
 
 
+# Attraction Specific Fields
 
-attraction_id: number
+*attraction_id*: number
 
-Pricing: Repeater field
-- attraction_price_type: Text / Multiple Select
-- attraction_price: number
-- attraction_sale_price: number
+*attraction_description*: rich text
 
-Media ( images, videos )
+*attraction_short_description*: rich text
 
-Duration
+*attraction_pricing*: Repeater field
+- *attraction_price_type*: Text / Multiple Select
+- *attraction_price*: number
+- *attraction_sale_price*: number
 
-Departure: time
-Arrival: time
+*attraction_is_on_sale*: Boolean
+*attraction_sale_description*: Text
 
-availability: text
+*attraction_media* ( images, videos )
 
-inclusions: repeater field
-- inclusions_title
-- inclusions_content
+*attraction_duration*: Text
 
-attraction_categories: taxonomy
-- categories from trvlr api. leaving free default wordpress categories taxonomy.
+*attraction_start_time*: Time Picker
+*attraction_end_time*: Time Picker
 
-Policies: rich text
+*attraction_location*: Repeater Field
+- *attraction_location_type*: Text / Multiple Select
+- *attraction_location_address*: Text
+- *attraction_location_latitude*: Text
+- *attraction_location_longitude*: Text
+
+*attraction_additional_info*: Rich text
+
+*attraction_inclusions*: Rich Text
+
+*attraction_highlights*: Rich Text
+
+# Low Urgency Fields to Consider Later
+
+*attraction_tags*: taxonomy
+- tags from trvlr api.
+
+*attraction_availability*: text
+
+*attraction_policies*: rich text

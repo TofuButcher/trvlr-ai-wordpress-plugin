@@ -31,13 +31,13 @@ The API returns a JSON object with the following top-level structure:
 }
 6. Response Fields
 6.1 Top-Level Fields
-Field	Type	Description
-results	array	Array of attraction/booking item objects.
-count	integer	Total number of results returned.
-error	string	Error message if request fails (empty string if no error).
-filters	object	Filters applied to the results (if any).
-columns	array	List of available columns/fields that can be returned or displayed.
-response_status	string	Status of the response. "success" or "error".
+*Field*	          *Type*	  *Description*
+results	          array	    Array of attraction/booking item objects.
+count	            integer   Total number of results returned.
+error	            string    Error message if request fails (empty string if no error).
+filters	          object    Filters applied to the results (if any).
+columns	          array	    List of available columns/fields that can be returned or displayed.
+response_status   string    Status of the response. "success" or "error".
 
 6.2 Attraction Object Structure
 Each attraction in the results array contains:
