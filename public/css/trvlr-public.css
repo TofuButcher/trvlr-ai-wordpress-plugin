@@ -1,0 +1,685 @@
+/**
+ * ----------------------------------------
+ * Public-facing styles for TRVLR
+ * ----------------------------------------
+ */
+
+body {
+   font-family: "Rethink Sans", sans-serif;
+}
+
+/**
+* ----------------------------------------
+* Variables - Theme Defaults
+* ----------------------------------------
+*/
+:root {
+
+   /* --trvlr-font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; */
+   --trvlr-font-family: "Rethink Sans", sans-serif;
+   --trvlr-heading-font-family: "Rethink Sans", sans-serif;
+   --trvlr-heading-letter-spacing: -0.04em;
+
+   --trvlr-primary-color: hsl(245, 90%, 50%);
+   --trvlr-primary-active-color: hsl(245, 100%, 40%);
+   --trvlr-accent-color: hsl(57, 100%, 50%);
+   --trvlr-text-muted-color: hsl(0, 0%, 40%);
+   --trvlr-heading-color: hsl(0, 0%, 0%);
+
+   --attraction-grid-gap: 40px;
+   --attraction-grid-row-gap: 80px;
+   --attraction-grid-columns: repeat(auto-fill, minmax(270px, 1fr));
+
+   --attraction-card-background: transparent;
+   --attraction-card-padding: 4px;
+   --attraction-card-border-radius: 8px;
+   --attraction-card-image-border-radius: 8px;
+   --attraction-card-popular-badge-color: #fff;
+   --attraction-card-popular-badge-background: #000;
+   --attraction-card-popular-badge-font-size: 16px;
+   --attraction-card-popular-badge-top: 2px;
+   --attraction-card-popular-badge-left: 2px;
+   --attraction-card-popular-badge-border-radius: 6px;
+
+   --attraction-card-title-font-size: 18px;
+   --attraction-card-title-line-height: 1.33;
+   --attraction-card-title-font-weight: 600;
+   --attraction-card-focus-color: #000;
+
+   --attraction-card-icon-size: 18px;
+   --attraction-card-icon-color: #000;
+
+   --attraction-card-image-wrap-margin-bottom: 10px;
+   --attraction-card-title-margin-bottom: 8px;
+   --attraction-card-text-wrap-margin-bottom: 20px;
+}
+
+
+/**
+* ----------------------------------------
+* Shared Components - Common UI Elements
+* ----------------------------------------
+*/
+
+.trvlr-sale-badge {
+   display: flex;
+   background: var(--trvlr-accent-color);
+   letter-spacing: var(--trvlr-heading-letter-spacing);
+   color: #000;
+   padding: 4px 10px;
+   border-radius: 50px;
+   font-size: 12px;
+   line-height: 1.1;
+   font-weight: 600;
+}
+
+.trvlr-icon-text {
+   display: flex;
+   flex-direction: row;
+   align-items: center;
+   gap: 10px;
+   font-size: 16px;
+}
+
+.trvlr-icon-text svg {
+   width: 18px;
+   height: 18px;
+}
+
+.back-link {
+   font-size: 1.8rem;
+   color: var(--primary-active);
+   font-weight: 600;
+   margin-left: -1em;
+   margin-bottom: 8px;
+   gap: 0.1em;
+}
+
+.back-link svg {
+   width: 1.2em;
+   height: 1.2em;
+}
+
+.back-link .text {
+   position: relative;
+   line-height: 1.2;
+}
+
+.back-link .text::after {
+   content: '';
+   position: absolute;
+   top: 100%;
+   left: 0;
+   width: 100%;
+   height: 1px;
+   background: var(--primary-active);
+}
+
+@media (max-width: 1536px) {
+   .back-link {
+      margin-left: unset;
+   }
+}
+
+@media (max-width: 480px) {
+   .back-link {
+      margin-bottom: 16px;
+   }
+}
+
+/**
+* ----------------------------------------
+* Single Attraction Template
+* ----------------------------------------
+*/
+
+.trvlr-attraction__section {
+   padding-left: 24px;
+   padding-right: 24px;
+}
+
+.trvlr-attraction__section-inner {
+   display: flex;
+   flex-direction: column;
+   width: 100%;
+   max-width: 1400px;
+   margin: 0 auto;
+   column-gap: 30px;
+   padding: 40px 0;
+}
+
+
+.trvlr-attraction__title {
+   font-size: 52px;
+   line-height: 1.1;
+   font-weight: 700;
+   color: var(--tvlr-heading-color);
+}
+
+.trvlr-attraction__columns {
+   position: relative;
+   display: grid;
+   grid-template-columns: 1fr 450px;
+   column-gap: 60px;
+}
+
+.trvlr-attraction__time,
+.trvlr-attraction__sale {
+   margin-bottom: 10px;
+   font-weight: 500;
+}
+
+.trvlr-attraction__sale {
+   display: flex;
+   flex-direction: row;
+   align-items: center;
+   justify-content: flex-start;
+   gap: 10px;
+   font-size: 16px;
+   margin-bottom: 20px;
+}
+
+.trvlr-attraction__media {
+   margin-bottom: 20px;
+}
+
+.attraction-slider__wrap {
+   width: 100%;
+   gap: 15px;
+   display: flex;
+   flex-direction: row;
+   align-items: stretch;
+   height: 400px;
+}
+
+.attraction-slider__wrap .splide__slide {
+   border: none !important;
+}
+
+.attraction-slider {
+   cursor: grab;
+   border-radius: 10px;
+   overflow: hidden;
+}
+
+.attraction-slider .splide__track {
+   height: 100%;
+}
+
+.attraction-slider__wrap img {
+   border-radius: 10px;
+   overflow: hidden;
+}
+
+.attraction-slider__wrap img {
+   width: 100%;
+   height: 100%;
+   object-fit: cover;
+}
+
+.attraction-slider__controls {
+   cursor: grab;
+   width: 140px;
+   height: 100%;
+}
+
+.attraction-slider__controls .splide__slide {
+   opacity: 0.6;
+   transition: opacity 0.1s ease;
+}
+
+.attraction-slider__controls .splide__slide.is-active {
+   opacity: 1;
+}
+
+.trvlr-attraction__text-content {
+   display: flex;
+   flex-direction: column;
+   gap: 1em;
+   margin-bottom: 30px;
+   font-size: 18px;
+   line-height: 1.3;
+   font-weight: 500;
+}
+
+.trvlr-attraction__booking-column-inner {
+   position: sticky;
+   top: 40px;
+   height: fit-content;
+   width: 100%;
+   border-radius: 10px;
+   padding: 16px;
+   border: 1px solid #ddd;
+}
+
+.trvlr-attraction__price {
+   font-size: 30px;
+   line-height: 1.2;
+   font-weight: 700;
+   margin-bottom: 10px;
+}
+
+.trvlr-attraction__price-type {
+   font-size: 16px;
+   font-weight: 400;
+}
+
+.trvlr-attraction__booking-column-inner iframe {
+   border-radius: 8px;
+}
+
+
+/**
+* ----------------------------------------
+* Simple Accordion Styles
+* ----------------------------------------
+* 
+* Structure:
+* .simple-accordion
+*   .accordion-item
+*     .accordion-trigger (button with .accordion-title and .accordion-icon)
+*     .accordion-content
+*       .accordion-content-inner
+*/
+
+.simple-accordion .accordion__item {
+   border-top: 1px solid #ddd;
+}
+
+.simple-accordion .accordion__item:last-child {
+   border-bottom: 1px solid #ddd;
+}
+
+.simple-accordion .accordion__trigger {
+   width: 100%;
+   padding-bottom: 8px;
+   padding-top: 20px;
+   background: none;
+   border: none;
+   text-align: left;
+   cursor: pointer;
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   transition: background-color 0.2s ease;
+   font-size: 18px;
+   line-height: 1.2;
+   color: var(--trvlr-primary-color);
+   font-weight: 600;
+}
+
+.simple-accordion .accordion__content {
+   overflow: hidden;
+   opacity: 0;
+   transition: height 0.3s ease, opacity 0.3s ease;
+   font-size: 18px;
+   margin-bottom: 12px;
+}
+
+.simple-accordion .accordion__item.is-open .accordion__content {
+   opacity: 1;
+}
+
+.simple-accordion .accordion__content ul {
+   padding-left: 1em;
+   margin: 0.4em 0;
+}
+
+.simple-accordion .accordion__icon {
+   width: 18px;
+   height: 18px;
+   fill: var(--trvlr-primary-color);
+}
+
+.icon-toggle {
+   position: relative;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+}
+
+.icon-toggle .open-icon,
+.icon-toggle .close-icon {
+   transition: 0.15s ease all;
+   pointer-events: none;
+   position: absolute;
+}
+
+.simple-accordion .accordion__item .open-icon {
+   opacity: 1;
+   transform: scale(1);
+   transition-delay: 0.15s;
+}
+
+.simple-accordion .accordion__item .close-icon {
+   transform: scale(0);
+   transition-delay: 0;
+}
+
+.simple-accordion .accordion__item.is-open .open-icon {
+   transform: scale(0);
+   transition-delay: 0;
+}
+
+.simple-accordion .accordion__item.is-open .close-icon {
+   opacity: 1;
+   transform: scale(1);
+   transition-delay: 0.15s;
+}
+
+/**
+* ----------------------------------------
+* Attraction Cards
+* ----------------------------------------
+*/
+
+.trvlr-attraction-cards {
+   display: grid;
+   grid-template-columns: var(--attraction-grid-columns);
+   gap: var(--attraction-grid-gap);
+   row-gap: var(--attraction-grid-row-gap);
+   width: 100%;
+}
+
+.attraction-card {
+   display: flex;
+   flex-direction: column;
+   justify-content: stretch;
+   width: 100%;
+   background: var(--attraction-card-background);
+   border-radius: var(--attraction-card-border-radius);
+   padding: var(--attraction-card-padding);
+   font-family: var(--trvlr-font-family);
+   position: relative;
+   z-index: 0;
+}
+
+.attraction-card svg {
+   width: 10px;
+   height: 10px;
+}
+
+.attraction-card:has(.attraction-card__title a:focus-visible) {
+   outline: 2px solid var(--trvlr-primary-active-color);
+}
+
+.attraction-card__image-wrap {
+   position: relative;
+   overflow: hidden;
+   display: flex;
+   justify-content: flex-start;
+   align-items: center;
+   border-radius: var(--attraction-card-image-border-radius);
+   aspect-ratio: 1.5;
+   flex-grow: 1;
+   height: unset;
+   margin-bottom: var(--attraction-card-image-wrap-margin-bottom);
+}
+
+.attraction-card__popular-badge {
+   position: absolute;
+   left: var(--attraction-card-popular-badge-left);
+   top: var(--attraction-card-popular-badge-top);
+   display: flex;
+   flex-direction: row;
+   align-items: center;
+   gap: 5px;
+   font-size: var(--attraction-card-popular-badge-font-size);
+   letter-spacing: var(--trvlr-heading-letter-spacing);
+   font-weight: 600;
+   color: var(--attraction-card-popular-badge-color);
+   background: var(--attraction-card-popular-badge-background);
+   padding: 2px 10px;
+   border-radius: var(--attraction-card-popular-badge-border-radius);
+}
+
+.attraction-card__popular-badge svg {
+   fill: var(--trvlr-accent-color);
+   width: 16px;
+   height: 16px;
+}
+
+.attraction-card__image {
+   position: absolute;
+   inset: 0;
+   height: 100%;
+   width: 100%;
+   object-fit: cover;
+   transition: filter var(--transition-duration) ease, transform var(--transition-duration) ease;
+}
+
+.attraction-card__content {
+   display: flex;
+   flex-direction: column;
+   justify-content: space-between;
+}
+
+.attraction-card__title {
+   font-family: var(--trvlr-heading-font-family);
+   font-size: var(--attraction-card-title-font-size);
+   line-height: var(--attraction-card-title-line-height);
+   font-weight: var(--attraction-card-title-font-weight);
+   letter-spacing: var(--trvlr-heading-letter-spacing);
+   text-wrap: balance;
+   margin: 0;
+   margin-bottom: var(--attraction-card-title-margin-bottom);
+}
+
+.attraction-card__title a {
+   text-decoration: underline;
+   text-decoration-thickness: 1px !important;
+}
+
+.attraction-card__title a:focus-visible,
+.attraction-card__title a:hover {
+   outline: none !important;
+   color: var(--attraction-card-focus-color);
+}
+
+.attraction-card__title a::before {
+   content: '';
+   position: absolute;
+   width: 100%;
+   height: 100%;
+   top: 0;
+   left: 0;
+   z-index: 0;
+}
+
+.attraction-card__text-wrap {
+   display: flex;
+   flex-direction: column;
+   align-items: stretch;
+   gap: 5px;
+   font-weight: 500;
+   margin-bottom: var(--attraction-card-text-wrap-margin-bottom);
+}
+
+.attraction-card__text-item {
+   display: flex;
+   flex-direction: row;
+   align-items: center;
+   gap: 6px;
+   font-size: 16px;
+   color: var(--trvlr-text-muted-color);
+}
+
+.attraction-card__text-item svg {
+   width: var(--attraction-card-icon-size);
+   height: var(--attraction-card-icon-size);
+   fill: var(--attraction-card-icon-color);
+}
+
+.attraction-card__text-item svg use {
+   width: 100%;
+   height: 100%;
+}
+
+.attraction-card__footer {
+   display: flex;
+   flex-direction: row;
+   align-items: flex-end;
+   justify-content: space-between;
+   gap: 10px;
+}
+
+.attraction-card__price {
+   display: flex;
+   flex-direction: column;
+   align-items: flex-start;
+   gap: 4px;
+}
+
+.attraction-card__sale-badge {
+   padding: 3px 10px;
+}
+
+.attraction-card__price-value {
+   font-size: 20px;
+   line-height: 1.2;
+   font-weight: 700;
+   letter-spacing: var(--trvlr-heading-letter-spacing);
+}
+
+.attraction-card__price-type {
+   font-size: 14px;
+   line-height: 1;
+   font-weight: 600;
+   color: var(--trvlr-text-muted-color);
+}
+
+.attraction-card__book-now {
+   position: relative;
+   display: flex;
+   align-items: center;
+   color: var(--trvlr-primary-color);
+   letter-spacing: var(--trvlr-heading-letter-spacing);
+   font-family: var(--trvlr-font-family);
+   background: none;
+   border: none;
+   line-height: 1;
+   height: auto;
+   padding: 0;
+   font-weight: 700;
+   font-size: 18px;
+   z-index: 10;
+   gap: 0.2em;
+   cursor: pointer;
+}
+
+.attraction-card__book-now svg {
+   fill: var(--trvlr-primary-color);
+   width: 1.2em;
+   height: 1.2em;
+}
+
+
+@media (max-width: 768px) {
+
+   .attraction-card {
+      --attraction-card-padding: 10px;
+      --attraction-card-border-radius: 12px;
+      --attraction-card-image-border-radius: 8px;
+      --transition-duration: 0.4s;
+      --transition-delay: 0s;
+      min-height: 154px;
+      gap: 14px;
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      grid-template-rows: min-content;
+      align-items: stretch;
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-items: stretch;
+   }
+
+   .attraction-card__image-wrap {
+      width: 40%;
+   }
+
+   .attraction-card__sale-badge span {
+      font-weight: 700;
+      font-size: 10px;
+   }
+
+   .attraction-card__content {
+      gap: 12px;
+      width: 60%;
+   }
+
+   .attraction-card__text-wrap {
+      gap: 5px;
+   }
+
+   button {
+      font-size: 14px;
+   }
+
+}
+
+@media (max-width: 1024px) {
+   .attraction-card__title a::before {
+      z-index: 1;
+   }
+
+   .attraction-card__image-wrap {
+      z-index: 0;
+   }
+}
+
+/**
+* ----------------------------------------
+* Payment Confirmation Page - Full Screen Iframe
+* ----------------------------------------
+*/
+
+body.trvlr-payment-confirmation-page {
+   margin: 0 !important;
+   padding: 0 !important;
+   overflow: hidden !important;
+}
+
+/* Hide theme header and footer */
+body.trvlr-payment-confirmation-page header,
+body.trvlr-payment-confirmation-page .site-header,
+body.trvlr-payment-confirmation-page #masthead,
+body.trvlr-payment-confirmation-page .header,
+body.trvlr-payment-confirmation-page footer,
+body.trvlr-payment-confirmation-page .site-footer,
+body.trvlr-payment-confirmation-page #colophon,
+body.trvlr-payment-confirmation-page .footer {
+   display: none !important;
+}
+
+/* Full screen container */
+.trvlr-payment-confirmation-page .trvlr-payment-wrapper {
+   position: fixed !important;
+   top: 0 !important;
+   left: 0 !important;
+   width: 100vw !important;
+   height: 100vh !important;
+   min-width: 100vw;
+   min-height: 100vh;
+   z-index: 999999 !important;
+   background: #fff;
+   margin: 0 !important;
+   padding: 0 !important;
+}
+
+/* Full screen iframe */
+.trvlr-payment-confirmation-page #trvlr-payment-confirmation-iframe {
+   width: 100% !important;
+   height: 100% !important;
+   border: none !important;
+   display: block !important;
+}
+
+/* Hide admin bar on this page */
+.trvlr-payment-confirmation-page #wpadminbar {
+   display: none !important;
+}
+
+.trvlr-payment-confirmation-page.admin-bar .trvlr-payment-wrapper {
+   top: 0 !important;
+}
