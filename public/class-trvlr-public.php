@@ -31,33 +31,15 @@ class Trvlr_Public
 
 	/**
 	 * Output CSS variables from theme settings
+	 * Uses Trvlr_Theme_Config for consistency
 	 */
 	public function output_theme_css_variables()
 	{
-		$settings = get_option('trvlr_theme_settings', array());
-
-		if (empty($settings)) {
-			return;
-		}
+		$user_settings = get_option('trvlr_theme_settings', array());
+		$settings = Trvlr_Theme_Config::merge_with_defaults($user_settings);
 
 		echo '<style id="trvlr-theme-variables">:root{';
-
-		if (!empty($settings['primaryColor'])) echo '--trvlr-primary-color:' . esc_attr($settings['primaryColor']) . ';';
-		if (!empty($settings['primaryActiveColor'])) echo '--trvlr-primary-active-color:' . esc_attr($settings['primaryActiveColor']) . ';';
-		if (!empty($settings['accentColor'])) echo '--trvlr-accent-color:' . esc_attr($settings['accentColor']) . ';';
-		if (!empty($settings['textMutedColor'])) echo '--trvlr-text-muted-color:' . esc_attr($settings['textMutedColor']) . ';';
-		if (!empty($settings['headingColor'])) echo '--trvlr-heading-color:' . esc_attr($settings['headingColor']) . ';';
-		if (!empty($settings['cardBackground'])) echo '--attraction-card-background:' . esc_attr($settings['cardBackground']) . ';';
-		if (isset($settings['headingLetterSpacing'])) echo '--trvlr-heading-letter-spacing:' . floatval($settings['headingLetterSpacing']) . 'em;';
-		if (!empty($settings['attractionGridGap'])) echo '--attraction-grid-gap:' . intval($settings['attractionGridGap']) . 'px;';
-		if (!empty($settings['attractionGridRowGap'])) echo '--attraction-grid-row-gap:' . intval($settings['attractionGridRowGap']) . 'px;';
-		if (isset($settings['cardPadding'])) echo '--attraction-card-padding:' . intval($settings['cardPadding']) . 'px;';
-		if (!empty($settings['cardBorderRadius'])) echo '--attraction-card-border-radius:' . intval($settings['cardBorderRadius']) . 'px;';
-		if (!empty($settings['cardImageBorderRadius'])) echo '--attraction-card-image-border-radius:' . intval($settings['cardImageBorderRadius']) . 'px;';
-		if (!empty($settings['popularBadgeColor'])) echo '--attraction-card-popular-badge-color:' . esc_attr($settings['popularBadgeColor']) . ';';
-		if (!empty($settings['popularBadgeBackground'])) echo '--attraction-card-popular-badge-background:' . esc_attr($settings['popularBadgeBackground']) . ';';
-		if (!empty($settings['popularBadgeFontSize'])) echo '--attraction-card-popular-badge-font-size:' . intval($settings['popularBadgeFontSize']) . 'px;';
-
+		echo esc_attr(Trvlr_Theme_Config::generate_css_variables($settings));
 		echo '}</style>';
 	}
 

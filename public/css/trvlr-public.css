@@ -384,7 +384,6 @@ body {
    display: flex;
    flex-direction: column;
    justify-content: stretch;
-   width: 100%;
    background: var(--attraction-card-background);
    border-radius: var(--attraction-card-border-radius);
    padding: var(--attraction-card-padding);

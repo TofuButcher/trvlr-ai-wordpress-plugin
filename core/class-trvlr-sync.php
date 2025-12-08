@@ -11,7 +11,11 @@ class Trvlr_Sync
 {
     public function sync_all()
     {
-        Trvlr_Logger::log('sync_start', 'Sync initiated', array('user_id' => get_current_user_id()));
+        // Generate unique session ID for this sync
+        $session_id = 'sync_' . date('YmdHis') . '_' . substr(md5(uniqid()), 0, 8);
+        $GLOBALS['trvlr_current_sync_session'] = $session_id;
+
+        Trvlr_Logger::log('sync_start', 'Sync initiated', array('user_id' => get_current_user_id()), $session_id);
 
         $created = 0;
         $updated = 0;
@@ -73,9 +77,12 @@ class Trvlr_Sync
             'updated' => $updated,
             'skipped' => $skipped,
             'errors' => $errors
-        ));
+        ), $session_id);
 
         Trvlr_Notifier::notify_sync_complete($created, $updated, $skipped, $errors);
+
+        // Clean up session global
+        unset($GLOBALS['trvlr_current_sync_session']);
     }
 
     private function update_attraction_post($data)

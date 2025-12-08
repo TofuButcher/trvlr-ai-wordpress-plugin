@@ -39,12 +39,21 @@ class Trvlr_Logger
 				log_type varchar(50) NOT NULL,
 				message text NOT NULL,
 				details longtext,
+				sync_session_id varchar(50),
 				created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
 				user_id bigint(20) DEFAULT 0 NOT NULL,
-				PRIMARY KEY (id)
+				PRIMARY KEY (id),
+				KEY sync_session_id (sync_session_id)
 			) $charset_collate;";
 			
 			dbDelta($sql);
+		} else {
+			// Table exists, check if sync_session_id column exists
+			$column_exists = $wpdb->get_results("SHOW COLUMNS FROM $table_name LIKE 'sync_session_id'");
+			if (empty($column_exists)) {
+				// Add the column
+				$wpdb->query("ALTER TABLE $table_name ADD COLUMN sync_session_id varchar(50) AFTER details, ADD KEY sync_session_id (sync_session_id)");
+			}
 		}
 	}
 
@@ -54,8 +63,9 @@ class Trvlr_Logger
 	 * @param string $type Log type (sync_start, sync_complete, attraction_created, etc.)
 	 * @param string $message Human-readable message
 	 * @param array $details Additional details to store as JSON
+	 * @param string|null $session_id Optional session ID for grouping related logs
 	 */
-	public static function log($type, $message, $details = array())
+	public static function log($type, $message, $details = array(), $session_id = null)
 	{
 		// Ensure table exists before logging
 		self::ensure_table_exists();
@@ -63,16 +73,22 @@ class Trvlr_Logger
 		global $wpdb;
 		$table_name = self::get_table_name();
 
+		// If no session ID provided, try to get current session from global
+		if ($session_id === null) {
+			$session_id = isset($GLOBALS['trvlr_current_sync_session']) ? $GLOBALS['trvlr_current_sync_session'] : null;
+		}
+
 		$wpdb->insert(
 			$table_name,
 			array(
 				'log_type' => $type,
 				'message' => $message,
 				'details' => json_encode($details),
+				'sync_session_id' => $session_id,
 				'created_at' => current_time('mysql'),
 				'user_id' => get_current_user_id()
 			),
-			array('%s', '%s', '%s', '%s', '%d')
+			array('%s', '%s', '%s', '%s', '%s', '%d')
 		);
 
 		// Also log to PHP error log for debugging
@@ -103,6 +119,112 @@ class Trvlr_Logger
 		$sql .= " ORDER BY created_at DESC LIMIT %d";
 
 		return $wpdb->get_results($wpdb->prepare($sql, $limit));
+	}
+
+	/**
+	 * Get logs grouped by sync session
+	 * 
+	 * @param int $limit Number of sync sessions to retrieve
+	 * @return array Array of sync sessions with their logs
+	 */
+	public static function get_grouped_logs($limit = 50)
+	{
+		// Ensure table exists before querying
+		self::ensure_table_exists();
+		
+		global $wpdb;
+		$table_name = self::get_table_name();
+
+		// Get distinct sync sessions (ordered by most recent)
+		$sessions = $wpdb->get_results($wpdb->prepare(
+			"SELECT DISTINCT sync_session_id, MIN(created_at) as started_at, MAX(created_at) as completed_at
+			FROM {$table_name}
+			WHERE sync_session_id IS NOT NULL
+			GROUP BY sync_session_id
+			ORDER BY started_at DESC
+			LIMIT %d",
+			$limit
+		));
+
+		$grouped = array();
+
+		foreach ($sessions as $session) {
+			// Get all logs for this session
+			$logs = $wpdb->get_results($wpdb->prepare(
+				"SELECT * FROM {$table_name}
+				WHERE sync_session_id = %s
+				ORDER BY created_at ASC",
+				$session->sync_session_id
+			));
+
+			// Calculate session summary
+			$created_count = 0;
+			$updated_count = 0;
+			$skipped_count = 0;
+			$error_count = 0;
+			$status = 'completed';
+
+			foreach ($logs as $log) {
+				switch ($log->log_type) {
+					case 'attraction_created':
+						$created_count++;
+						break;
+					case 'attraction_updated':
+						$updated_count++;
+						break;
+					case 'attraction_skipped':
+						$skipped_count++;
+						break;
+					case 'error':
+						$error_count++;
+						$status = 'error';
+						break;
+				}
+			}
+
+			$grouped[] = array(
+				'session_id' => $session->sync_session_id,
+				'started_at' => $session->started_at,
+				'completed_at' => $session->completed_at,
+				'status' => $status,
+				'summary' => array(
+					'created' => $created_count,
+					'updated' => $updated_count,
+					'skipped' => $skipped_count,
+					'errors' => $error_count,
+					'total' => count($logs)
+				),
+				'logs' => $logs
+			);
+		}
+
+		// Also get logs without a session ID (legacy or standalone logs)
+		$standalone_logs = $wpdb->get_results($wpdb->prepare(
+			"SELECT * FROM {$table_name}
+			WHERE sync_session_id IS NULL
+			ORDER BY created_at DESC
+			LIMIT %d",
+			$limit
+		));
+
+		if (!empty($standalone_logs)) {
+			$grouped[] = array(
+				'session_id' => null,
+				'started_at' => null,
+				'completed_at' => null,
+				'status' => 'standalone',
+				'summary' => array(
+					'created' => 0,
+					'updated' => 0,
+					'skipped' => 0,
+					'errors' => 0,
+					'total' => count($standalone_logs)
+				),
+				'logs' => $standalone_logs
+			);
+		}
+
+		return $grouped;
 	}
 
 	/**

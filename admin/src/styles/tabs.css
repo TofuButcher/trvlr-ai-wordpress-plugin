@@ -1,0 +1,50 @@
+.trvlr-settings-wrapper {
+   margin-top: 20px;
+}
+
+.trvlr-tabs-nav {
+   display: flex;
+   gap: 10px;
+}
+
+.trvlr-tab-link {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   padding: 12px 20px;
+   text-decoration: none;
+   color: #50575e;
+   border-bottom: 3px solid transparent;
+   transition: all 0.2s ease;
+   font-weight: 500;
+}
+
+.trvlr-tab-link:hover {
+   color: #2271b1;
+}
+
+.trvlr-tab-link.active {
+   color: #2271b1;
+   border-bottom-color: #2271b1;
+}
+
+.trvlr-tab-link .dashicons {
+   font-size: 18px;
+   width: 18px;
+   height: 18px;
+}
+
+.trvlr-tabs-content {
+   background: #fff;
+   padding: 20px;
+   border: 1px solid #dcdcde;
+   border-radius: 0px 4px 4px 4px;
+}
+
+.trvlr-tab-pane {
+   display: none;
+}
+
+.trvlr-tab-pane.active {
+   display: block;
+}

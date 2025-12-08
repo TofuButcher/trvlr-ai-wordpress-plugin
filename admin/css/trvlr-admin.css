@@ -5,8 +5,12 @@
 
 :root {
     --trvlr-primary: hsl(216, 79%, 39%);
+    --trvlr-primary-active: hsl(216, 79%, 30%);
     --trvlr-settings-background: hsl(0, 0%, 4%);
     --trvlr-settings-max-width: 1440px;
+
+    --wp-admin-theme-color: var(--trvlr-primary);
+    --wp-admin-theme-color-darker-10: var(--trvlr-primary-active);
 }
 
 /* === Tab System === */
@@ -94,15 +98,48 @@
     }
 }
 
-.trvlr-tab-content h2 {
+.trvlr-tab-content>h2,
+.trvlr-settings-page-header>h2 {
     margin: 0;
     padding: 0;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.6;
+    margin: 0;
+    color: hsl(0, 0%, 2%);
+    text-transform: uppercase;
 }
 
-.trvlr-tabs-content .description {
-    padding-bottom: 10px;
+.trvlr-tab-content>.description,
+.trvlr-settings-page-header>p {
+    margin-top: 0;
+    margin-bottom: 24px;
+    padding-bottom: 24px;
     width: 100%;
     border-bottom: 1px solid #e0e0e0;
+}
+
+.trvlr-settings-section-spacer {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+.trvlr-settings-form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.trvlr-settings-form .components-base-control {
+    width: 100%;
+}
+
+.trvlr-settings-checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .trvlr-sync-section {
@@ -171,19 +208,6 @@ h1.trvlr-title {
 
 .trvlr-content {
     padding: 10px 60px;
-}
-
-.trvlr-content h2 {
-    font-size: 28px;
-    font-weight: 700;
-    line-height: 1.6;
-    margin: 0;
-    color: hsl(0, 0%, 2%);
-    text-transform: uppercase;
-}
-
-.trvlr-content p {
-    margin-bottom: 24px;
 }
 
 .trvlr-separator {
@@ -464,4 +488,138 @@ h1.trvlr-title {
     padding: 20px;
     margin-top: 55px;
     border: 1px solid #e0e0e0;
+}
+
+/* Status Badges */
+.trvlr-status-badge {
+    display: flex;
+    align-items: center;
+    background: var(--trvlr-status-color, #444);
+    color: #fff;
+    gap: 0.5em;
+    font-size: 11px;
+    height: 24px;
+    line-height: 22px;
+    padding: 0 8px;
+}
+
+.trvlr-status-badge .dashicons {
+    color: #fff;
+    font-size: 1.2em;
+    height: 1em;
+    width: 1em;
+}
+
+.trvlr-status-success {
+    --trvlr-status-color: #00a32a;
+}
+
+.trvlr-status-error {
+    --trvlr-status-color: #d63638;
+}
+
+.trvlr-status-info {
+    --trvlr-status-color: #666;
+}
+
+/* === Logs Page === */
+.trvlr-logs-settings .trvlr-sync-sessions {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.trvlr-sync-session {
+    border: 1px solid #ddd;
+}
+
+.trvlr-session-header {
+    user-select: none;
+}
+
+.trvlr-session-header:hover {
+    background: #f9f9f9;
+}
+
+.trvlr-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.trvlr-badge-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.trvlr-badge-error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.trvlr-badge-info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.trvlr-log-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.trvlr-log-badge-info {
+    background: #e8f4f8;
+    color: #0073aa;
+}
+
+.trvlr-log-badge-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.trvlr-log-badge-created {
+    background: #cfe2ff;
+    color: #084298;
+}
+
+.trvlr-log-badge-updated {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.trvlr-log-badge-skipped {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.trvlr-log-badge-error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.trvlr-log-badge-system {
+    background: #f8f9fa;
+    color: #6c757d;
+}
+
+.trvlr-log-badge-default {
+    background: #f0f0f1;
+    color: #50575e;
+}
+
+.trvlr-session-logs table {
+    margin: 0;
+}
+
+.trvlr-session-logs table th,
+.trvlr-session-logs table td {
+    padding: 8px 10px;
 }

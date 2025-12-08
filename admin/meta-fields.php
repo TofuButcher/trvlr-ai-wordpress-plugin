@@ -268,12 +268,17 @@ function trvlr_save_details_meta( $post_id ) {
         update_post_meta( $post_id, 'trvlr_is_on_sale', isset( $_POST['trvlr_is_on_sale'] ) ? '1' : '0' );
         
         // Media Gallery
-        if ( isset( $_POST['trvlr_media'] ) && is_array( $_POST['trvlr_media'] ) ) {
-            $media_ids = array_map( 'intval', $_POST['trvlr_media'] );
-            update_post_meta( $post_id, 'trvlr_media', $media_ids );
-        } else {
-            delete_post_meta( $post_id, 'trvlr_media' );
+        // Only update if explicitly provided in POST (don't delete if field not submitted)
+        if ( isset( $_POST['trvlr_media'] ) ) {
+            if ( is_array( $_POST['trvlr_media'] ) && !empty( $_POST['trvlr_media'] ) ) {
+                $media_ids = array_map( 'intval', $_POST['trvlr_media'] );
+                update_post_meta( $post_id, 'trvlr_media', $media_ids );
+            } else {
+                // Empty array explicitly submitted - clear the gallery
+                delete_post_meta( $post_id, 'trvlr_media' );
+            }
         }
+        // If not in POST, leave unchanged (user didn't interact with gallery field)
     }
 
     // Save Repeaters

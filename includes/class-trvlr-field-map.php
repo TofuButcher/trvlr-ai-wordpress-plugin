@@ -185,10 +185,14 @@ class Trvlr_Field_Map
 			ksort($array);
 		}
 
-		// Recursively normalize nested arrays
+		// Recursively normalize nested arrays and convert numeric strings to integers
 		foreach ($array as $key => $value) {
 			if (is_array($value)) {
 				$array[$key] = self::normalize_array($value);
+			} elseif (is_numeric($value)) {
+				// Normalize numeric strings to integers (e.g., "31" -> 31)
+				// This ensures consistency between sync (strings) and manual saves (integers)
+				$array[$key] = intval($value);
 			}
 		}
 

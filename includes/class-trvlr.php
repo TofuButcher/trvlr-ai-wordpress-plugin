@@ -117,6 +117,11 @@ class Trvlr
 		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-edit-tracker.php';
 
 		/**
+		 * The theme configuration class
+		 */
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-theme-config.php';
+
+		/**
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
 		require_once plugin_dir_path(dirname(__FILE__)) . 'admin/class-trvlr-admin.php';
@@ -125,6 +130,11 @@ class Trvlr
 		 * The class responsible for React-based admin app functionality.
 		 */
 		require_once plugin_dir_path(dirname(__FILE__)) . 'admin/class-trvlr-admin-app.php';
+
+		/**
+		 * REST API Controller for all plugin endpoints
+		 */
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-rest-api.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the public-facing side.
@@ -191,7 +201,10 @@ class Trvlr
 		$this->loader->add_action('admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts');
 		$this->loader->add_action('admin_menu', $plugin_admin, 'add_plugin_admin_menu');
 		$this->loader->add_action('admin_init', $plugin_admin, 'register_settings');
-		$this->loader->add_action('rest_api_init', $plugin_admin, 'register_theme_rest_routes');
+
+		// Register REST API routes
+		$rest_api = new Trvlr_REST_API();
+		$this->loader->add_action('rest_api_init', $rest_api, 'register_routes');
 		// Initialize Meta Boxes
 		$this->loader->add_action('admin_init', $plugin_admin, 'init_meta_boxes');
 
@@ -199,8 +212,8 @@ class Trvlr
 		$plugin_admin_app = new Trvlr_Admin_App($this->get_plugin_name(), $this->get_version());
 		$this->loader->add_action('admin_enqueue_scripts', $plugin_admin_app, 'enqueue_styles');
 		$this->loader->add_action('admin_enqueue_scripts', $plugin_admin_app, 'enqueue_scripts');
-		$this->loader->add_action('admin_menu', $plugin_admin_app, 'add_plugin_admin_menu');
-		$this->loader->add_action('admin_footer', $plugin_admin_app, 'output_admin_svg_icons');
+		// $this->loader->add_action('admin_menu', $plugin_admin_app, 'add_plugin_admin_menu');
+		// $this->loader->add_action('admin_footer', $plugin_admin_app, 'output_admin_svg_icons');
 
 		// AJAX Hooks
 		$this->loader->add_action('wp_ajax_trvlr_manual_sync', $plugin_admin, 'ajax_manual_sync');

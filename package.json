@@ -4,8 +4,8 @@
   "description": "A generalized WordPress plugin for integrating the trvlr.ai booking system into any WordPress site.",
   "main": "index.js",
   "scripts": {
-    "start": "wp-scripts start admin/src/settings-pages/theme-settings.jsx admin/src/settings-pages/setup-settings.jsx --output-path=admin/build",
-    "build": "wp-scripts build admin/src/settings-pages/theme-settings.jsx admin/src/settings-pages/setup-settings.jsx --output-path=admin/build"
+    "start": "wp-scripts start admin/src/trvlr-admin-root.jsx --output-path=admin/build",
+    "build": "wp-scripts build admin/src/trvlr-admin-root.jsx --output-path=admin/build"
   },
   "keywords": [],
   "author": "",
