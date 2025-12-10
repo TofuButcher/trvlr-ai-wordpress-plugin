@@ -10,6 +10,7 @@ import { PageHeader } from '../components/page-header';
 import { SystemStatus } from '../components/system-status';
 import { ConnectionSettingsForm } from '../settings-forms/connection-settings-form';
 import { EmailSettingsForm } from '../settings-forms/email-settings-form';
+import { PluginInstructions } from '../components/plugin-instructions';
 
 export const SetupSettings = () => {
     return (
@@ -45,6 +46,8 @@ export const SetupSettings = () => {
                         <EmailSettingsForm />
                     </CardBody>
                 </Card>
+
+                <PluginInstructions />
             </div >
         </>
     );

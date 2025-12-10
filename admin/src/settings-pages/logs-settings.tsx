@@ -219,7 +219,7 @@ export const LogsSettings = () => {
          )}
 
          {/* Actions */}
-         <Card className="trvlr-card">
+         <Card className="trvlr-card" style={{ marginBottom: '15px' }}>
             <CardBody>
                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   <Button
@@ -265,7 +265,7 @@ export const LogsSettings = () => {
 
                   return (
                      <Card key={sessionKey} className="trvlr-card trvlr-sync-session">
-                        <CardBody>
+                        <CardBody style={{ padding: '8px 12px' }}>
                            <div
                               className="trvlr-session-header"
                               onClick={() => toggleSession(sessionKey)}

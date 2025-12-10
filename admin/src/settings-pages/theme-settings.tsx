@@ -132,7 +132,7 @@ export const ThemeSettings = () => {
             </div>
 
             {/* Live Preview (Sticky) */}
-            <div style={{ position: 'sticky', top: '20px' }}>
+            <div style={{ position: 'sticky', top: '40px' }}>
                <h3 style={{ marginTop: 0 }}>{__('Live Preview', 'trvlr')}</h3>
                <div id="trvlr-preview-card" style={{ display: 'flex' }}>
                   <AttractionCardPreview />

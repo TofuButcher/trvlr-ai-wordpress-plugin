@@ -132,6 +132,17 @@
     gap: 20px;
 }
 
+.trvlr-settings-form-heading {
+    margin: 0;
+    margin-bottom: 8px;
+}
+
+.trvlr-settings-form-description {
+    margin: 0;
+    margin-bottom: 20px;
+    color: #666;
+}
+
 .trvlr-settings-form .components-base-control {
     width: 100%;
 }
@@ -529,16 +540,14 @@ h1.trvlr-title {
     gap: 15px;
 }
 
-.trvlr-sync-session {
-    border: 1px solid #ddd;
-}
-
 .trvlr-session-header {
     user-select: none;
+    padding: 6px 10px;
+    border-radius: 8px;
 }
 
 .trvlr-session-header:hover {
-    background: #f9f9f9;
+    background: #fafafa;
 }
 
 .trvlr-badge {
