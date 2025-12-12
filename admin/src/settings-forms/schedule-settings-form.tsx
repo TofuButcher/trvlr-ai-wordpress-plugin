@@ -50,13 +50,14 @@ export const ScheduleSettingsForm = () => {
          )}
 
          <ToggleControl
+            style={{ marginBottom: '0px' }}
             label={__('Enable automatic synchronization', 'trvlr')}
             checked={scheduleEnabled}
             onChange={setScheduleEnabled}
          />
 
          {scheduleEnabled && nextSync && (
-            <div style={{ marginTop: '20px', marginBottom: '15px', padding: '10px', background: '#f0f0f1', borderRadius: '4px' }}>
+            <div style={{ padding: '10px', background: '#f0f0f1', borderRadius: '4px' }}>
                <strong>{__('Next sync scheduled for:', 'trvlr')}</strong> {nextSync}
             </div>
          )}

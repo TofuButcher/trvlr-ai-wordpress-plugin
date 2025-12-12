@@ -129,7 +129,7 @@ class Trvlr
 		/**
 		 * The class responsible for React-based admin app functionality.
 		 */
-		require_once plugin_dir_path(dirname(__FILE__)) . 'admin/class-trvlr-admin-app.php';
+		// require_once plugin_dir_path(dirname(__FILE__)) . 'admin/class-trvlr-admin-app.php';
 
 		/**
 		 * REST API Controller for all plugin endpoints
@@ -207,13 +207,6 @@ class Trvlr
 		$this->loader->add_action('rest_api_init', $rest_api, 'register_routes');
 		// Initialize Meta Boxes
 		$this->loader->add_action('admin_init', $plugin_admin, 'init_meta_boxes');
-
-		// React-based admin app
-		$plugin_admin_app = new Trvlr_Admin_App($this->get_plugin_name(), $this->get_version());
-		$this->loader->add_action('admin_enqueue_scripts', $plugin_admin_app, 'enqueue_styles');
-		$this->loader->add_action('admin_enqueue_scripts', $plugin_admin_app, 'enqueue_scripts');
-		// $this->loader->add_action('admin_menu', $plugin_admin_app, 'add_plugin_admin_menu');
-		// $this->loader->add_action('admin_footer', $plugin_admin_app, 'output_admin_svg_icons');
 
 		// AJAX Hooks
 		$this->loader->add_action('wp_ajax_trvlr_manual_sync', $plugin_admin, 'ajax_manual_sync');

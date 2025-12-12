@@ -214,13 +214,13 @@ export const themeConfig: ThemeGroupConfig[] = [
  */
 export function getThemeDefaults(): Record<string, string | number> {
    const defaults: Record<string, string | number> = {};
-   
+
    themeConfig.forEach(group => {
       group.fields.forEach(field => {
          defaults[field.key] = field.default;
       });
    });
-   
+
    return defaults;
 }
 
@@ -243,13 +243,13 @@ export function getFieldConfig(key: string): ThemeFieldConfig | undefined {
  */
 export function generateCSSVariables(settings: Record<string, string | number>): string {
    let css = ':root {\n';
-   
+
    getAllFields().forEach(field => {
       const value = settings[field.key] ?? field.default;
       const unit = field.unit || '';
       css += `  ${field.cssVar}: ${value}${unit};\n`;
    });
-   
+
    css += '}';
    return css;
 }
@@ -258,9 +258,14 @@ export function generateCSSVariables(settings: Record<string, string | number>):
  * Merge user settings with defaults
  */
 export function mergeWithDefaults(userSettings: Partial<Record<string, string | number>>): Record<string, string | number> {
+   const defaults = getThemeDefaults();
+   const filtered = Object.fromEntries(
+      Object.entries(userSettings).filter(([_, value]) => value !== undefined)
+   ) as Record<string, string | number>;
+
    return {
-      ...getThemeDefaults(),
-      ...userSettings,
+      ...defaults,
+      ...filtered,
    };
 }
 

@@ -3,7 +3,6 @@ import { SetupSettings } from './setup-settings';
 import { ThemeSettings } from './theme-settings';
 import { SyncSettings } from './sync-settings';
 import { LogsSettings } from './logs-settings';
-import '../styles/tabs.css';
 
 interface Tab {
    key: string;

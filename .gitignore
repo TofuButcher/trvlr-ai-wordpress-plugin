@@ -1,6 +1,10 @@
 /node_modules
-/todo.md
+*.md
+
 /admin/build/*.js
 /admin/build/*.js.map
+/admin/build/*.css
+/admin/build/*.css.map
 /admin/build/*.asset.php
+/admin/build/*
 package-lock.json
