@@ -1,0 +1,77 @@
+/*!*******************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/@wordpress/scripts/node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[4].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[4].use[2]!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[4].use[3]!./public/src/styles/trvlr-single-attraction.scss ***!
+  \*******************************************************************************************************************************************************************************************************************************************************************************************************/
+/**
+* ----------------------------------------
+* Single Attraction Template Styles
+* ----------------------------------------
+*/
+.trvlr-single-attraction__section {
+  padding-left: 24px;
+  padding-right: 24px;
+}
+.trvlr-single-attraction__inner {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1340px;
+  margin: 0 auto;
+  -moz-column-gap: 30px;
+       column-gap: 30px;
+  padding: 40px 0;
+}
+.trvlr-single-attraction__columns {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 450px;
+  -moz-column-gap: 60px;
+       column-gap: 60px;
+}
+.trvlr-single-attraction__main {
+  overflow: hidden;
+}
+.trvlr-single-attraction__main > * {
+  margin-bottom: 20px;
+}
+.trvlr-single-attraction__main > *:last-child {
+  margin-bottom: 0;
+}
+.trvlr-single-attraction__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+.trvlr-single-attraction__sidebar-inner {
+  position: sticky;
+  top: 40px;
+  height: -moz-fit-content;
+  height: fit-content;
+  border-radius: 10px;
+  padding: 16px;
+  border: 1px solid #ddd;
+}
+.trvlr-single-attraction__sidebar-inner > * {
+  margin-bottom: 10px;
+}
+.trvlr-single-attraction__sidebar-inner > *:last-child {
+  margin-bottom: 0;
+}
+.trvlr-single-attraction__sidebar iframe {
+  width: 100% !important;
+}
+.trvlr-single-attraction .trvlr-back-link {
+  margin-bottom: 30px;
+}
+.trvlr-single-attraction .trvlr-title {
+  font-size: 52px;
+  line-height: 1.1;
+  font-weight: 700;
+  margin: 0;
+  margin-bottom: 20px;
+}
+.trvlr-single-attraction .trvlr-media {
+  margin-bottom: 20px;
+}
+
+/*# sourceMappingURL=trvlr-single-attraction.css.map*/

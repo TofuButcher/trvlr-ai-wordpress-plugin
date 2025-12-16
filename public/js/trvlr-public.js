@@ -3,10 +3,10 @@
 
 	$(document).ready(function () {
 		// Initialize Splide galleries
-		$('.attraction-slider__wrap').each(function () {
+		$('.trvlr-gallery--slider').each(function () {
 			var $wrap = $(this);
-			var $main = $wrap.find('.attraction-slider').not('.attraction-slider__controls');
-			var $nav = $wrap.find('.attraction-slider__controls');
+			var $main = $wrap.find('.trvlr-gallery__main');
+			var $nav = $wrap.find('.trvlr-gallery__nav');
 
 			if ($main.length && $nav.length && typeof Splide !== 'undefined') {
 
@@ -48,7 +48,7 @@
 				navSlider.mount();
 			}
 		});
-		const simpleAccordions = document.querySelectorAll('.simple-accordion');
+		const simpleAccordions = document.querySelectorAll('.trvlr-accordion');
 		simpleAccordions.forEach(accordion => {
 			new SimpleAccordion(accordion);
 		});
@@ -76,11 +76,11 @@ class SimpleAccordion {
 	}
 
 	init() {
-		const items = this.accordion.querySelectorAll('.accordion__item');
+		const items = this.accordion.querySelectorAll('.trvlr-accordion__item');
 
 		items.forEach((item, index) => {
-			const trigger = item.querySelector('.accordion__trigger');
-			const content = item.querySelector('.accordion__content');
+			const trigger = item.querySelector('.trvlr-accordion__trigger');
+			const content = item.querySelector('.trvlr-accordion__content');
 
 			if (!trigger || !content) return;
 
@@ -104,8 +104,8 @@ class SimpleAccordion {
 	setupItem(accordionItem) {
 		const { trigger, content, index } = accordionItem;
 
-		const triggerId = trigger.id || `accordion__trigger-${index}`;
-		const contentId = content.id || `accordion__content-${index}`;
+		const triggerId = trigger.id || `trvlr-accordion__trigger-${index}`;
+		const contentId = content.id || `trvlr-accordion__content-${index}`;
 
 		trigger.id = triggerId;
 		content.id = contentId;

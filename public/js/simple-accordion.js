@@ -17,11 +17,11 @@ class SimpleAccordion {
    }
 
    init() {
-      const items = this.accordion.querySelectorAll('.accordion__item');
+      const items = this.accordion.querySelectorAll('.trvlr-accordion__item');
 
       items.forEach((item, index) => {
-         const trigger = item.querySelector('.accordion__trigger');
-         const content = item.querySelector('.accordion__content');
+         const trigger = item.querySelector('.trvlr-accordion__trigger');
+         const content = item.querySelector('.trvlr-accordion__content');
 
          if (!trigger || !content) return;
 

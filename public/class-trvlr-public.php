@@ -25,8 +25,11 @@ class Trvlr_Public
 	public function enqueue_styles()
 	{
 		wp_enqueue_style($this->plugin_name, plugin_dir_url(__FILE__) . 'css/trvlr-public.css', array(), $this->version, 'all');
+
+		wp_enqueue_style('trvlr-cards-styles', plugin_dir_url(__FILE__) . 'css/trvlr-cards.css', array(), $this->version, 'all');
+		wp_enqueue_style('trvlr-single-attraction-styles', plugin_dir_url(__FILE__) . 'css/trvlr-single-attraction.css', array(), $this->version, 'all');
+
 		wp_enqueue_style('splide', plugin_dir_url(__FILE__) . 'dist/splide.min.css', array(), '4.1.3', 'all');
-		wp_enqueue_style('trvlr-modal-styles', plugin_dir_url(__FILE__) . 'css/trvlr-modal-styles.css', array(), $this->version, 'all');
 	}
 
 	/**
@@ -44,7 +47,7 @@ class Trvlr_Public
 	}
 
 	/**
-	 * Load custom template for single attractions
+	 * Load custom template for single attractions and archives
 	 */
 	public function load_attraction_template($template)
 	{
@@ -54,6 +57,30 @@ class Trvlr_Public
 				return $plugin_template;
 			}
 		}
+
+		if (is_post_type_archive('trvlr_attraction') || is_tax()) {
+			$is_trvlr_archive = false;
+
+			if (is_post_type_archive('trvlr_attraction')) {
+				$is_trvlr_archive = true;
+			} else {
+				$queried_object = get_queried_object();
+				if ($queried_object && isset($queried_object->taxonomy)) {
+					$taxonomy = get_taxonomy($queried_object->taxonomy);
+					if ($taxonomy && in_array('trvlr_attraction', $taxonomy->object_type)) {
+						$is_trvlr_archive = true;
+					}
+				}
+			}
+
+			if ($is_trvlr_archive) {
+				$plugin_template = plugin_dir_path(__FILE__) . 'partials/taxonomy.php';
+				if (file_exists($plugin_template)) {
+					return $plugin_template;
+				}
+			}
+		}
+
 		return $template;
 	}
 

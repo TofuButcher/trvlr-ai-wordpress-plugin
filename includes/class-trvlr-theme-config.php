@@ -228,4 +228,3 @@ class Trvlr_Theme_Config
 		return $fields;
 	}
 }
-

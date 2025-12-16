@@ -7,4 +7,7 @@
 /admin/build/*.css.map
 /admin/build/*.asset.php
 /admin/build/*
+
+/public/partials/dev-*
+/public/partials/taxonomy.php
 package-lock.json

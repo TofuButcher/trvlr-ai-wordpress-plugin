@@ -252,7 +252,6 @@ class Trvlr
 		// Theme CSS Variables
 		$this->loader->add_action('wp_head', $plugin_public, 'output_theme_css_variables');
 
-		// Data Formatters
 		$this->loader->add_filter('trvlr_duration', $plugin_public, 'filter_trvlr_duration', 10, 2);
 		$this->loader->add_filter('trvlr_start_time', $plugin_public, 'filter_trvlr_time', 10, 2);
 		$this->loader->add_filter('trvlr_end_time', $plugin_public, 'filter_trvlr_time', 10, 2);

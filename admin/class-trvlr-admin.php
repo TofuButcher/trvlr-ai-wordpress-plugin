@@ -54,6 +54,7 @@ class Trvlr_Admin
 
 		if ($screen && $screen->id === 'toplevel_page_trvlr_settings') {
 			wp_enqueue_style('trvlr-public', plugin_dir_url(dirname(__FILE__)) . 'public/css/trvlr-public.css', array(), $this->version, 'all');
+			wp_enqueue_style('trvlr-cards', plugin_dir_url(dirname(__FILE__)) . 'public/css/trvlr-cards.css', array(), $this->version, 'all');
 		}
 	}
 
