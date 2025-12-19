@@ -30,6 +30,8 @@ body {
 
    &-back-link {
       display: flex;
+      justify-content: flex-start;
+      align-items: center;
       font-size: 18px;
       color: var(--trvlr-primary-color);
       font-weight: 600;
@@ -67,13 +69,14 @@ body {
       align-items: center;
       gap: 10px;
       font-weight: 500;
-      font-size: 16px;
 
       &__badge {
          display: flex;
+         width: fit-content;
          background: var(--trvlr-accent-color);
          letter-spacing: var(--trvlr-heading-letter-spacing);
          color: #000;
+         font-size: 16px;
          padding: 4px 10px;
          border-radius: 50px;
          font-size: 12px;
@@ -83,6 +86,7 @@ body {
 
       &__description {
          font-weight: 500;
+         font-size: 16px;
       }
    }
 
@@ -96,7 +100,8 @@ body {
          display: flex;
          flex-direction: row;
          align-items: stretch;
-         height: 400px;
+         // height: 400px;
+         aspect-ratio: 2;
       }
 
       &__main {

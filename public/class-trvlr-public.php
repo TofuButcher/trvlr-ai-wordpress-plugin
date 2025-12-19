@@ -12,11 +12,31 @@ class Trvlr_Public
 
 	private $plugin_name;
 	private $version;
+	private $dev_instance;
 
 	public function __construct($plugin_name, $version)
 	{
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
+		$this->init_dev_environment();
+	}
+
+	/**
+	 * Initialize dev environment if dev class exists
+	 */
+	private function init_dev_environment()
+	{
+
+		$dev_class_file = TRVLR_PLUGIN_DIR . '~dev/dev-class-trvlr-public.php';
+
+		if (file_exists($dev_class_file)) {
+			require_once $dev_class_file;
+
+			if (class_exists('Trvlr_Public_Dev')) {
+				$this->dev_instance = new Trvlr_Public_Dev($this->plugin_name, $this->version, $this);
+				$this->dev_instance->init();
+			}
+		}
 	}
 
 	/**
@@ -47,7 +67,7 @@ class Trvlr_Public
 	}
 
 	/**
-	 * Load custom template for single attractions and archives
+	 * Load custom template for single attractions
 	 */
 	public function load_attraction_template($template)
 	{
@@ -55,29 +75,6 @@ class Trvlr_Public
 			$plugin_template = plugin_dir_path(__FILE__) . 'partials/single-trvlr_attraction.php';
 			if (file_exists($plugin_template)) {
 				return $plugin_template;
-			}
-		}
-
-		if (is_post_type_archive('trvlr_attraction') || is_tax()) {
-			$is_trvlr_archive = false;
-
-			if (is_post_type_archive('trvlr_attraction')) {
-				$is_trvlr_archive = true;
-			} else {
-				$queried_object = get_queried_object();
-				if ($queried_object && isset($queried_object->taxonomy)) {
-					$taxonomy = get_taxonomy($queried_object->taxonomy);
-					if ($taxonomy && in_array('trvlr_attraction', $taxonomy->object_type)) {
-						$is_trvlr_archive = true;
-					}
-				}
-			}
-
-			if ($is_trvlr_archive) {
-				$plugin_template = plugin_dir_path(__FILE__) . 'partials/taxonomy.php';
-				if (file_exists($plugin_template)) {
-					return $plugin_template;
-				}
 			}
 		}
 
@@ -169,6 +166,7 @@ class Trvlr_Public
 		</div>
 		<script>
 			(function() {
+				console.log('Payment confirmation iframe loaded');
 				window.addEventListener('message', function(event) {
 					console.log('Payment confirmation message received:', event.data);
 

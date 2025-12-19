@@ -8,6 +8,6 @@
 /admin/build/*.asset.php
 /admin/build/*
 
-/public/partials/dev-*
-/public/partials/taxonomy.php
+/~dev/
+/~docs/
 package-lock.json
