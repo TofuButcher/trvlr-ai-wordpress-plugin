@@ -141,7 +141,7 @@ export const CustomEditsForm = () => {
          )}
 
          <div style={{ overflowX: 'auto' }}>
-            <table className="wp-list-table widefat fixed striped" style={{ marginTop: '15px' }}>
+            <table className="wp-list-table widefat fixed striped">
                <thead>
                   <tr>
                      <th style={{ width: '35%' }}>{__('Attraction', 'trvlr')}</th>

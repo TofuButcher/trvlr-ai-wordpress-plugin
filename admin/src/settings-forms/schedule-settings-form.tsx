@@ -3,6 +3,7 @@ import { useState, useEffect } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button, SelectControl, ToggleControl, Notice } from '@wordpress/components';
 import { useTrvlr } from '../context/TrvlrContext';
+import { PageHeading } from '../components/page-heading';
 
 export const ScheduleSettingsForm = () => {
    const { scheduleSettings, saveScheduleSettings } = useTrvlr();
@@ -49,41 +50,50 @@ export const ScheduleSettingsForm = () => {
             </Notice>
          )}
 
-         <ToggleControl
-            style={{ marginBottom: '0px' }}
-            label={__('Enable automatic synchronization', 'trvlr')}
-            checked={scheduleEnabled}
-            onChange={setScheduleEnabled}
-         />
-
-         {scheduleEnabled && nextSync && (
-            <div style={{ padding: '10px', background: '#f0f0f1', borderRadius: '4px' }}>
-               <strong>{__('Next sync scheduled for:', 'trvlr')}</strong> {nextSync}
+         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', justifyItems: 'start', width: '100%' }}>
+            <div style={{ display: 'grid', gap: '10px', justifyItems: 'start' }}>
+               <PageHeading level={3} text={'Auto-Sync: Schedule syncs to happen automatically'} />
+               <ToggleControl
+                  style={{ marginBottom: '0px' }}
+                  label={__('Enable automatic synchronization', 'trvlr')}
+                  checked={scheduleEnabled}
+                  onChange={setScheduleEnabled}
+               />
+               <Button
+                  variant="primary"
+                  onClick={handleSave}
+                  isBusy={saving}
+                  disabled={saving}
+               >
+                  {__('Save Schedule Settings', 'trvlr')}
+               </Button>
             </div>
-         )}
 
-         <SelectControl
-            label={__('Sync Frequency', 'trvlr')}
-            value={scheduleFrequency}
-            onChange={setScheduleFrequency}
-            disabled={!scheduleEnabled}
-            options={[
-               { label: __('Hourly', 'trvlr'), value: 'hourly' },
-               { label: __('Twice Daily', 'trvlr'), value: 'twicedaily' },
-               { label: __('Daily', 'trvlr'), value: 'daily' },
-               { label: __('Weekly', 'trvlr'), value: 'weekly' },
-            ]}
-            help={__('How often should attractions be synced automatically?', 'trvlr')}
-         />
-
-         <Button
-            variant="primary"
-            onClick={handleSave}
-            isBusy={saving}
-            disabled={saving}
-         >
-            {__('Save Schedule Settings', 'trvlr')}
-         </Button>
+            {scheduleEnabled && (
+               <div style={{ display: 'grid', gap: '10px' }}>
+                  <PageHeading level={3} text={'Select auto-sync frequency'} />
+                  <SelectControl
+                     label={__('Sync Frequency', 'trvlr')}
+                     value={scheduleFrequency}
+                     onChange={setScheduleFrequency}
+                     disabled={!scheduleEnabled}
+                     options={[
+                        { label: __('Hourly', 'trvlr'), value: 'hourly' },
+                        { label: __('Twice Daily', 'trvlr'), value: 'twicedaily' },
+                        { label: __('Daily', 'trvlr'), value: 'daily' },
+                        { label: __('Weekly', 'trvlr'), value: 'weekly' },
+                     ]}
+                  />
+                  {
+                     nextSync && (
+                        <div style={{ padding: '10px', background: '#f0f0f1', borderRadius: '4px' }}>
+                           <strong>{__('Next sync scheduled for:', 'trvlr')}</strong> {nextSync}
+                        </div>
+                     )
+                  }
+               </div>
+            )}
+         </div>
       </div>
    );
 };

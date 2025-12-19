@@ -3,7 +3,7 @@ import { useState, useEffect } from '@wordpress/element';
 import { Panel, PanelBody, Button } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { useTrvlr } from '../context/TrvlrContext';
-import { PageHeader } from '../components/page-header';
+import { PageHeading } from '../components/page-heading';
 import { ThemeField } from '../components/theme-field';
 import { AttractionCardPreview } from '../components/theme-preview';
 import { themeConfig, getThemeDefaults, mergeWithDefaults, getAllFields } from '../config/themeConfig';
@@ -60,31 +60,11 @@ export const ThemeSettings = () => {
    };
 
    return (
-      <div className="trvlr-theme-settings">
-         <PageHeader
-            title={__('Theme Customization', 'trvlr')}
-            description={__('Customize the appearance of your TRVLR attractions. All changes use CSS variables for easy theme integration.', 'trvlr')}
-         />
-
-         <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-            <Button
-               variant="primary"
-               onClick={handleSave}
-               isBusy={saving}
-               disabled={saving}
-            >
-               {saving ? __('Saving...', 'trvlr') : __('Save Settings', 'trvlr')}
-            </Button>
-            <Button
-               variant="secondary"
-               onClick={resetToDefaults}
-               disabled={saving}
-            >
-               {__('Reset to Defaults', 'trvlr')}
-            </Button>
-         </div>
-
-         <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '30px', alignItems: 'start' }}>
+      <div className="trvlr-theme-settings trvlr-settings-sidebar-wrap">
+         <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <PageHeading
+               text="Customise appearance of components"
+            />
             {/* Settings Panels */}
             <div>
                <Panel>
@@ -130,13 +110,32 @@ export const ThemeSettings = () => {
                   ))}
                </Panel>
             </div>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px', flexGrow: 1, alignItems: 'flex-end' }}>
+               <Button
+                  variant="primary"
+                  onClick={handleSave}
+                  isBusy={saving}
+                  disabled={saving}
+               >
+                  {saving ? __('Saving...', 'trvlr') : __('Save Settings', 'trvlr')}
+               </Button>
+               <Button
+                  variant="secondary"
+                  onClick={resetToDefaults}
+                  disabled={saving}
+               >
+                  {__('Reset to Defaults', 'trvlr')}
+               </Button>
+            </div>
+         </div>
 
-            {/* Live Preview (Sticky) */}
-            <div style={{ position: 'sticky', top: '40px' }}>
-               <h3 style={{ marginTop: 0 }}>{__('Live Preview', 'trvlr')}</h3>
-               <div id="trvlr-preview-card" style={{ display: 'flex' }}>
-                  <AttractionCardPreview />
-               </div>
+         {/* Live Preview (Sticky) */}
+         <div>
+            <PageHeading
+               text="Preview"
+            />
+            <div id="trvlr-preview-card" style={{ display: 'flex', position: 'sticky', top: '50px' }}>
+               <AttractionCardPreview />
             </div>
          </div>
       </div>

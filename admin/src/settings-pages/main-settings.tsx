@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from '@wordpress/element';
-import { SetupSettings } from './setup-settings';
+import { GettingsStartedSettings } from './getting-started-settings';
+import { ConnectionSettings } from './connection-settings';
 import { ThemeSettings } from './theme-settings';
 import { SyncSettings } from './sync-settings';
 import { LogsSettings } from './logs-settings';
@@ -14,10 +15,16 @@ interface Tab {
 export const MainSettings = () => {
    const tabs: Tab[] = [
       {
-         key: 'setup',
-         label: 'Setup',
+         key: 'getting-started',
+         label: 'Getting Started',
+         icon: 'dashicons-welcome-learn-more',
+         component: GettingsStartedSettings,
+      },
+      {
+         key: 'connection',
+         label: 'Connection',
          icon: 'dashicons-admin-settings',
-         component: SetupSettings,
+         component: ConnectionSettings,
       },
       {
          key: 'theme',

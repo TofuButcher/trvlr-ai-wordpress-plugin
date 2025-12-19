@@ -3,7 +3,7 @@ import { useState, useEffect } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button, Card, CardBody, Notice, } from '@wordpress/components';
 import { useTrvlr } from '../context/TrvlrContext';
-import { PageHeader } from '../components/page-header';
+import { PageHeading } from '../components/page-heading';
 import apiFetch from '@wordpress/api-fetch';
 
 declare global {
@@ -192,9 +192,8 @@ export const LogsSettings = () => {
    if (loading) {
       return (
          <div className="trvlr-logs-settings">
-            <PageHeader
-               title={__('Logs', 'trvlr')}
-               description={__('View sync history and system events.', 'trvlr')}
+            <PageHeading
+               text={'TRVLR Wordpress Manager Logs'}
             />
             <p>{__('Loading logs...', 'trvlr')}</p>
          </div>
@@ -203,9 +202,8 @@ export const LogsSettings = () => {
 
    return (
       <div className="trvlr-logs-settings">
-         <PageHeader
-            title={__('Logs', 'trvlr')}
-            description={__('View sync history and system events.', 'trvlr')}
+         <PageHeading
+            text={'TRVLR Wordpress Manager Logs'}
          />
 
          {message && (
