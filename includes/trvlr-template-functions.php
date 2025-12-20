@@ -17,7 +17,7 @@ function trvlr_duration($post_id = null)
 	$post_id = $post_id ?: get_the_ID();
 	$duration = get_trvlr_duration($post_id);
 
-	if (!$duration) {
+	if (!$duration || $duration === '0' || $duration === '0-0-0') {
 		return '';
 	}
 
@@ -54,6 +54,32 @@ function trvlr_sale($post_id = null)
 	</div>
 <?php
 	return apply_filters('trvlr_sale', ob_get_clean(), $post_id);
+}
+
+function trvlr_popular_badge($post_id = null)
+{
+	$post_id = $post_id ?: get_the_ID();
+	$attraction_tags = get_trvlr_attraction_tags($post_id);
+
+	$is_popular = false;
+	if (is_array($attraction_tags)) {
+		foreach ($attraction_tags as $term) {
+			if (is_object($term) && isset($term->slug) && $term->slug === 'popular') {
+				$is_popular = true;
+				break;
+			}
+		}
+	}
+
+	if ($is_popular) {
+		return '<div class="trvlr-popular-badge">
+			<svg class="trvlr-icon trvlr-popular-badge__icon">
+				<use href="#icon-star"></use>
+			</svg>
+			<span class="trvlr-popular-badge__text">Popular</span>
+		</div>';
+	}
+	return '';
 }
 
 function trvlr_sale_badge($post_id = null)
@@ -367,13 +393,8 @@ function trvlr_card($post_id = null)
 		<div class="trvlr-card__image-wrap">
 			<?php if (has_post_thumbnail($post_id)) : ?>
 				<?php echo get_the_post_thumbnail($post_id, 'medium', array('class' => 'trvlr-card__image')); ?>
+				<?php echo trvlr_popular_badge($post_id); ?>
 			<?php endif; ?>
-			<div class="trvlr-popular-badge">
-				<svg class="trvlr-icon trvlr-popular-badge__icon">
-					<use href="#icon-star"></use>
-				</svg>
-				<span class="trvlr-popular-badge__text">Popular</span>
-			</div>
 		</div>
 		<div class="trvlr-card__content">
 			<h3 class="trvlr-title trvlr-card__title">
@@ -428,7 +449,7 @@ function trvlr_cards($args = array())
 	} else {
 		$defaults = array(
 			'post_type' => 'trvlr_attraction',
-			'posts_per_page' => -1,
+			'posts_per_page' => 16,
 			'post_status' => 'publish',
 		);
 

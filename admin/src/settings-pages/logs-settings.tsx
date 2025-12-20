@@ -217,7 +217,7 @@ export const LogsSettings = () => {
          )}
 
          {/* Actions */}
-         <Card className="trvlr-card" style={{ marginBottom: '15px' }}>
+         <Card style={{ marginBottom: '15px' }}>
             <CardBody>
                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   <Button
@@ -262,7 +262,7 @@ export const LogsSettings = () => {
                   const isExpanded = expandedSessions.has(sessionKey);
 
                   return (
-                     <Card key={sessionKey} className="trvlr-card trvlr-sync-session">
+                     <Card key={sessionKey} className="trvlr-sync-session">
                         <CardBody style={{ padding: '8px 12px' }}>
                            <div
                               className="trvlr-session-header"

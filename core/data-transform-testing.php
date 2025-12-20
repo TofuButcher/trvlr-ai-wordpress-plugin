@@ -81,6 +81,7 @@ $field_map = array(
    'trvlr_end_time' => array('label' => 'End Time', 'api_key' => 'end_time', 'type' => 'text'),
    'trvlr_pricing' => array('label' => 'Pricing', 'api_key' => 'pricing', 'type' => 'array'),
    'trvlr_locations' => array('label' => 'Locations', 'api_key' => 'location', 'type' => 'complex'),
+   'trvlr_attraction_tags' => array('label' => 'Attraction Tags', 'api_key' => 'attraction_type', 'type' => 'array'),
 );
 
 function prepare_for_wp_editor($content)

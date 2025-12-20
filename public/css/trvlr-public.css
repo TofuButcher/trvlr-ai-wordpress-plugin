@@ -18,6 +18,7 @@ body {
   --trvlr-accent-color: hsl(57, 100%, 50%);
   --trvlr-text-muted-color: hsl(0, 0%, 40%);
   --trvlr-heading-color: hsl(0, 0%, 0%);
+  --trvlr-text-color: hsl(0, 0%, 0%);
 }
 :root {
   --trvlr-content-width: 1426px;
@@ -325,12 +326,16 @@ body {
   line-height: 1.2;
   font-weight: 700;
 }
+.trvlr-price__value {
+  color: var(--trvlr-text-color);
+}
 .trvlr-price__type {
   font-size: 16px;
   font-weight: 400;
 }
 .trvlr-booking-calendar__iframe {
   border-radius: 8px;
+  max-width: 560px;
 }
 .trvlr-popular-badge {
   position: absolute;

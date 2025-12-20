@@ -12,14 +12,12 @@ export const ConnectionSettingsForm = () => {
    const [saveStatus, setSaveStatus] = useState(null);
 
    const [organisationId, setOrganisationId] = useState(connectionSettings.organisation_id || '');
-   const [apiKey, setApiKey] = useState(connectionSettings.api_key || '');
 
    const handleSave = async () => {
       setSaveStatus(null);
 
       const result = await saveConnectionSettings({
          organisation_id: organisationId,
-         api_key: apiKey,
       });
 
       if (result.success) {
@@ -48,13 +46,6 @@ export const ConnectionSettingsForm = () => {
             value={organisationId}
             onChange={setOrganisationId}
             help={__('Your Organisation ID from TRVLR AI.', 'trvlr')}
-         />
-         <TextControl
-            label={__('API Key', 'trvlr')}
-            value={apiKey}
-            onChange={setApiKey}
-            help={__('API Key for authentication (if required).', 'trvlr')}
-            type="password"
          />
          <Button
             variant="primary"

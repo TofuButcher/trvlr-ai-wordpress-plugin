@@ -84,4 +84,44 @@ add_action('init', function () {
 	if (isset($_GET['test']) && $_GET['test'] == 'true') {
 		require_once TRVLR_PLUGIN_DIR . 'core/data-transform-testing.php';
 	}
+
+	if (isset($_GET['temp']) && $_GET['temp'] == 'true') {
+		// Fetch all attractions, loop through the trvlr_price repeater field and get the price type for each price row.
+		// Die() and output to screen a set of all price types used on attractions.
+
+		$attractions = get_posts(array(
+			'post_type' => 'trvlr_attraction',
+			'posts_per_page' => -1,
+			'post_status' => 'publish'
+		));
+
+		$price_types = array();
+
+		foreach ($attractions as $attraction) {
+			$prices = get_post_meta($attraction->ID, 'trvlr_pricing', true);
+			$pricing = is_array($prices) ? $prices : array();
+
+			foreach ($pricing as $price) {
+				if (isset($price['type']) && !empty($price['type'])) {
+					$price_types[] = $price['type'];
+				}
+			}
+		}
+
+		$unique_price_types = array_unique($price_types);
+		sort($unique_price_types);
+
+		echo '<h2>Price Types Found on Attractions:</h2>';
+		echo '<ul>';
+		foreach ($unique_price_types as $type) {
+			echo '<li>' . esc_html($type) . '</li>';
+		}
+		echo '</ul>';
+
+		echo '<h3>Total attractions: ' . count($attractions) . '</h3>';
+		echo '<h3>Total unique price types: ' . count($unique_price_types) . '</h3>';
+		echo '<h3>Total price entries: ' . count($price_types) . '</h3>';
+
+		die();
+	}
 });

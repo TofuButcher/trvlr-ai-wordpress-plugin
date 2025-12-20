@@ -11,6 +11,6 @@ export const PageHeading = ({ text, level = 2 }: { text: string, level?: number 
    const HeadingTag = `h${level}` as keyof JSX.IntrinsicElements;
 
    return (
-      <HeadingTag className={`${level === 2 ? 'trvlr-settings-page-heading' : ''}`}>{__(text, 'trvlr')}</HeadingTag>
+      <HeadingTag className={`${level === 2 ? 'trvlr-settings-page-heading' : 'trvlr-settings-heading'}`}>{__(text, 'trvlr')}</HeadingTag>
    );
 }

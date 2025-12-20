@@ -248,6 +248,18 @@ function get_trvlr_media($post_id = null, $include_featured = true)
 	return apply_filters('trvlr_media', $media, $post_id);
 }
 
+function get_trvlr_attraction_tags($post_id = null)
+{
+	$post_id = $post_id ?: get_the_ID();
+	$terms = get_the_terms($post_id, 'trvlr_attraction_tag');
+
+	if (is_wp_error($terms) || empty($terms)) {
+		return apply_filters('trvlr_attraction_tags', array(), $post_id);
+	}
+
+	return apply_filters('trvlr_attraction_tags', $terms, $post_id);
+}
+
 function get_trvlr_attraction_advertised_price_value($post_id = null)
 {
 	return get_trvlr_advertised_price_value($post_id);

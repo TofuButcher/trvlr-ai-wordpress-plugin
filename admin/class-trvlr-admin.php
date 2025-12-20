@@ -180,8 +180,20 @@ class Trvlr_Admin
 					<path d="M9.83496 4.29285C10.2255 3.90241 10.8585 3.90236 11.249 4.29285L16.791 9.83484C16.7969 9.84072 16.8019 9.84741 16.8076 9.8534C16.8194 9.86578 16.8307 9.87851 16.8418 9.89148C16.8509 9.90206 16.8596 9.91284 16.8682 9.92371C16.879 9.93742 16.8893 9.95142 16.8994 9.9657C17.1465 10.3148 17.143 10.7848 16.8896 11.1307C16.8847 11.1375 16.8801 11.1446 16.875 11.1512C16.8612 11.1691 16.8462 11.1859 16.8311 11.203C16.8259 11.2089 16.8208 11.2148 16.8154 11.2206C16.807 11.2297 16.7999 11.2401 16.791 11.2489L11.249 16.7899C10.8585 17.1804 10.2255 17.1804 9.83496 16.7899C9.44461 16.3994 9.44449 15.7663 9.83496 15.3759L13.668 11.5419H5C4.4478 11.5419 4.00013 11.094 4 10.5419C4 9.98959 4.44772 9.54187 5 9.54187H13.6699L9.83496 5.70691C9.44444 5.31639 9.44444 4.68337 9.83496 4.29285Z" />
 				</symbol>
 			</svg>
-<?php
+		<?php
 		}
+	}
+
+	/**
+	 * Inject Google Fonts
+	 */
+	public function add_admin_google_fonts()
+	{
+		?>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Montserrat:ital,wght@0,700;1,700&family=Rethink+Sans:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
+<?php
 	}
 
 	/**
@@ -322,7 +334,6 @@ class Trvlr_Admin
 				'theme' => Trvlr_Theme_Config::merge_with_defaults(get_option('trvlr_theme_settings', array())),
 				'connection' => array(
 					'organisation_id' => get_option('trvlr_organisation_id', ''),
-					'api_key' => get_option('trvlr_api_key', ''),
 				),
 				'notifications' => get_option('trvlr_notification_settings', array()),
 			),

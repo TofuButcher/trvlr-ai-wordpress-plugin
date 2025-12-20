@@ -85,15 +85,20 @@ export const MainSettings = () => {
          </nav>
 
          <div className="trvlr-tabs-content">
-            {tabs.map(tab => (
-               <div
-                  key={tab.key}
-                  className={`trvlr-tab-pane ${activeTab === tab.key ? 'active' : ''}`}
-                  style={{ display: activeTab === tab.key ? 'block' : 'none' }}
-               >
-                  <tab.component />
-               </div>
-            ))}
+            {tabs.map((tab, index) => {
+               const activeIndex = tabs.findIndex(t => t.key === activeTab);
+               const positionClass = index < activeIndex ? 'before' : index > activeIndex ? 'after' : '';
+
+               return (
+                  <div
+                     key={tab.key}
+                     className={`trvlr-tab-pane ${activeTab === tab.key ? 'active' : ''} ${positionClass}`}
+                  // style={{ display: activeTab === tab.key ? 'block' : 'none' }}
+                  >
+                     <tab.component />
+                  </div>
+               );
+            })}
          </div>
       </div>
    );

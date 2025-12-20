@@ -18,6 +18,7 @@ body {
    --trvlr-accent-color: hsl(57, 100%, 50%);
    --trvlr-text-muted-color: hsl(0, 0%, 40%);
    --trvlr-heading-color: hsl(0, 0%, 0%);
+   --trvlr-text-color: hsl(0, 0%, 0%);
 }
 
 :root {
@@ -392,7 +393,9 @@ body {
       line-height: 1.2;
       font-weight: 700;
 
-      &__value {}
+      &__value {
+         color: var(--trvlr-text-color);
+      }
 
       &__type {
          font-size: 16px;
@@ -404,6 +407,7 @@ body {
 
       &__iframe {
          border-radius: 8px;
+         max-width: 560px;
       }
    }
 

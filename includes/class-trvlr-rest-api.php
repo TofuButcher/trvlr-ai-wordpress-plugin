@@ -278,7 +278,6 @@ class Trvlr_REST_API
 	{
 		return rest_ensure_response(array(
 			'organisation_id' => get_option('trvlr_organisation_id', ''),
-			'api_key' => get_option('trvlr_api_key', ''),
 		));
 	}
 
@@ -288,14 +287,10 @@ class Trvlr_REST_API
 		if (isset($data['organisation_id'])) {
 			update_option('trvlr_organisation_id', sanitize_text_field($data['organisation_id']));
 		}
-		if (isset($data['api_key'])) {
-			update_option('trvlr_api_key', sanitize_text_field($data['api_key']));
-		}
 		return rest_ensure_response(array(
 			'success' => true,
 			'settings' => array(
 				'organisation_id' => get_option('trvlr_organisation_id', ''),
-				'api_key' => get_option('trvlr_api_key', ''),
 			),
 		));
 	}

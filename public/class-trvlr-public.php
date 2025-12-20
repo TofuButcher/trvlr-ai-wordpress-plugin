@@ -339,12 +339,18 @@ class Trvlr_Public
 			return $pricing;
 		}
 
+		$adult_price_types = array(
+			'Adult - UDW',
+			'Single Supplement',
+			'Quantity',
+		);
+
 		foreach ($pricing as $key => $row) {
 			if (empty($row['type'])) {
 				continue;
 			}
 
-			if ($row['type'] === 'Adult - UDW') {
+			if (in_array($row['type'], $adult_price_types) || strpos($row['type'], 'Adult') !== false) {
 				$pricing[$key]['type'] = __('per person', 'trvlr');
 			} elseif ($row['type'] === 'Child 5-16 UDW') {
 				$pricing[$key]['type'] = __('per child', 'trvlr');
