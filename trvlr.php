@@ -79,9 +79,9 @@ if (file_exists(TRVLR_PLUGIN_DIR . 'test-api.php')) {
 	require_once TRVLR_PLUGIN_DIR . 'test-api.php';
 }
 
-// Data transform testing (access with ?testing=1)
+// Data transform testing (access with ?testing=true)
 add_action('init', function () {
-	if (isset($_GET['testing']) && $_GET['testing'] == '1') {
+	if (isset($_GET['test']) && $_GET['test'] == 'true') {
 		require_once TRVLR_PLUGIN_DIR . 'core/data-transform-testing.php';
 	}
 });

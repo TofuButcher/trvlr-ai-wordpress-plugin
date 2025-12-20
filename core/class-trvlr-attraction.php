@@ -59,6 +59,7 @@ class Trvlr_Attraction {
 			'description'           => __( 'Tours and Experiences from TRVLR AI System', 'trvlr' ),
 			'labels'                => $labels,
 			'supports'              => array( 'title', 'editor', 'thumbnail', 'custom-fields', 'excerpt' ),
+			'taxonomies'            => array( 'trvlr_attraction_tag' ),
 			'hierarchical'          => false,
 			'public'                => true,
 			'show_ui'               => true,
@@ -75,6 +76,49 @@ class Trvlr_Attraction {
 			'show_in_rest'          => true,
 		);
 		register_post_type( 'trvlr_attraction', $args );
+
+	}
+
+	/**
+	 * Register the 'trvlr_attraction_tag' taxonomy.
+	 *
+	 * @since    1.0.0
+	 */
+	public function register_taxonomy() {
+
+		$labels = array(
+			'name'                       => _x( 'Attraction Tags', 'Taxonomy General Name', 'trvlr' ),
+			'singular_name'              => _x( 'Attraction Tag', 'Taxonomy Singular Name', 'trvlr' ),
+			'menu_name'                  => __( 'Attraction Tags', 'trvlr' ),
+			'all_items'                  => __( 'All Tags', 'trvlr' ),
+			'parent_item'                => __( 'Parent Tag', 'trvlr' ),
+			'parent_item_colon'          => __( 'Parent Tag:', 'trvlr' ),
+			'new_item_name'              => __( 'New Tag Name', 'trvlr' ),
+			'add_new_item'               => __( 'Add New Tag', 'trvlr' ),
+			'edit_item'                  => __( 'Edit Tag', 'trvlr' ),
+			'update_item'                => __( 'Update Tag', 'trvlr' ),
+			'view_item'                  => __( 'View Tag', 'trvlr' ),
+			'separate_items_with_commas' => __( 'Separate tags with commas', 'trvlr' ),
+			'add_or_remove_items'        => __( 'Add or remove tags', 'trvlr' ),
+			'choose_from_most_used'      => __( 'Choose from the most used', 'trvlr' ),
+			'popular_items'              => __( 'Popular Tags', 'trvlr' ),
+			'search_items'               => __( 'Search Tags', 'trvlr' ),
+			'not_found'                  => __( 'Not Found', 'trvlr' ),
+			'no_terms'                   => __( 'No tags', 'trvlr' ),
+			'items_list'                 => __( 'Tags list', 'trvlr' ),
+			'items_list_navigation'      => __( 'Tags list navigation', 'trvlr' ),
+		);
+		$args = array(
+			'labels'                     => $labels,
+			'hierarchical'               => false,
+			'public'                     => true,
+			'show_ui'                    => true,
+			'show_admin_column'          => true,
+			'show_in_nav_menus'          => true,
+			'show_tagcloud'              => true,
+			'show_in_rest'               => true,
+		);
+		register_taxonomy( 'trvlr_attraction_tag', array( 'trvlr_attraction' ), $args );
 
 	}
 

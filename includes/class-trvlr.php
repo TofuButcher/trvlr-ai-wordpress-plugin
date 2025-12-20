@@ -172,6 +172,7 @@ class Trvlr
 		$plugin_attraction = new Trvlr_Attraction();
 
 		$this->loader->add_action('init', $plugin_attraction, 'register_post_type');
+		$this->loader->add_action('init', $plugin_attraction, 'register_taxonomy');
 
 		// Cron jobs
 		$this->loader->add_action('trvlr_daily_log_cleanup', 'Trvlr_Logger', 'run_daily_cleanup');

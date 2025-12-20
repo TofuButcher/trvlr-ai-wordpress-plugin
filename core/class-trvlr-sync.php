@@ -11,7 +11,6 @@ class Trvlr_Sync
 {
     public function sync_all()
     {
-        // Generate unique session ID for this sync
         $session_id = 'sync_' . date('YmdHis') . '_' . substr(md5(uniqid()), 0, 8);
         $GLOBALS['trvlr_current_sync_session'] = $session_id;
 
@@ -22,45 +21,36 @@ class Trvlr_Sync
         $skipped = 0;
         $errors = 0;
 
-        // Load mock data files
-        $multiple_file = plugin_dir_path(dirname(__FILE__)) . 'api/multiple-attractions.json';
-        $single_file = plugin_dir_path(dirname(__FILE__)) . 'api/single-attraction.json';
+        $api_data = $this->fetch_attractions_from_api();
 
-        if (!file_exists($multiple_file) || !file_exists($single_file)) {
-            Trvlr_Logger::log('error', 'Mock files missing');
+        if (is_wp_error($api_data)) {
+            Trvlr_Logger::log('error', 'API fetch failed: ' . $api_data->get_error_message());
             return;
         }
 
-        $list_data = json_decode(file_get_contents($multiple_file), true);
-        $single_data_wrapper = json_decode(file_get_contents($single_file), true);
-        $single_data = !empty($single_data_wrapper['results'][0]) ? $single_data_wrapper['results'][0] : array();
-
-        if (empty($list_data['results'])) {
+        if (empty($api_data['results'])) {
             Trvlr_Logger::log('error', 'No attractions found in API response');
             return;
         }
 
-        foreach ($list_data['results'] as $list_item) {
-            $attraction_data = array();
+        foreach ($api_data['results'] as $list_item) {
+            $attraction_id = isset($list_item['pk']) ? $list_item['pk'] : (isset($list_item['id']) ? $list_item['id'] : 0);
 
-            $attraction_data['pk'] = isset($list_item['pk']) ? $list_item['pk'] : 0;
-            $attraction_data['id'] = $attraction_data['pk'];
-            $attraction_data['title'] = isset($list_item['title']) ? $list_item['title'] : '';
-
-            if (isset($list_item['images']) && is_string($list_item['images'])) {
-                $attraction_data['images'] = array(
-                    'all_images' => array(array('url' => $list_item['images']))
-                );
+            if (!$attraction_id) {
+                $errors++;
+                continue;
             }
 
-            foreach ($single_data as $key => $val) {
-                if (!isset($attraction_data[$key]) && !in_array($key, array('id', 'pk', 'title', 'images'))) {
-                    $attraction_data[$key] = $val;
-                }
+            $attraction_data = $this->fetch_single_attraction($attraction_id);
+
+            if (!$attraction_data) {
+                Trvlr_Logger::log('error', "Failed to fetch details for attraction ID: {$attraction_id}");
+                $errors++;
+                continue;
             }
 
-            if ($attraction_data['pk'] == 5220) {
-                $attraction_data = $single_data;
+            if (!empty($list_item['images']) && empty($attraction_data['images']['all_images'])) {
+                $attraction_data['list_image'] = $list_item['images'];
             }
 
             $result = $this->update_attraction_post($attraction_data);
@@ -81,8 +71,79 @@ class Trvlr_Sync
 
         Trvlr_Notifier::notify_sync_complete($created, $updated, $skipped, $errors);
 
-        // Clean up session global
         unset($GLOBALS['trvlr_current_sync_session']);
+    }
+
+    private function fetch_attractions_from_api()
+    {
+        $api_url = 'https://sl.portal.trvlr.ai/api/process/webapi_handler/generic_attractions';
+        $headers = $this->get_api_headers();
+
+        $response = wp_remote_post($api_url, array(
+            'headers' => $headers,
+            'body'    => json_encode(array(
+                'page'      => 1,
+                'page_size' => 1000
+            )),
+            'timeout' => 60
+        ));
+
+        if (is_wp_error($response)) {
+            return $response;
+        }
+
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+
+        if (empty($data) || !isset($data['results'])) {
+            return new WP_Error('invalid_response', 'Invalid API response format');
+        }
+
+        return $data;
+    }
+
+    private function fetch_single_attraction($attraction_id)
+    {
+        $api_url = 'https://sl.portal.trvlr.ai/api/process/webapi_handler/generic_attraction_with_id';
+        $headers = $this->get_api_headers();
+
+        $response = wp_remote_post($api_url, array(
+            'headers' => $headers,
+            'body'    => json_encode(array(
+                'id' => $attraction_id
+            )),
+            'timeout' => 30
+        ));
+
+        if (is_wp_error($response)) {
+            return null;
+        }
+
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+
+        if (!empty($data['results'][0])) {
+            return $data['results'][0];
+        }
+
+        return null;
+    }
+
+    private function get_api_headers()
+    {
+        $headers = array(
+            'Content-Type' => 'application/json',
+        );
+
+        $organisation_id = get_option('trvlr_organisation_id', '');
+
+        if (!empty($organisation_id)) {
+            $headers['Origin'] = 'https://' . sanitize_text_field($organisation_id) . '.trvlr.ai';
+        } else {
+            $headers['Origin'] = home_url();
+        }
+
+        return $headers;
     }
 
     private function update_attraction_post($data)
@@ -98,66 +159,68 @@ class Trvlr_Sync
         $new_title = sanitize_text_field($data['title']);
         $new_description = $this->prepare_for_wp_editor(isset($data['description']) ? $data['description'] : '');
 
+        $has_images = !empty($data['images']['all_images']) || !empty($data['list_image']);
+        $is_new_post = !$existing_post;
+
+        $post_status = 'publish';
+        if ($is_new_post && !$has_images) {
+            $post_status = 'draft';
+        } elseif ($existing_post) {
+            $post_status = $existing_post->post_status;
+        }
+
         $post_args = array(
             'post_type' => 'trvlr_attraction',
-            'post_status' => 'publish',
+            'post_status' => $post_status,
             'meta_input' => array(
                 'trvlr_id' => $attraction_id,
                 'trvlr_pk' => isset($data['pk']) ? $data['pk'] : '',
-                'trvlr_product_type' => isset($data['product_type']) ? $data['product_type'] : '',
                 'trvlr_raw_data' => json_encode($data),
                 'trvlr_description' => $new_description,
                 'trvlr_short_description' => isset($data['short_description']) ? $this->prepare_for_wp_editor($data['short_description']) : '',
                 'trvlr_duration' => isset($data['duration']) ? sanitize_text_field($data['duration']) : '',
                 'trvlr_additional_info' => isset($data['additional_info']) ? $this->prepare_for_wp_editor($data['additional_info']) : '',
-                'trvlr_start_time' => '',
-                'trvlr_end_time' => '',
-                'trvlr_is_on_sale' => isset($data['is_on_sale']) ? (bool) $data['is_on_sale'] : false,
-                'trvlr_sale_discount' => isset($data['sale_discount']) ? sanitize_text_field($data['sale_discount']) : '',
-                'trvlr_sale_description' => isset($data['sale_description']) ? sanitize_text_field($data['sale_description']) : '',
+                'trvlr_start_time' => isset($data['start_time']) ? sanitize_text_field($data['start_time']) : '',
+                'trvlr_end_time' => isset($data['end_time']) ? sanitize_text_field($data['end_time']) : '',
             ),
         );
 
-        // Pricing
         $pricing_rows = array();
         if (!empty($data['pricing']) && is_array($data['pricing'])) {
             foreach ($data['pricing'] as $p) {
-                $name = isset($p['pricing_type']) ? $p['pricing_type'] : (isset($p['extra_data']['name']) ? $p['extra_data']['name'] : '');
-                $amount = isset($p['extra_data']['price']['amount']) ? $p['extra_data']['price']['amount'] : (isset($p['max_price']) ? $p['max_price'] : '');
                 $pricing_rows[] = array(
-                    'type' => sanitize_text_field($name),
-                    'price' => sanitize_text_field($amount),
+                    'type' => isset($p['pricing_type']) ? sanitize_text_field($p['pricing_type']) : '',
+                    'price' => isset($p['max_price']) ? sanitize_text_field($p['max_price']) : '',
                     'sale_price' => '',
                 );
             }
         }
         $post_args['meta_input']['trvlr_pricing'] = $pricing_rows;
 
-        // Locations
         $location_rows = array();
         if (!empty($data['location_start'])) {
-            $loc_start = json_decode($data['location_start'], true);
+            $loc_start = is_string($data['location_start']) ? json_decode($data['location_start'], true) : $data['location_start'];
             if (is_array($loc_start) && !empty($loc_start[0])) {
                 $l = $loc_start[0];
                 $location_rows[] = array(
                     'type' => 'Start',
-                    'address' => isset($l['building']) ? $l['building'] . ', ' . $l['city'] : '',
+                    'address' => isset($l['building']) ? $l['building'] . ', ' . (isset($l['city']) ? $l['city'] : '') : '',
                     'lat' => isset($l['latitude']) ? $l['latitude'] : '',
                     'lng' => isset($l['longitude']) ? $l['longitude'] : '',
                 );
             }
-        } elseif (!empty($data['location']['coordinates'])) {
+        }
+        if (!empty($data['location']['coordinates'])) {
             $coords = $data['location']['coordinates'];
             $location_rows[] = array(
                 'type' => 'Start',
                 'address' => isset($data['location']['address']) ? $data['location']['address'] : '',
-                'lat' => isset($coords[1]) ? $coords[1] : '',
-                'lng' => isset($coords[0]) ? $coords[0] : '',
+                'lat' => isset($coords[0]) ? $coords[0] : '',
+                'lng' => isset($coords[1]) ? $coords[1] : '',
             );
         }
         $post_args['meta_input']['trvlr_locations'] = $location_rows;
 
-        // Inclusions & Highlights
         $post_args['meta_input']['trvlr_inclusions'] = !empty($data['inclusions']) ? $this->prepare_for_wp_editor($data['inclusions']) : '';
         $post_args['meta_input']['trvlr_highlights'] = !empty($data['highlights']) ? $this->prepare_for_wp_editor($data['highlights']) : '';
 
@@ -254,9 +317,24 @@ class Trvlr_Sync
         }
 
         if (!is_wp_error($post_id)) {
+            $images_to_process = array();
+
+            if (!empty($data['list_image'])) {
+                $list_image_url = $this->get_best_image_url($data['list_image']);
+                $images_to_process[] = array('url' => $list_image_url);
+            }
+
             if (!empty($data['images']['all_images']) && is_array($data['images']['all_images'])) {
+                $images_to_process = array_merge($images_to_process, $data['images']['all_images']);
+            }
+
+            if (!empty($images_to_process)) {
                 $force_sync_fields = $this->get_force_sync_fields($post_id);
-                $this->process_images($post_id, $data['images']['all_images'], $skipped_fields, $force_sync_fields);
+                $this->process_images($post_id, $images_to_process, $skipped_fields, $force_sync_fields);
+            }
+
+            if (!empty($data['attraction_type']) && is_array($data['attraction_type'])) {
+                wp_set_object_terms($post_id, $data['attraction_type'], 'trvlr_attraction_tag');
             }
 
             $this->store_field_hashes($post_id, $skipped_fields);
@@ -407,14 +485,22 @@ class Trvlr_Sync
 
         $gallery_ids = array();
         $first_image_id = null;
+        $processed_urls = array();
 
-        // Check if we should skip media processing
         $skip_media = in_array('trvlr_media', $skipped_fields) && !in_array('trvlr_media', $force_sync_fields);
         $skip_thumbnail = in_array('_thumbnail_id', $skipped_fields) && !in_array('_thumbnail_id', $force_sync_fields);
 
         foreach ($images as $index => $img) {
-            $image_url = isset($img['url']) ? $img['url'] : (is_string($img) ? $img : null);
+            if (is_array($img)) {
+                $image_url = $this->get_best_image_url($img);
+            } else {
+                $image_url = is_string($img) ? $img : null;
+            }
+
             if (!$image_url) continue;
+
+            if (in_array($image_url, $processed_urls)) continue;
+            $processed_urls[] = $image_url;
 
             global $wpdb;
             $attachment_id = $wpdb->get_var(
@@ -426,9 +512,9 @@ class Trvlr_Sync
                 require_once(ABSPATH . 'wp-admin/includes/file.php');
                 require_once(ABSPATH . 'wp-admin/includes/image.php');
 
-                $attachment_id = media_sideload_image($image_url, $post_id, "Trvlr Image for Post $post_id", 'id');
+                $attachment_id = $this->download_image_with_original_filename($image_url, $post_id);
 
-                if (!is_wp_error($attachment_id)) {
+                if ($attachment_id && !is_wp_error($attachment_id)) {
                     update_post_meta($attachment_id, 'trvlr_source_url', $image_url);
                 } else {
                     continue;
@@ -454,6 +540,57 @@ class Trvlr_Sync
                 set_post_thumbnail($post_id, $first_image_id);
             }
         }
+    }
+
+    private function get_best_image_url($img)
+    {
+        if (is_string($img)) {
+            if (preg_match('/\.(jpg|jpeg|png|gif)$/i', $img, $matches)) {
+                $lg_url = preg_replace('/\.' . preg_quote($matches[1], '/') . '$/i', '_lg.' . $matches[1], $img);
+                return $lg_url;
+            }
+            return $img;
+        }
+
+        if (is_array($img)) {
+            if (!empty($img['largeSizeUrl'])) {
+                return $img['largeSizeUrl'];
+            }
+            if (!empty($img['itemUrl'])) {
+                return $img['itemUrl'];
+            }
+            if (!empty($img['url'])) {
+                return $img['url'];
+            }
+        }
+
+        return null;
+    }
+
+    private function download_image_with_original_filename($image_url, $post_id)
+    {
+        $parsed_url = parse_url($image_url);
+        $original_filename = basename($parsed_url['path']);
+
+        $tmp = download_url($image_url);
+
+        if (is_wp_error($tmp)) {
+            return $tmp;
+        }
+
+        $file_array = array(
+            'name' => $original_filename,
+            'tmp_name' => $tmp
+        );
+
+        $attachment_id = media_handle_sideload($file_array, $post_id);
+
+        if (is_wp_error($attachment_id)) {
+            @unlink($file_array['tmp_name']);
+            return $attachment_id;
+        }
+
+        return $attachment_id;
     }
 
     private function get_post_by_trvlr_id($trvlr_id)

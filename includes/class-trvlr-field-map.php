@@ -21,7 +21,7 @@ class Trvlr_Field_Map
 			'post_title' => array(
 				'label' => 'Title',
 				'type' => 'string',
-				'sync_from' => 'title', // API field name
+				'sync_from' => 'title',
 			),
 			'trvlr_description' => array(
 				'label' => 'Description',
@@ -32,31 +32,6 @@ class Trvlr_Field_Map
 				'label' => 'Short Description',
 				'type' => 'string',
 				'sync_from' => 'short_description',
-			),
-			'trvlr_additional_info' => array(
-				'label' => 'Additional Info',
-				'type' => 'string',
-				'sync_from' => 'additional_info',
-			),
-			'trvlr_duration' => array(
-				'label' => 'Duration',
-				'type' => 'string',
-				'sync_from' => 'duration',
-			),
-			'trvlr_start_time' => array(
-				'label' => 'Start Time',
-				'type' => 'string',
-				'sync_from' => 'start_time',
-			),
-			'trvlr_end_time' => array(
-				'label' => 'End Time',
-				'type' => 'string',
-				'sync_from' => 'end_time',
-			),
-			'trvlr_locations' => array(
-				'label' => 'Locations',
-				'type' => 'array',
-				'sync_from' => null, // Derived from multiple API fields
 			),
 			'trvlr_inclusions' => array(
 				'label' => 'Inclusions',
@@ -73,29 +48,49 @@ class Trvlr_Field_Map
 				'type' => 'array',
 				'sync_from' => 'pricing',
 			),
-			'trvlr_is_on_sale' => array(
-				'label' => 'Sale Status',
-				'type' => 'boolean',
-				'sync_from' => 'is_on_sale',
-			),
-			'trvlr_sale_discount' => array(
-				'label' => 'Sale Discount',
-				'type' => 'string',
-				'sync_from' => 'sale_discount',
-			),
-			'trvlr_sale_description' => array(
-				'label' => 'Sale Description',
-				'type' => 'string',
-				'sync_from' => 'sale_description',
-			),
-			'_thumbnail_id' => array(
-				'label' => 'Featured Image',
-				'type' => 'string',
+			'trvlr_locations' => array(
+				'label' => 'Locations',
+				'type' => 'array',
 				'sync_from' => null,
 			),
 			'trvlr_media' => array(
 				'label' => 'Gallery Images',
 				'type' => 'array',
+				'sync_from' => null,
+			),
+			'trvlr_duration' => array(
+				'label' => 'Duration',
+				'type' => 'string',
+				'sync_from' => 'duration',
+			),
+			'trvlr_start_time' => array(
+				'label' => 'Start Time',
+				'type' => 'string',
+				'sync_from' => 'start_time',
+			),
+			'trvlr_end_time' => array(
+				'label' => 'End Time',
+				'type' => 'string',
+				'sync_from' => 'end_time',
+			),
+			'trvlr_additional_info' => array(
+				'label' => 'Additional Info',
+				'type' => 'string',
+				'sync_from' => 'additional_info',
+			),
+			'trvlr_is_on_sale' => array(
+				'label' => 'Is On Sale',
+				'type' => 'boolean',
+				'sync_from' => null,
+			),
+			'trvlr_sale_description' => array(
+				'label' => 'Sale Description',
+				'type' => 'string',
+				'sync_from' => null,
+			),
+			'_thumbnail_id' => array(
+				'label' => 'Featured Image',
+				'type' => 'string',
 				'sync_from' => null,
 			),
 		);

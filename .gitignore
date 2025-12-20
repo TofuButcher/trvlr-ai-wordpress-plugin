@@ -8,6 +8,7 @@
 /admin/build/*.asset.php
 /admin/build/*
 
+/~api/
 /~dev/
 /~docs/
 package-lock.json
