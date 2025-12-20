@@ -22,6 +22,7 @@ if ($is_dev_environment) {
 while (have_posts()) : the_post();
 
 	$post_id = get_the_ID();
+	$attraction_id = get_trvlr_attraction_id($post_id);
 	$post_classes = get_post_class('single-attraction');
 	$post_class = implode(' ', $post_classes);
 
@@ -42,6 +43,8 @@ while (have_posts()) : the_post();
 							<div class="trvlr-single-attraction__meta">
 								<?php echo trvlr_duration($post_id); ?>
 								<?php echo trvlr_sale($post_id); ?>
+								<?php echo trvlr_advertised_price($post_id); ?>
+								<Button class="trvlr-check-availability" attraction-id="<?php echo $attraction_id; ?>">Check Availability</Button>
 							</div>
 							<?php echo trvlr_gallery($post_id); ?>
 							<?php echo trvlr_short_description($post_id); ?>

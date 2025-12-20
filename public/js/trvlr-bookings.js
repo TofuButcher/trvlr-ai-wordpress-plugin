@@ -2,6 +2,7 @@ class TrvlrBookingSystem {
    constructor(config) {
       this.config = config;
       this.state = {
+         defaultFormCheckAvailability: false,
          dateSelectedInfo: {},
          currentAttractionId: null
       };
@@ -13,6 +14,7 @@ class TrvlrBookingSystem {
 
       this.setupDOM();
       this.cacheElements();
+      this.loadInitialView();
       this.bindEvents();
       this.updateCart();
       this.updateBookingCalendarSize();
@@ -55,6 +57,17 @@ class TrvlrBookingSystem {
       };
    }
 
+   loadInitialView() {
+      if (document.querySelector('[attraction-id].trvlr-check-availability')) {
+         const attractionId = document.querySelector('[attraction-id].trvlr-check-availability').getAttribute('attraction-id');
+         if (attractionId) {
+            this.state.currentAttractionId = attractionId;
+            this.loadCheckAvailabilityForm(attractionId);
+            this.state.defaultFormCheckAvailability = true;
+         }
+      }
+   }
+
    bindEvents() {
       if (!this.elements.modal) return;
       this.elements.modal.addEventListener('click', (e) => {
@@ -80,6 +93,10 @@ class TrvlrBookingSystem {
          if (bookNowBtn) {
             this.handleBookNowClick(bookNowBtn);
          }
+         const checkAvailabilityBtn = e.target.closest('[attraction-id].trvlr-check-availability');
+         if (checkAvailabilityBtn) {
+            this.handleCheckAvailabilityClick(checkAvailabilityBtn);
+         }
       });
 
       window.addEventListener('message', (e) => this.handleMessage(e));
@@ -93,11 +110,37 @@ class TrvlrBookingSystem {
       this.elements.modal.showModal();
    }
 
+   handleCheckAvailabilityClick(button) {
+      const attractionId = button.getAttribute('attraction-id');
+      if (attractionId === '' || attractionId === null || attractionId === undefined) return;
+      this.state.currentAttractionId = attractionId;
+      if (!this.elements.modalContent.querySelector(`iframe[src="${this.config.baseIframeUrl}/date-picker2/index.html?attr_id=${attractionId}"]`)) {
+         this.loadCheckAvailabilityForm(attractionId);
+      }
+      this.elements.modal.showModal();
+   }
+
    closeModalWithAnimation() {
       if (!this.elements.modal?.hasAttribute('open')) return;
 
       this.elements.modal.classList.add('closing');
       setTimeout(() => this.elements.modal.close(), 200);
+      if (this.state.defaultFormCheckAvailability) {
+         this.loadCheckAvailabilityForm();
+      }
+   }
+
+   loadCheckAvailabilityForm(attractionId = this.state.currentAttractionId) {
+      this.elements.modalContent.innerHTML = `
+         <iframe
+            style="width: 100%; height: 100%;"
+            frameborder="0"
+            src="${this.config.baseIframeUrl}/date-picker2/index.html?attr_id=${attractionId}"
+            title="Check Availability"
+            class="iframe-cont"
+            id="check-availability-modal-iframe"
+         ></iframe>
+      `;
    }
 
    showBookNowForm() {
@@ -193,6 +236,8 @@ class TrvlrBookingSystem {
    handleMessage(event) {
       const { type, data } = event.data;
 
+      console.log(event.data);
+
       const handlers = {
          'CART_UPDATED': () => {
             localStorage.setItem('trvlr-cart', JSON.stringify(data));
@@ -218,10 +263,17 @@ class TrvlrBookingSystem {
             this.updateCart();
          },
          'CLOSE_MODAL': () => {
-            data ? this.showBookNowForm() : this.closeModalWithAnimation();
+            if (data) {
+               this.showBookNowForm();
+            } else {
+               this.closeModalWithAnimation();
+            }
          },
          'CLOSE_BOOK_NOW_MODAL': () => {
             this.elements.modal.close();
+            if (this.state.defaultFormCheckAvailability) {
+               this.loadCheckAvailabilityForm();
+            }
          },
          'REDIRECT': () => {
             window.location.href = event.data.url;

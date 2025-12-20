@@ -23,7 +23,8 @@
 
    --trvlr-card-image-wrap-margin-bottom: 10px;
    --trvlr-card-title-margin-bottom: 8px;
-   --trvlr-card-meta-margin-bottom: 20px;
+   --trvlr-card-meta-margin-bottom: 0px;
+   --trvlr-card-footer-margin-top: 20px;
 }
 
 .trvlr-cards {
@@ -87,6 +88,7 @@
    }
 
    &__footer {
+      margin-top: var(--trvlr-card-footer-margin-top);
       display: flex;
       flex-direction: row;
       align-items: flex-end;
