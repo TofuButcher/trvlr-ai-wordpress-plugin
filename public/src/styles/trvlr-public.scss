@@ -213,6 +213,10 @@ body {
          width: 140px;
          height: 100%;
 
+         .splide__track {
+            max-height: 100%;
+         }
+
          .splide__slide {
             border: none !important;
             opacity: 0.6;

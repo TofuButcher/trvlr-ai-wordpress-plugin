@@ -415,7 +415,7 @@ function trvlr_cards($args = array())
 	ob_start();
 
 	if ($use_main_query) {
-		echo '<div class="trvlr-cards">';
+		echo '<div class="trvlr-cards-container"><div class="trvlr-cards">';
 		if (have_posts()) {
 			while (have_posts()) {
 				the_post();
@@ -424,7 +424,7 @@ function trvlr_cards($args = array())
 		} else {
 			echo '<p>' . esc_html__('No posts found.', 'trvlr') . '</p>';
 		}
-		echo '</div>';
+		echo '</div></div>';
 	} else {
 		$defaults = array(
 			'post_type' => 'trvlr_attraction',
@@ -435,7 +435,7 @@ function trvlr_cards($args = array())
 		$query_args = wp_parse_args($args, $defaults);
 		$query = new WP_Query($query_args);
 
-		echo '<div class="trvlr-cards">';
+		echo '<div class="trvlr-cards-container"><div class="trvlr-cards">';
 		if ($query->have_posts()) {
 			while ($query->have_posts()) {
 				$query->the_post();
@@ -445,7 +445,7 @@ function trvlr_cards($args = array())
 		} else {
 			echo '<p>' . esc_html__('No posts found.', 'trvlr') . '</p>';
 		}
-		echo '</div>';
+		echo '</div></div>';
 	}
 
 	return apply_filters('trvlr_cards', ob_get_clean(), $args);

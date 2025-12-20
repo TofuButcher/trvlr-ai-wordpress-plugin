@@ -185,6 +185,9 @@ body {
   width: 140px;
   height: 100%;
 }
+.trvlr-gallery__nav .splide__track {
+  max-height: 100%;
+}
 .trvlr-gallery__nav .splide__slide {
   border: none !important;
   opacity: 0.6;

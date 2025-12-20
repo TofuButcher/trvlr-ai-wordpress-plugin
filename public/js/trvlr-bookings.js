@@ -236,8 +236,6 @@ class TrvlrBookingSystem {
    handleMessage(event) {
       const { type, data } = event.data;
 
-      console.log(event.data);
-
       const handlers = {
          'CART_UPDATED': () => {
             localStorage.setItem('trvlr-cart', JSON.stringify(data));
