@@ -115,9 +115,17 @@ const getInstructionSteps = () => [
                   <strong style={{ display: 'block', marginTop: '12px' }}>[trvlr_attraction_cards]</strong>
                   <ul style={{ marginTop: '8px', marginBottom: '16px' }}>
                      <li><code>posts_per_page</code> - Number of attractions (-1 for all, default: -1)</li>
-                     <li><code>orderby</code> - Sort by: date, title, etc. (default: date)</li>
+                     <li><code>orderby</code> - Sort by: date, title, meta_value, etc. (default: date)</li>
                      <li><code>order</code> - ASC or DESC (default: DESC)</li>
-                     <li><code>ids</code> - Comma-separated list of post IDs</li>
+                     <li><code>ids</code> - Comma-separated list of post IDs to include</li>
+                     <li><code>exclude</code> - Comma-separated list of post IDs to exclude</li>
+                     <li><code>tag</code> - Filter by tag name (comma-separated)</li>
+                     <li><code>tag_id</code> - Filter by tag ID (comma-separated)</li>
+                     <li><code>tag_slug</code> - Filter by tag slug (comma-separated)</li>
+                     <li><code>tag_relation</code> - AND or OR for multiple tags (default: AND)</li>
+                     <li><code>meta_key</code> - Meta key to filter/sort by</li>
+                     <li><code>meta_value</code> - Meta value to match</li>
+                     <li><code>meta_compare</code> - Comparison operator (=, !=, &gt;, &lt;, etc.)</li>
                   </ul>
                   <pre style={{
                      background: '#f6f7f7',
@@ -126,7 +134,17 @@ const getInstructionSteps = () => [
                      fontSize: '13px',
                      marginBottom: '16px'
                   }}>
-                     {`[trvlr_attraction_cards posts_per_page="6" orderby="title" order="ASC"]`}
+                     {`// Basic usage
+[trvlr_attraction_cards posts_per_page="6" orderby="title" order="ASC"]
+
+// Filter by tags
+[trvlr_attraction_cards tag="popular,featured" tag_relation="OR"]
+
+// Filter by meta field
+[trvlr_attraction_cards meta_key="trvlr_is_on_sale" meta_value="1"]
+
+// Exclude specific attractions
+[trvlr_attraction_cards exclude="10,20,30"]`}
                   </pre>
 
                   <strong style={{ display: 'block', marginTop: '12px' }}>[trvlr_attraction_card]</strong>
@@ -259,7 +277,7 @@ const getInstructionSteps = () => [
                   {`// Display single card
 echo trvlr_card($post_id);
 
-// Display multiple cards
+// Display multiple cards (with optional args)
 echo trvlr_cards($args);
 
 // Display gallery
@@ -284,6 +302,108 @@ echo trvlr_duration($post_id);
 // Display locations
 echo trvlr_locations($post_id);`}
                </pre>
+            )
+         },
+         {
+            title: __('trvlr_cards() Arguments', 'trvlr'),
+            content: (
+               <>
+                  <Text style={{ marginBottom: '12px' }}>
+                     {__('The trvlr_cards() function accepts extensive query arguments:', 'trvlr')}
+                  </Text>
+                  <pre style={{
+                     background: '#f6f7f7',
+                     padding: '12px',
+                     borderRadius: '4px',
+                     fontSize: '13px',
+                     whiteSpace: 'pre-wrap'
+                  }}>
+                     {`// Basic arguments
+$args = array(
+    'posts_per_page' => 12,
+    'orderby' => 'date',
+    'order' => 'DESC',
+    'post_status' => 'publish',
+);
+
+// Filter by specific IDs
+$args = array(
+    'ids' => '123,456,789', // or array(123, 456, 789)
+);
+
+// Exclude specific IDs
+$args = array(
+    'exclude' => '10,20,30',
+);
+
+// Filter by attraction tags
+$args = array(
+    'tag' => 'popular,featured',
+    'tag_relation' => 'OR', // AND or OR
+);
+
+$args = array(
+    'tag_id' => '5,10',
+    'tag_slug' => 'water-activities',
+);
+
+// Filter by meta fields
+$args = array(
+    'meta_key' => 'trvlr_duration',
+    'meta_value' => '2 hours',
+    'meta_compare' => '=', // =, !=, >, <, >=, <=, LIKE, etc.
+);
+
+// Advanced meta query
+$args = array(
+    'meta_query' => array(
+        'relation' => 'AND',
+        array(
+            'key' => 'trvlr_is_on_sale',
+            'value' => '1',
+            'compare' => '='
+        ),
+        array(
+            'key' => 'trvlr_duration',
+            'value' => '3 hours',
+            'compare' => 'LIKE'
+        )
+    )
+);
+
+// Advanced taxonomy query
+$args = array(
+    'tax_query' => array(
+        'relation' => 'AND',
+        array(
+            'taxonomy' => 'trvlr_attraction_tag',
+            'field' => 'slug',
+            'terms' => array('popular', 'featured')
+        )
+    )
+);
+
+// Full custom query override
+$args = array(
+    'query_args' => array(
+        'post_type' => 'trvlr_attraction',
+        'posts_per_page' => 6,
+        'orderby' => 'meta_value_num',
+        'meta_key' => 'trvlr_advertised_price_value',
+        'order' => 'ASC',
+        'tax_query' => array(
+            array(
+                'taxonomy' => 'trvlr_attraction_tag',
+                'field' => 'slug',
+                'terms' => 'popular'
+            )
+        )
+    )
+);
+
+echo trvlr_cards($args);`}
+                  </pre>
+               </>
             )
          },
          {
@@ -365,16 +485,19 @@ get_trvlr_attraction_formatted_price($post_id);`}
             )
          },
          {
-            title: __('Custom Loop Example', 'trvlr'),
+            title: __('Custom Loop Examples', 'trvlr'),
             content: (
-               <pre style={{
-                  background: '#f6f7f7',
-                  padding: '12px',
-                  borderRadius: '4px',
-                  fontSize: '13px',
-                  whiteSpace: 'pre-wrap'
-               }}>
-                  {`<?php
+               <>
+                  <strong style={{ display: 'block', marginBottom: '8px' }}>{__('Basic Loop:', 'trvlr')}</strong>
+                  <pre style={{
+                     background: '#f6f7f7',
+                     padding: '12px',
+                     borderRadius: '4px',
+                     fontSize: '13px',
+                     whiteSpace: 'pre-wrap',
+                     marginBottom: '16px'
+                  }}>
+                     {`<?php
 $args = array(
     'post_type' => 'trvlr_attraction',
     'posts_per_page' => 6,
@@ -393,7 +516,59 @@ if ($query->have_posts()) {
     wp_reset_postdata();
 }
 ?>`}
-               </pre>
+                  </pre>
+
+                  <strong style={{ display: 'block', marginBottom: '8px' }}>{__('Using trvlr_cards() Function:', 'trvlr')}</strong>
+                  <pre style={{
+                     background: '#f6f7f7',
+                     padding: '12px',
+                     borderRadius: '4px',
+                     fontSize: '13px',
+                     whiteSpace: 'pre-wrap',
+                     marginBottom: '16px'
+                  }}>
+                     {`<?php
+// Show popular attractions on sale
+echo trvlr_cards(array(
+    'posts_per_page' => 6,
+    'tag' => 'popular',
+    'meta_key' => 'trvlr_is_on_sale',
+    'meta_value' => '1'
+));
+
+// Show attractions by price (lowest first)
+echo trvlr_cards(array(
+    'posts_per_page' => 8,
+    'orderby' => 'meta_value_num',
+    'meta_key' => 'trvlr_advertised_price_value',
+    'order' => 'ASC'
+));
+
+// Advanced: Multiple filters
+echo trvlr_cards(array(
+    'query_args' => array(
+        'post_type' => 'trvlr_attraction',
+        'posts_per_page' => 10,
+        'tax_query' => array(
+            array(
+                'taxonomy' => 'trvlr_attraction_tag',
+                'field' => 'slug',
+                'terms' => array('popular', 'featured'),
+                'operator' => 'IN'
+            )
+        ),
+        'meta_query' => array(
+            array(
+                'key' => 'trvlr_duration',
+                'value' => '3 hours',
+                'compare' => 'LIKE'
+            )
+        )
+    )
+));
+?>`}
+                  </pre>
+               </>
             )
          },
          {

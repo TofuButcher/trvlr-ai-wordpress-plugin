@@ -214,6 +214,14 @@ function trvlr_shortcode_attraction_cards($atts)
 		'orderby' => 'date',
 		'order' => 'DESC',
 		'ids' => '',
+		'exclude' => '',
+		'tag' => '',
+		'tag_id' => '',
+		'tag_slug' => '',
+		'tag_relation' => 'AND',
+		'meta_key' => '',
+		'meta_value' => '',
+		'meta_compare' => '=',
 	), $atts, 'trvlr_attraction_cards');
 	
 	$query_args = array(
@@ -226,6 +234,36 @@ function trvlr_shortcode_attraction_cards($atts)
 		$ids = array_map('intval', explode(',', $atts['ids']));
 		$query_args['post__in'] = $ids;
 		$query_args['orderby'] = 'post__in';
+	}
+	
+	if (!empty($atts['exclude'])) {
+		$query_args['exclude'] = sanitize_text_field($atts['exclude']);
+	}
+	
+	if (!empty($atts['tag'])) {
+		$query_args['tag'] = sanitize_text_field($atts['tag']);
+	}
+	
+	if (!empty($atts['tag_id'])) {
+		$query_args['tag_id'] = sanitize_text_field($atts['tag_id']);
+	}
+	
+	if (!empty($atts['tag_slug'])) {
+		$query_args['tag_slug'] = sanitize_text_field($atts['tag_slug']);
+	}
+	
+	if (!empty($atts['tag_relation'])) {
+		$query_args['tag_relation'] = sanitize_text_field($atts['tag_relation']);
+	}
+	
+	if (!empty($atts['meta_key'])) {
+		$query_args['meta_key'] = sanitize_text_field($atts['meta_key']);
+		if (!empty($atts['meta_value'])) {
+			$query_args['meta_value'] = sanitize_text_field($atts['meta_value']);
+		}
+		if (!empty($atts['meta_compare'])) {
+			$query_args['meta_compare'] = sanitize_text_field($atts['meta_compare']);
+		}
 	}
 	
 	return trvlr_cards($query_args);

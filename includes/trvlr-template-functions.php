@@ -447,13 +447,91 @@ function trvlr_cards($args = array())
 		}
 		echo '</div></div>';
 	} else {
-		$defaults = array(
-			'post_type' => 'trvlr_attraction',
-			'posts_per_page' => 16,
-			'post_status' => 'publish',
-		);
+		// Check if query_args is provided for complete override
+		if (isset($args['query_args']) && is_array($args['query_args'])) {
+			$query_args = $args['query_args'];
+			// Ensure post_type is set to trvlr_attraction if not specified
+			if (!isset($query_args['post_type'])) {
+				$query_args['post_type'] = 'trvlr_attraction';
+			}
+		} else {
+			$defaults = array(
+				'post_type' => 'trvlr_attraction',
+				'posts_per_page' => 16,
+				'post_status' => 'publish',
+			);
 
-		$query_args = wp_parse_args($args, $defaults);
+			// Build query args from individual parameters
+			$query_args = wp_parse_args($args, $defaults);
+
+			// Handle taxonomy query
+			if (!empty($args['tag']) || !empty($args['tag_id']) || !empty($args['tag_slug'])) {
+				$tax_query = array();
+
+				if (!empty($args['tag'])) {
+					$tax_query[] = array(
+						'taxonomy' => 'trvlr_attraction_tag',
+						'field' => 'name',
+						'terms' => is_array($args['tag']) ? $args['tag'] : explode(',', $args['tag']),
+					);
+				}
+
+				if (!empty($args['tag_id'])) {
+					$tax_query[] = array(
+						'taxonomy' => 'trvlr_attraction_tag',
+						'field' => 'term_id',
+						'terms' => is_array($args['tag_id']) ? $args['tag_id'] : array_map('intval', explode(',', $args['tag_id'])),
+					);
+				}
+
+				if (!empty($args['tag_slug'])) {
+					$tax_query[] = array(
+						'taxonomy' => 'trvlr_attraction_tag',
+						'field' => 'slug',
+						'terms' => is_array($args['tag_slug']) ? $args['tag_slug'] : explode(',', $args['tag_slug']),
+					);
+				}
+
+				if (count($tax_query) > 1) {
+					$tax_query['relation'] = !empty($args['tag_relation']) ? strtoupper($args['tag_relation']) : 'AND';
+				}
+
+				$query_args['tax_query'] = $tax_query;
+			}
+
+			// Handle custom taxonomy query (allows full tax_query array)
+			if (!empty($args['tax_query']) && is_array($args['tax_query'])) {
+				$query_args['tax_query'] = $args['tax_query'];
+			}
+
+			// Handle meta query
+			if (!empty($args['meta_query']) && is_array($args['meta_query'])) {
+				$query_args['meta_query'] = $args['meta_query'];
+			}
+
+			// Handle meta key/value for simple meta queries
+			if (!empty($args['meta_key'])) {
+				$query_args['meta_key'] = $args['meta_key'];
+				if (!empty($args['meta_value'])) {
+					$query_args['meta_value'] = $args['meta_value'];
+				}
+				if (!empty($args['meta_compare'])) {
+					$query_args['meta_compare'] = $args['meta_compare'];
+				}
+			}
+
+			// Handle exclude/include
+			if (!empty($args['exclude'])) {
+				$query_args['post__not_in'] = is_array($args['exclude']) ? $args['exclude'] : array_map('intval', explode(',', $args['exclude']));
+			}
+
+			// Clean up our custom args that aren't WP_Query params
+			$custom_args = array('tag', 'tag_id', 'tag_slug', 'tag_relation', 'exclude', 'query_args');
+			foreach ($custom_args as $custom_arg) {
+				unset($query_args[$custom_arg]);
+			}
+		}
+
 		$query = new WP_Query($query_args);
 
 		echo '<div class="trvlr-cards-container"><div class="trvlr-cards">';

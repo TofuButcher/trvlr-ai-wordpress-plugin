@@ -13,14 +13,14 @@ body {
 * Controllable Variables
 * ----------------------------------------
 * Global
-- trvlr-primary
+- trvlr-primary-color
 - trvlr-primary-active-color
 - trvlr-accent-color
 - trvlr-heading-color
 - trvlr-text-muted-color
 - trvlr-border-radius
 
-* Card
+* Attraction Cards
 - trvlr-card-border-radius
 - trvlr-card-padding
 - trvlr-card-background-color

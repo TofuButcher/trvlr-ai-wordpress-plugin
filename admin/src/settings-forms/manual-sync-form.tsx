@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from '@wordpress/element';
+import React, { useState, useEffect, useRef } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button, Notice } from '@wordpress/components';
 import apiFetch from '@wordpress/api-fetch';
@@ -13,7 +13,7 @@ export const ManualSyncForm = () => {
 
    const pollProgress = async () => {
       try {
-         const response = await apiFetch({ path: '/trvlr/v1/sync/progress' });
+         const response: any = await apiFetch({ path: '/trvlr/v1/sync/progress' });
 
          if (response.in_progress && response.progress) {
             setProgress(response.progress);
