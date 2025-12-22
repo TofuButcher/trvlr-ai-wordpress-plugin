@@ -9,6 +9,30 @@
 body {
   font-family: "Rethink Sans", sans-serif;
 }
+/*
+* Controllable Variables
+* ----------------------------------------
+* Global
+- trvlr-primary
+- trvlr-primary-active-color
+- trvlr-accent-color
+- trvlr-heading-color
+- trvlr-text-muted-color
+- trvlr-border-radius
+
+* Card
+- trvlr-card-border-radius
+- trvlr-card-padding
+- trvlr-card-background-color
+- trvlr-card-image-border-radius
+- trvlr-card-badge-top
+- trvlr-card-badge-left
+- trvlr-card-badge-border-radius
+- trvlr-card-badge-background-color
+- trvlr-card-badge-color
+- trvlr-card-badge-icon-color
+
+*/
 :root {
   --trvlr-font-family: "Rethink Sans", sans-serif;
   --trvlr-heading-font-family: "Rethink Sans", sans-serif;

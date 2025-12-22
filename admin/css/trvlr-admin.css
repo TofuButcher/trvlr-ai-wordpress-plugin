@@ -29,7 +29,7 @@ body {
 }
 .trvlr-tabs-nav {
   display: flex;
-  gap: 5px;
+  gap: 10px;
   border-bottom: none;
   margin: 20px 0 0;
   padding: 0;
@@ -39,7 +39,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 30px;
+  padding: 12px 26px;
   text-decoration: none;
   color: #50575e;
   border: none;
@@ -48,6 +48,7 @@ body {
   position: relative;
   border-radius: 6px 6px 0 0;
   font-size: 14px;
+  border-bottom: 3px solid transparent;
 }
 .trvlr-tab-link:hover {
   background: #fff;
@@ -60,6 +61,7 @@ body {
 .trvlr-tab-link.active {
   background: #fff;
   color: var(--trvlr-primary);
+  border-bottom-color: var(--trvlr-primary);
 }
 .trvlr-tab-link .dashicons {
   font-size: 18px;
@@ -81,6 +83,12 @@ body {
   padding: 30px;
   transition: 0.3s ease all;
 }
+.trvlr-tab-pane.active {
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition-delay: 0.1s;
+}
 .trvlr-tab-pane.before, .trvlr-tab-pane.after {
   opacity: 0;
   pointer-events: none;
@@ -95,21 +103,6 @@ body {
 }
 .trvlr-tab-pane.after {
   transform: translateX(20px);
-}
-.trvlr-tab-pane.active {
-  visibility: visible;
-  pointer-events: auto;
-  transform: translateY(0);
-}
-@keyframes trvlrFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 .trvlr-settings-sidebar-wrap {
   display: grid;
@@ -202,6 +195,11 @@ body {
   text-align: center;
   color: #666;
   font-style: italic;
+}
+/* === Plugin Instructions === */
+.trvlr-plugin-instructions .components-panel__body-toggle.components-button {
+  font-size: 18px;
+  font-weight: 600;
 }
 /* === Existing Styles === */
 #wpwrap:has(.trvlr-header) {
@@ -334,6 +332,10 @@ h1.trvlr-title {
 }
 .log-badge-attraction_skipped {
   background: #dba617;
+  color: #fff;
+}
+.log-badge-no-updates {
+  background: #8c8f94;
   color: #fff;
 }
 .log-badge-error {

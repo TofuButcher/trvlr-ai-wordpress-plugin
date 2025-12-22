@@ -173,6 +173,7 @@ class Trvlr_Logger
 						$updated_count++;
 						break;
 					case 'attraction_skipped':
+					case 'no_updates':
 						$skipped_count++;
 						break;
 					case 'error':

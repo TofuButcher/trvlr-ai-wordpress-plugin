@@ -317,7 +317,9 @@ class Trvlr_REST_API
 
 	public function get_sync_stats($request)
 	{
-		$total_attractions = wp_count_posts('trvlr_attraction')->publish;
+		$post_counts = wp_count_posts('trvlr_attraction');
+		$total_attractions = $post_counts->publish + $post_counts->draft + $post_counts->pending + $post_counts->private;
+
 		$custom_edit_posts = get_posts(array(
 			'post_type' => 'trvlr_attraction',
 			'meta_key' => '_trvlr_has_custom_edits',
@@ -337,18 +339,33 @@ class Trvlr_REST_API
 
 	public function trigger_manual_sync($request)
 	{
-		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-field-map.php';
-		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-logger.php';
-		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-notifier.php';
-		require_once plugin_dir_path(dirname(__FILE__)) . 'core/class-trvlr-sync.php';
+		try {
+			require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-field-map.php';
+			require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-logger.php';
+			require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-notifier.php';
+			require_once plugin_dir_path(dirname(__FILE__)) . 'core/class-trvlr-sync.php';
 
-		$syncer = new Trvlr_Sync();
-		$syncer->sync_all();
+			$syncer = new Trvlr_Sync();
+			$syncer->sync_all();
 
-		return rest_ensure_response(array(
-			'success' => true,
-			'message' => 'Sync completed successfully.',
-		));
+			return rest_ensure_response(array(
+				'success' => true,
+				'message' => 'Sync completed successfully.',
+			));
+		} catch (Exception $e) {
+			if (class_exists('Trvlr_Logger')) {
+				Trvlr_Logger::log('error', 'Manual sync failed: ' . $e->getMessage(), array(
+					'trace' => $e->getTraceAsString()
+				));
+			}
+			error_log('TRVLR Manual Sync Error: ' . $e->getMessage());
+
+			return new WP_Error(
+				'sync_failed',
+				'Sync failed: ' . $e->getMessage(),
+				array('status' => 500)
+			);
+		}
 	}
 
 	public function get_schedule_settings($request)

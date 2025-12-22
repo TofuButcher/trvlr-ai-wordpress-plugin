@@ -61,6 +61,7 @@ if (isset($_GET['post_id'])) {
       'meta_key' => 'trvlr_id',
       'meta_value' => $trvlr_id,
       'posts_per_page' => 1,
+      'post_status' => 'any',
       'fields' => 'ids'
    );
    $query = new WP_Query($args);

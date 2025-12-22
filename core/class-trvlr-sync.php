@@ -9,10 +9,58 @@
 
 class Trvlr_Sync
 {
+    public function sync_single($post_id)
+    {
+        $trvlr_id = get_post_meta($post_id, 'trvlr_id', true);
+
+        if (!$trvlr_id) {
+            return array(
+                'success' => false,
+                'message' => 'No TRVLR ID found for this attraction'
+            );
+        }
+
+        $attraction_data = $this->fetch_single_attraction($trvlr_id);
+
+        if (!$attraction_data) {
+            return array(
+                'success' => false,
+                'message' => 'Failed to fetch attraction data from API'
+            );
+        }
+
+        $list_image = get_post_meta($post_id, '_trvlr_list_image_cache', true);
+        if ($list_image && empty($attraction_data['images']['all_images'])) {
+            $attraction_data['list_image'] = $list_image;
+        }
+
+        $result = $this->update_attraction_post($attraction_data);
+
+        if ($result === 'error') {
+            return array(
+                'success' => false,
+                'message' => 'Error updating attraction'
+            );
+        }
+
+        $status_message = $result === 'skipped'
+            ? 'Attraction synced (some fields skipped due to custom edits)'
+            : 'Attraction synced successfully';
+
+        return array(
+            'success' => true,
+            'message' => $status_message,
+            'result' => $result
+        );
+    }
+
     public function sync_all()
     {
         $session_id = 'sync_' . date('YmdHis') . '_' . substr(md5(uniqid()), 0, 8);
         $GLOBALS['trvlr_current_sync_session'] = $session_id;
+
+        set_transient('trvlr_sync_in_progress', true, 3600);
+        $this->update_sync_progress(0, 0, 'Starting sync...');
 
         Trvlr_Logger::log('sync_start', 'Sync initiated', array('user_id' => get_current_user_id()), $session_id);
 
@@ -25,19 +73,28 @@ class Trvlr_Sync
 
         if (is_wp_error($api_data)) {
             Trvlr_Logger::log('error', 'API fetch failed: ' . $api_data->get_error_message());
+            delete_transient('trvlr_sync_in_progress');
+            delete_transient('trvlr_sync_progress');
             return;
         }
 
         if (empty($api_data['results'])) {
             Trvlr_Logger::log('error', 'No attractions found in API response');
+            delete_transient('trvlr_sync_in_progress');
+            delete_transient('trvlr_sync_progress');
             return;
         }
+
+        $total = count($api_data['results']);
+        $processed = 0;
 
         foreach ($api_data['results'] as $list_item) {
             $attraction_id = isset($list_item['pk']) ? $list_item['pk'] : (isset($list_item['id']) ? $list_item['id'] : 0);
 
             if (!$attraction_id) {
                 $errors++;
+                $processed++;
+                $this->update_sync_progress($processed, $total, "Processing {$processed} of {$total}...");
                 continue;
             }
 
@@ -46,6 +103,8 @@ class Trvlr_Sync
             if (!$attraction_data) {
                 Trvlr_Logger::log('error', "Failed to fetch details for attraction ID: {$attraction_id}");
                 $errors++;
+                $processed++;
+                $this->update_sync_progress($processed, $total, "Processing {$processed} of {$total}...");
                 continue;
             }
 
@@ -56,9 +115,12 @@ class Trvlr_Sync
             $result = $this->update_attraction_post($attraction_data);
 
             if ($result === 'created') $created++;
-            elseif ($result === 'updated') $updated++;
-            elseif ($result === 'skipped') $skipped++;
+            elseif ($result === 'updated' || $result === 'partial') $updated++;
+            elseif ($result === 'skipped' || $result === 'no_changes') $skipped++;
             elseif ($result === 'error') $errors++;
+
+            $processed++;
+            $this->update_sync_progress($processed, $total, "Synced {$processed} of {$total}");
         }
 
         $message = "Sync completed: {$created} created, {$updated} updated, {$skipped} skipped" . ($errors > 0 ? ", {$errors} errors" : "");
@@ -71,7 +133,21 @@ class Trvlr_Sync
 
         Trvlr_Notifier::notify_sync_complete($created, $updated, $skipped, $errors);
 
+        delete_transient('trvlr_sync_in_progress');
+        delete_transient('trvlr_sync_progress');
         unset($GLOBALS['trvlr_current_sync_session']);
+    }
+
+    private function update_sync_progress($processed, $total, $message)
+    {
+        $percentage = $total > 0 ? round(($processed / $total) * 100) : 0;
+
+        set_transient('trvlr_sync_progress', array(
+            'processed' => $processed,
+            'total' => $total,
+            'percentage' => $percentage,
+            'message' => $message
+        ), 3600);
     }
 
     private function fetch_attractions_from_api()
@@ -225,6 +301,7 @@ class Trvlr_Sync
         $post_args['meta_input']['trvlr_highlights'] = !empty($data['highlights']) ? $this->prepare_for_wp_editor($data['highlights']) : '';
 
         $skipped_fields = array();
+        $updated_fields = array();
         $status = 'updated';
 
         // Handle existing post - check for custom edits
@@ -237,18 +314,24 @@ class Trvlr_Sync
             $force_sync_fields = $this->get_force_sync_fields($existing_post->ID);
             $force_sync_title = in_array('post_title', $force_sync_fields);
 
-            // Smart diffing for title
+            // Smart diffing for title - decode HTML entities for comparison
             if (!$force_sync_title && in_array('post_title', $existing_edited_fields)) {
                 $skipped_fields[] = 'post_title';
             } else {
-                $current_title_hash = md5($existing_post->post_title);
+                $existing_title_decoded = html_entity_decode($existing_post->post_title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                $new_title_decoded = html_entity_decode($new_title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                $current_title_hash = md5($existing_title_decoded);
                 $last_synced_title_hash = get_post_meta($existing_post->ID, '_trvlr_sync_hash_post_title', true);
 
                 if (!$force_sync_title && $last_synced_title_hash && $current_title_hash !== $last_synced_title_hash) {
                     $skipped_fields[] = 'post_title';
                     $this->mark_field_as_edited($existing_post->ID, 'post_title');
                 } else {
-                    $post_args['post_title'] = $new_title;
+                    // Check if title is actually different (after decoding)
+                    if ($existing_title_decoded !== $new_title_decoded) {
+                        $post_args['post_title'] = $new_title;
+                        $updated_fields[] = 'post_title';
+                    }
                 }
             }
 
@@ -270,8 +353,12 @@ class Trvlr_Sync
                 $current_value = Trvlr_Field_Map::get_field_value($existing_post->ID, $field_name);
                 $synced_hash = get_post_meta($existing_post->ID, "_trvlr_sync_hash_{$field_name}", true);
 
+                // Get the new value from post_args
+                $new_value = isset($post_args['meta_input'][$field_name]) ? $post_args['meta_input'][$field_name] : null;
+
                 if ($synced_hash) {
                     $current_hash = Trvlr_Field_Map::hash_field_value($current_value, $field_name);
+                    $new_hash = Trvlr_Field_Map::hash_field_value($new_value, $field_name);
 
                     if ($current_hash !== $synced_hash) {
                         if (!$force_sync_field) {
@@ -280,23 +367,51 @@ class Trvlr_Sync
                             if (isset($post_args['meta_input'][$field_name])) {
                                 unset($post_args['meta_input'][$field_name]);
                             }
+                        } else {
+                            $updated_fields[] = $field_name;
                         }
+                    } else if ($new_hash !== $synced_hash) {
+                        // Field hasn't been edited locally, but API has new data
+                        $updated_fields[] = $field_name;
                     }
+                } else if ($new_value !== null) {
+                    // No synced hash exists, this is a new field
+                    $updated_fields[] = $field_name;
                 }
             }
 
             $post_args['ID'] = $existing_post->ID;
             $post_id = wp_update_post($post_args);
 
-            if (!empty($skipped_fields)) {
+            // Determine logging based on what actually happened
+            if (!empty($skipped_fields) && !empty($updated_fields)) {
+                // Some fields updated, some skipped
+                $status = 'partial';
+                Trvlr_Logger::log('attraction_updated', "Updated: {$new_title} (Skipped Custom Edits)", array(
+                    'post_id' => $post_id,
+                    'trvlr_id' => $attraction_id,
+                    'updated_fields' => $updated_fields,
+                    'skipped_fields' => $skipped_fields
+                ));
+            } else if (!empty($skipped_fields)) {
+                // All fields skipped, no updates made
                 $status = 'skipped';
-                Trvlr_Logger::log('attraction_skipped', "Skipped: {$new_title} (custom edits)", array(
+                Trvlr_Logger::log('no_updates', "No Updates: {$new_title} (Custom Edits)", array(
                     'post_id' => $post_id,
                     'trvlr_id' => $attraction_id,
                     'skipped_fields' => $skipped_fields
                 ));
-            } else {
+            } else if (!empty($updated_fields)) {
+                // Fields were actually updated
                 Trvlr_Logger::log('attraction_updated', "Updated: {$new_title}", array(
+                    'post_id' => $post_id,
+                    'trvlr_id' => $attraction_id,
+                    'updated_fields' => $updated_fields
+                ));
+            } else {
+                // No changes detected
+                $status = 'no_changes';
+                Trvlr_Logger::log('no_updates', "No Updates: {$new_title}", array(
                     'post_id' => $post_id,
                     'trvlr_id' => $attraction_id
                 ));
@@ -330,7 +445,10 @@ class Trvlr_Sync
 
             if (!empty($images_to_process)) {
                 $force_sync_fields = $this->get_force_sync_fields($post_id);
-                $this->process_images($post_id, $images_to_process, $skipped_fields, $force_sync_fields);
+                $image_updated_fields = $this->process_images($post_id, $images_to_process, $skipped_fields, $force_sync_fields);
+                if (!empty($image_updated_fields)) {
+                    $updated_fields = array_merge($updated_fields, $image_updated_fields);
+                }
             }
 
             if (!empty($data['attraction_type']) && is_array($data['attraction_type'])) {
@@ -402,6 +520,11 @@ class Trvlr_Sync
                 }
 
                 $saved_value = Trvlr_Field_Map::get_field_value($post_id, $field_name);
+
+                // Decode HTML entities for title to ensure consistent hashing
+                if ($field_name === 'post_title' && is_string($saved_value)) {
+                    $saved_value = html_entity_decode($saved_value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                }
 
                 if ($is_debug_post && in_array($field_name, ['trvlr_description', 'trvlr_short_description', 'trvlr_additional_info', 'trvlr_inclusions', 'trvlr_highlights'])) {
                     error_log("  [{$field_name}] FULL RAW VALUE:");
@@ -481,11 +604,12 @@ class Trvlr_Sync
 
     private function process_images($post_id, $images, $skipped_fields = array(), $force_sync_fields = array())
     {
-        if (empty($images)) return;
+        if (empty($images)) return array();
 
         $gallery_ids = array();
         $first_image_id = null;
         $processed_urls = array();
+        $images_changed = false;
 
         $skip_media = in_array('trvlr_media', $skipped_fields) && !in_array('trvlr_media', $force_sync_fields);
         $skip_thumbnail = in_array('_thumbnail_id', $skipped_fields) && !in_array('_thumbnail_id', $force_sync_fields);
@@ -516,6 +640,7 @@ class Trvlr_Sync
 
                 if ($attachment_id && !is_wp_error($attachment_id)) {
                     update_post_meta($attachment_id, 'trvlr_source_url', $image_url);
+                    $images_changed = true;
                 } else {
                     continue;
                 }
@@ -527,19 +652,44 @@ class Trvlr_Sync
             }
         }
 
+        $updated_fields = array();
+
         if (!empty($gallery_ids)) {
+            // Compare existing gallery with new gallery
+            $existing_gallery = get_post_meta($post_id, 'trvlr_media', true);
+            if (!is_array($existing_gallery)) {
+                $existing_gallery = array();
+            }
+
+            // Check if galleries are different (compare sorted arrays)
+            sort($gallery_ids);
+            sort($existing_gallery);
+            $gallery_changed = ($gallery_ids !== $existing_gallery);
+
             update_post_meta($post_id, 'trvlr_gallery_ids', $gallery_ids);
 
             // Only update trvlr_media if not skipped or force synced
             if (!$skip_media) {
-                update_post_meta($post_id, 'trvlr_media', $gallery_ids);
+                if ($gallery_changed || $images_changed) {
+                    update_post_meta($post_id, 'trvlr_media', $gallery_ids);
+                    $updated_fields[] = 'trvlr_media';
+                }
             }
+
+            // Check if featured image changed
+            $existing_thumbnail = get_post_thumbnail_id($post_id);
+            $thumbnail_changed = ($existing_thumbnail != $first_image_id);
 
             // Only update featured image if not skipped or force synced
             if (!$skip_thumbnail && $first_image_id) {
-                set_post_thumbnail($post_id, $first_image_id);
+                if ($thumbnail_changed || $images_changed) {
+                    set_post_thumbnail($post_id, $first_image_id);
+                    $updated_fields[] = '_thumbnail_id';
+                }
             }
         }
+
+        return $updated_fields;
     }
 
     private function get_best_image_url($img)
@@ -600,6 +750,7 @@ class Trvlr_Sync
             'meta_key' => 'trvlr_id',
             'meta_value' => $trvlr_id,
             'posts_per_page' => 1,
+            'post_status' => 'any',
             'fields' => 'ids'
         );
         $query = new WP_Query($args);

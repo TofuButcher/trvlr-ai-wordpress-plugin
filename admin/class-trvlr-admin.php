@@ -301,7 +301,9 @@ class Trvlr_Admin
 	private function get_initial_data()
 	{
 		// Get sync statistics
-		$total_attractions = wp_count_posts('trvlr_attraction')->publish;
+		$post_counts = wp_count_posts('trvlr_attraction');
+		$total_attractions = $post_counts->publish + $post_counts->draft + $post_counts->pending + $post_counts->private;
+
 		$custom_edit_posts = get_posts(array(
 			'post_type' => 'trvlr_attraction',
 			'meta_key' => '_trvlr_has_custom_edits',
@@ -422,6 +424,14 @@ class Trvlr_Admin
 				return current_user_can('manage_options');
 			},
 		));
+
+		register_rest_route('trvlr/v1', '/sync/progress', array(
+			'methods' => 'GET',
+			'callback' => array($this, 'get_sync_progress_rest'),
+			'permission_callback' => function () {
+				return current_user_can('manage_options');
+			},
+		));
 	}
 
 	/**
@@ -517,6 +527,20 @@ class Trvlr_Admin
 	}
 
 	/**
+	 * REST API: Get sync progress
+	 */
+	public function get_sync_progress_rest($request)
+	{
+		$in_progress = get_transient('trvlr_sync_in_progress');
+		$progress = get_transient('trvlr_sync_progress');
+
+		return rest_ensure_response(array(
+			'in_progress' => $in_progress ? true : false,
+			'progress' => $progress ? $progress : null
+		));
+	}
+
+	/**
 	 * AJAX Handler: Manual Sync
 	 */
 	public function ajax_manual_sync()
@@ -527,16 +551,25 @@ class Trvlr_Admin
 			wp_send_json_error('Insufficient permissions.');
 		}
 
-		// Load dependencies
-		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-field-map.php';
-		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-logger.php';
-		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-notifier.php';
-		require_once plugin_dir_path(dirname(__FILE__)) . 'core/class-trvlr-sync.php';
+		try {
+			require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-field-map.php';
+			require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-logger.php';
+			require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-notifier.php';
+			require_once plugin_dir_path(dirname(__FILE__)) . 'core/class-trvlr-sync.php';
 
-		$syncer = new Trvlr_Sync();
-		$syncer->sync_all();
+			$syncer = new Trvlr_Sync();
+			$syncer->sync_all();
 
-		wp_send_json_success('Sync completed successfully.');
+			wp_send_json_success('Sync completed successfully.');
+		} catch (Exception $e) {
+			if (class_exists('Trvlr_Logger')) {
+				Trvlr_Logger::log('error', 'Manual sync failed: ' . $e->getMessage(), array(
+					'trace' => $e->getTraceAsString()
+				));
+			}
+			error_log('TRVLR Manual Sync Error: ' . $e->getMessage());
+			wp_send_json_error('Sync failed: ' . $e->getMessage());
+		}
 	}
 
 	/**
@@ -594,6 +627,38 @@ class Trvlr_Admin
 		}
 
 		wp_send_json_success('Data deleted.');
+	}
+
+	/**
+	 * AJAX Handler: Sync single attraction
+	 */
+	public function ajax_sync_single()
+	{
+		check_ajax_referer('trvlr_sync_single', 'nonce');
+
+		if (!current_user_can('edit_posts')) {
+			wp_send_json_error(array('message' => 'Insufficient permissions'));
+		}
+
+		$post_id = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;
+
+		if (!$post_id) {
+			wp_send_json_error(array('message' => 'Invalid post ID'));
+		}
+
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-field-map.php';
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-logger.php';
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-notifier.php';
+		require_once plugin_dir_path(dirname(__FILE__)) . 'core/class-trvlr-sync.php';
+
+		$sync_engine = new Trvlr_Sync();
+		$result = $sync_engine->sync_single($post_id);
+
+		if ($result['success']) {
+			wp_send_json_success($result);
+		} else {
+			wp_send_json_error($result);
+		}
 	}
 
 	/**

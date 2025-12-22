@@ -30,6 +30,15 @@ function trvlr_get_repeater_instances()
 function trvlr_register_meta_boxes()
 {
 
+    add_meta_box(
+        'trvlr_sync_actions',
+        'TRVLR Sync',
+        'trvlr_render_sync_actions_meta_box',
+        'trvlr_attraction',
+        'side',
+        'high'
+    );
+
     // 1. Consolidated Details Box (Normal context with Core priority to appear right after title)
     add_meta_box(
         'trvlr_attraction_details',
@@ -44,6 +53,123 @@ function trvlr_register_meta_boxes()
     remove_meta_box('postcustom', 'trvlr_attraction', 'normal');
 }
 add_action('add_meta_boxes', 'trvlr_register_meta_boxes');
+
+function trvlr_render_sync_actions_meta_box($post)
+{
+    $trvlr_id = get_post_meta($post->ID, 'trvlr_id', true);
+    $has_edits = get_post_meta($post->ID, '_trvlr_has_custom_edits', true);
+    $edited_fields = get_post_meta($post->ID, '_trvlr_edited_fields', true);
+
+?>
+    <div id="trvlr-sync-actions" style="padding: 10px 0;">
+        <?php if ($trvlr_id): ?>
+            <p style="margin: 0 0 10px 0; font-size: 12px; color: #666;">
+                <strong>TRVLR ID:</strong> <?php echo esc_html($trvlr_id); ?>
+            </p>
+
+            <?php if ($has_edits && is_array($edited_fields) && !empty($edited_fields)): ?>
+                <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 8px; margin-bottom: 10px; border-radius: 3px; font-size: 12px;">
+                    <strong>⚠️ Manual edits detected</strong><br>
+                    <?php echo count($edited_fields); ?> field(s) will be skipped during sync
+                </div>
+            <?php endif; ?>
+
+            <button type="button" id="trvlr-sync-single-btn" class="button button-primary" style="width: 100%;">
+                <span class="dashicons dashicons-update" style="vertical-align: middle;"></span>
+                Sync from TRVLR
+            </button>
+
+            <div id="trvlr-sync-message" style="margin-top: 10px; padding: 8px; border-radius: 3px; display: none;"></div>
+        <?php else: ?>
+            <p style="color: #999; font-size: 12px; margin: 0;">
+                This attraction is not synced with TRVLR.
+            </p>
+        <?php endif; ?>
+    </div>
+
+    <style>
+        #trvlr-sync-single-btn.loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        #trvlr-sync-single-btn.loading .dashicons {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #trvlr-sync-message.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        #trvlr-sync-message.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+
+    <script>
+        jQuery(document).ready(function($) {
+            $('#trvlr-sync-single-btn').on('click', function() {
+                var $btn = $(this);
+                var $message = $('#trvlr-sync-message');
+                var postId = <?php echo absint($post->ID); ?>;
+
+                $btn.addClass('loading');
+                $message.hide().removeClass('success error');
+
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'trvlr_sync_single',
+                        post_id: postId,
+                        nonce: '<?php echo wp_create_nonce('trvlr_sync_single'); ?>'
+                    },
+                    success: function(response) {
+                        $btn.removeClass('loading');
+
+                        if (response.success) {
+                            $message
+                                .addClass('success')
+                                .html('<strong>✓ ' + response.data.message + '</strong>')
+                                .show();
+
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            $message
+                                .addClass('error')
+                                .html('<strong>✗ Error:</strong> ' + (response.data.message || 'Unknown error'))
+                                .show();
+                        }
+                    },
+                    error: function() {
+                        $btn.removeClass('loading');
+                        $message
+                            .addClass('error')
+                            .html('<strong>✗ Connection error.</strong> Please try again.')
+                            .show();
+                    }
+                });
+            });
+        });
+    </script>
+<?php
+}
 
 // Move content editor below our meta box
 function trvlr_move_editor_below_metabox()

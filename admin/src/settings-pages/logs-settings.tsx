@@ -160,6 +160,7 @@ export const LogsSettings = () => {
          attraction_created: 'trvlr-log-badge-created',
          attraction_updated: 'trvlr-log-badge-updated',
          attraction_skipped: 'trvlr-log-badge-skipped',
+         no_updates: 'trvlr-log-badge-no-updates',
          error: 'trvlr-log-badge-error',
          system: 'trvlr-log-badge-system',
       };

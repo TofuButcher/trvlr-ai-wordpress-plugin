@@ -62,6 +62,11 @@ class Trvlr_Edit_Tracker
 			// Get current value
 			$current_value = Trvlr_Field_Map::get_field_value($post_id, $field_name);
 
+			// Decode HTML entities for title to ensure consistent hashing
+			if ($field_name === 'post_title' && is_string($current_value)) {
+				$current_value = html_entity_decode($current_value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+			}
+
 			// FULL DEBUG for rich text fields (only for debug post)
 			if ($is_debug_post && in_array($field_name, ['trvlr_description', 'trvlr_short_description', 'trvlr_additional_info', 'trvlr_inclusions', 'trvlr_highlights'])) {
 				error_log("TRVLR TRACKER [{$post_id}] {$field_name} - FULL RAW VALUE (ON SAVE):");

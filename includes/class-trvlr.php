@@ -207,11 +207,13 @@ class Trvlr
 		// Register REST API routes
 		$rest_api = new Trvlr_REST_API();
 		$this->loader->add_action('rest_api_init', $rest_api, 'register_routes');
+		$this->loader->add_action('rest_api_init', $plugin_admin, 'register_theme_rest_routes');
 		// Initialize Meta Boxes
 		$this->loader->add_action('admin_init', $plugin_admin, 'init_meta_boxes');
 
 		// AJAX Hooks
 		$this->loader->add_action('wp_ajax_trvlr_manual_sync', $plugin_admin, 'ajax_manual_sync');
+		$this->loader->add_action('wp_ajax_trvlr_sync_single', $plugin_admin, 'ajax_sync_single');
 		$this->loader->add_action('wp_ajax_trvlr_delete_all_data', $plugin_admin, 'ajax_delete_all_data');
 		$this->loader->add_action('wp_ajax_trvlr_delete_posts_only', $plugin_admin, 'ajax_delete_posts_only');
 		$this->loader->add_action('wp_ajax_trvlr_create_payment_page', $plugin_admin, 'ajax_create_payment_page');
