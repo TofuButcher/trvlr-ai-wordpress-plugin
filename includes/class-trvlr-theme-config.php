@@ -14,6 +14,27 @@ class Trvlr_Theme_Config
 {
 	/**
 	 * Get all theme configuration
+	 * @return array
+	 * 
+	 * [ 'Top Level Group' => [
+	 * 	'label' => 'Label',
+	 * 	'description' => 'Description',
+	 * 	'fields' => [
+	 * 		'Key' => [
+	 * 			'label' => 'Label',
+	 * 			'type' => 'Type',
+	 * 			'default' => 'Default',
+	 * 			'cssVar' => 'CSS Var',
+	 * 		]
+	 * 	]
+	 * 	'cols-2' => [
+	 * 		'label' => 'Optional Label',
+	 * 		'description' => 'Optional Description',
+	 * 		'fields' => [...],
+	 * 		]
+	 * ] ]
+	 * --- cols-X keys can be used to wrap fields within with eg. div.trvlr-cols-2.
+	 * --- Available keys are 'cols-2', 'cols-3', 'cols-4'.
 	 */
 	public static function get_config()
 	{

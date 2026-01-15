@@ -1,8 +1,112 @@
-import { createContext, useContext, useState, useCallback } from '@wordpress/element';
+import { createContext, useContext, useState, useCallback, useMemo } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
-import { mergeWithDefaults } from '../config/themeConfig';
 
 const TrvlrContext = createContext();
+
+/**
+ * Get all fields from theme config (flattened)
+ */
+const getAllFieldsFromConfig = (config) => {
+    const fields = [];
+
+    Object.values(config || {}).forEach(group => {
+        if (group.fields) {
+            Object.entries(group.fields).forEach(([key, field]) => {
+                // Check if this is a cols grouping
+                if (key.startsWith('cols-') && field.fields) {
+                    // Add fields from within the cols grouping
+                    Object.entries(field.fields).forEach(([nestedKey, nestedField]) => {
+                        fields.push({
+                            key: nestedKey,
+                            ...nestedField
+                        });
+                    });
+                } else {
+                    fields.push({
+                        key,
+                        ...field
+                    });
+                }
+            });
+        }
+    });
+
+    return fields;
+};
+
+/**
+ * Get default values from theme config
+ */
+const getThemeDefaults = (config) => {
+    const defaults = {};
+    const allFields = getAllFieldsFromConfig(config);
+
+    allFields.forEach(field => {
+        if (field.default !== undefined) {
+            defaults[field.key] = field.default;
+        }
+    });
+
+    return defaults;
+};
+
+/**
+ * Merge user settings with defaults from config
+ */
+const mergeWithDefaults = (userSettings, config) => {
+    const defaults = getThemeDefaults(config);
+    const filtered = Object.fromEntries(
+        Object.entries(userSettings || {}).filter(([_, value]) => value !== undefined)
+    );
+
+    return {
+        ...defaults,
+        ...filtered,
+    };
+};
+
+/**
+ * Process theme config fields for rendering
+ * Handles cols-X groupings
+ */
+const processConfigForRendering = (config) => {
+    const processed = {};
+
+    Object.entries(config || {}).forEach(([groupKey, group]) => {
+        processed[groupKey] = {
+            ...group,
+            fields: []
+        };
+
+        if (group.fields) {
+            Object.entries(group.fields).forEach(([key, field]) => {
+                if (key.startsWith('cols-')) {
+                    // This is a cols grouping
+                    const colsClass = key; // e.g., "cols-3"
+                    processed[groupKey].fields.push({
+                        type: 'group',
+                        colsClass,
+                        label: field.label,
+                        description: field.description,
+                        fields: Object.entries(field.fields || {}).map(([nestedKey, nestedField]) => ({
+                            key: nestedKey,
+                            ...nestedField
+                        }))
+                    });
+                } else {
+                    // Regular field
+                    processed[groupKey].fields.push({
+                        type: 'field',
+                        key,
+                        ...field
+                    });
+                }
+            });
+        }
+    });
+
+    return processed;
+};
 
 export const TrvlrProvider = ({ children }) => {
     // Load initial data from window object (localized by PHP)
@@ -10,20 +114,27 @@ export const TrvlrProvider = ({ children }) => {
         settings: {},
         sync: {},
         system: {},
+        themeConfig: {},
         nonce: '',
     };
 
+    // Get theme config from localized data
+    const themeConfig = initialData.themeConfig || {};
+
+    // Process config for rendering (memoized)
+    const processedThemeConfig = useMemo(() => processConfigForRendering(themeConfig), [themeConfig]);
+
     // State management (merge with defaults to ensure all fields exist)
-    const [themeSettings, setThemeSettings] = useState(() => 
-        mergeWithDefaults(initialData.settings?.theme || {})
+    const [themeSettings, setThemeSettings] = useState(() =>
+        mergeWithDefaults(initialData.settings?.theme || {}, themeConfig)
     );
     const [connectionSettings, setConnectionSettings] = useState(initialData.settings?.connection || {});
     const [notificationSettings, setNotificationSettings] = useState(initialData.settings?.notifications || {});
-    
+
     const [syncStats, setSyncStats] = useState(initialData.sync?.stats || {});
     const [scheduleSettings, setScheduleSettings] = useState(initialData.sync?.schedule || {});
     const [customEditsCount, setCustomEditsCount] = useState(initialData.sync?.custom_edits_count || 0);
-    
+
     const [systemStatus, setSystemStatus] = useState(initialData.system || {});
     const [saving, setSaving] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
@@ -187,7 +298,11 @@ export const TrvlrProvider = ({ children }) => {
         saveThemeSettings,
         saveConnectionSettings,
         saveNotificationSettings,
-        
+
+        // Theme Config
+        themeConfig,
+        processedThemeConfig,
+
         // Sync
         syncStats,
         scheduleSettings,
@@ -196,13 +311,13 @@ export const TrvlrProvider = ({ children }) => {
         triggerManualSync,
         saveScheduleSettings,
         deleteData,
-        
+
         // System
         systemStatus,
         refreshSystemStatus,
         createPaymentPage,
         testApiConnection,
-        
+
         // UI State
         saving,
         refreshing,
@@ -223,4 +338,26 @@ export const useTrvlr = () => {
     }
     return context;
 };
+
+/**
+ * Generate CSS variables string from settings and config
+ */
+export const generateCSSVariables = (settings, config) => {
+    let css = ':root {\n';
+    const allFields = getAllFieldsFromConfig(config);
+
+    allFields.forEach(field => {
+        if (field.cssVar) {
+            const value = settings[field.key] ?? field.default;
+            const unit = field.unit || '';
+            css += `  ${field.cssVar}: ${value}${unit};\n`;
+        }
+    });
+
+    css += '}';
+    return css;
+};
+
+// Export helper functions for use outside context
+export { getAllFieldsFromConfig, getThemeDefaults, mergeWithDefaults, processConfigForRendering };
 

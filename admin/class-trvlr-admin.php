@@ -339,6 +339,7 @@ class Trvlr_Admin
 				),
 				'notifications' => get_option('trvlr_notification_settings', array()),
 			),
+			'themeConfig' => Trvlr_Theme_Config::get_config(),
 			'sync' => array(
 				'stats' => array(
 					'total_attractions' => $total_attractions,

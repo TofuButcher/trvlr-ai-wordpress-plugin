@@ -1,6 +1,19 @@
 import React, { ColorPicker, RangeControl, TextControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { ThemeFieldConfig } from '../config/themeConfig';
+
+interface ThemeFieldConfig {
+   key: string;
+   label: string;
+   type: 'color' | 'range' | 'text' | 'select';
+   default: string | number;
+   cssVar: string;
+   description?: string;
+   min?: number;
+   max?: number;
+   step?: number;
+   unit?: string;
+   options?: Array<{ label: string; value: string | number }>;
+}
 
 interface ThemeFieldProps {
    field: ThemeFieldConfig;

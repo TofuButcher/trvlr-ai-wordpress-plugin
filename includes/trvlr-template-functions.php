@@ -33,23 +33,30 @@ function trvlr_duration($post_id = null)
 	return apply_filters('trvlr_duration', ob_get_clean(), $post_id);
 }
 
-function trvlr_sale($post_id = null)
+function trvlr_sale($post_id = null, $description = null)
 {
 	$post_id = $post_id ?: get_the_ID();
 	$is_on_sale = get_trvlr_is_on_sale($post_id);
+	$always_show = false;
 
-	if (!$is_on_sale) {
-		return '';
-	}
 
 	$sale_description = get_trvlr_sale_description($post_id);
+
+	if ($description) {
+		$always_show = true;
+		$sale_description = $description;
+	}
+
+	if (!$is_on_sale && !$always_show) {
+		return '';
+	}
 
 	ob_start();
 ?>
 	<div class="trvlr-sale">
-		<?php echo trvlr_sale_badge($post_id); ?>
+		<?php echo trvlr_sale_badge($post_id, $always_show); ?>
 		<?php if ($sale_description) : ?>
-			<?php echo trvlr_sale_description($post_id); ?>
+			<?php echo trvlr_sale_description($post_id, $sale_description); ?>
 		<?php endif; ?>
 	</div>
 <?php
@@ -82,10 +89,13 @@ function trvlr_popular_badge($post_id = null)
 	return '';
 }
 
-function trvlr_sale_badge($post_id = null)
+function trvlr_sale_badge($post_id = null, $always_show = false)
 {
 	$post_id = $post_id ?: get_the_ID();
 	$is_on_sale = get_trvlr_is_on_sale($post_id);
+	if ($always_show) {
+		$is_on_sale = true;
+	}
 
 	if (!$is_on_sale) {
 		return '';
@@ -95,10 +105,10 @@ function trvlr_sale_badge($post_id = null)
 	return apply_filters('trvlr_sale_badge', $output, $post_id);
 }
 
-function trvlr_sale_description($post_id = null)
+function trvlr_sale_description($post_id = null, $description = null)
 {
 	$post_id = $post_id ?: get_the_ID();
-	$description = get_trvlr_sale_description($post_id);
+	$description = $description ?: get_trvlr_sale_description($post_id);
 
 	if (!$description) {
 		return '';

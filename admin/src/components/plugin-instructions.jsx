@@ -645,7 +645,7 @@ export const PluginInstructions = () => {
                            ))}
                         </Panel>
                      )}
-                  </div>
+</div>
                </PanelRow>
             </PanelBody>
          ))}

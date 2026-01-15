@@ -2,6 +2,12 @@
 	'use strict';
 
 	$(document).ready(function () {
+
+		$('.trvlr-back-link').on('click', function (e) {
+			e.preventDefault();
+			window.history.back(-1);
+		});
+
 		// Initialize Splide galleries
 		$('.trvlr-gallery--slider').each(function () {
 			var $wrap = $(this);
