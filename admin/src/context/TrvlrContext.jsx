@@ -10,25 +10,27 @@ const getAllFieldsFromConfig = (config) => {
     const fields = [];
 
     Object.values(config || {}).forEach(group => {
+        // Direct fields
         if (group.fields) {
             Object.entries(group.fields).forEach(([key, field]) => {
-                // Check if this is a cols grouping
-                if (key.startsWith('cols-') && field.fields) {
-                    // Add fields from within the cols grouping
-                    Object.entries(field.fields).forEach(([nestedKey, nestedField]) => {
-                        fields.push({
-                            key: nestedKey,
-                            ...nestedField
-                        });
-                    });
-                } else {
-                    fields.push({
-                        key,
-                        ...field
-                    });
-                }
+                fields.push({
+                    key,
+                    ...field
+                });
             });
         }
+
+        // Fields inside cols-X wrappers (at group level)
+        Object.entries(group).forEach(([key, value]) => {
+            if (key.startsWith('cols-') && value.fields) {
+                Object.entries(value.fields).forEach(([fieldKey, field]) => {
+                    fields.push({
+                        key: fieldKey,
+                        ...field
+                    });
+                });
+            }
+        });
     });
 
     return fields;
@@ -74,35 +76,38 @@ const processConfigForRendering = (config) => {
 
     Object.entries(config || {}).forEach(([groupKey, group]) => {
         processed[groupKey] = {
-            ...group,
+            label: group.label,
+            description: group.description,
             fields: []
         };
 
+        // Add direct fields first
         if (group.fields) {
             Object.entries(group.fields).forEach(([key, field]) => {
-                if (key.startsWith('cols-')) {
-                    // This is a cols grouping
-                    const colsClass = key; // e.g., "cols-3"
-                    processed[groupKey].fields.push({
-                        type: 'group',
-                        colsClass,
-                        label: field.label,
-                        description: field.description,
-                        fields: Object.entries(field.fields || {}).map(([nestedKey, nestedField]) => ({
-                            key: nestedKey,
-                            ...nestedField
-                        }))
-                    });
-                } else {
-                    // Regular field
-                    processed[groupKey].fields.push({
-                        type: 'field',
-                        key,
-                        ...field
-                    });
-                }
+                processed[groupKey].fields.push({
+                    type: 'field',
+                    key,
+                    ...field
+                });
             });
         }
+
+        // Add cols-X groupings (at group level)
+        Object.entries(group).forEach(([key, value]) => {
+            if (key.startsWith('cols-') && value.fields) {
+                const colsClass = key; // e.g., "cols-3"
+                processed[groupKey].fields.push({
+                    type: 'group',
+                    colsClass,
+                    label: value.label,
+                    description: value.description,
+                    fields: Object.entries(value.fields || {}).map(([fieldKey, field]) => ({
+                        key: fieldKey,
+                        ...field
+                    }))
+                });
+            }
+        });
     });
 
     return processed;

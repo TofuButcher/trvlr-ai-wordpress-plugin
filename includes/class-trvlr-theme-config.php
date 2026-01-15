@@ -42,36 +42,38 @@ class Trvlr_Theme_Config
 			'colors' => array(
 				'label' => 'Colors',
 				'description' => 'Global color scheme for TRVLR components',
-				'fields' => array(
-					'primaryColor' => array(
-						'label' => 'Primary Color',
-						'type' => 'color',
-						'default' => 'hsl(245, 90%, 50%)',
-						'cssVar' => '--trvlr-primary-color',
-					),
-					'primaryActiveColor' => array(
-						'label' => 'Primary Hover Color',
-						'type' => 'color',
-						'default' => 'hsl(245, 100%, 40%)',
-						'cssVar' => '--trvlr-primary-active-color',
-					),
-					'accentColor' => array(
-						'label' => 'Accent Color',
-						'type' => 'color',
-						'default' => 'hsl(57, 100%, 50%)',
-						'cssVar' => '--trvlr-accent-color',
-					),
-					'headingColor' => array(
-						'label' => 'Heading Color',
-						'type' => 'color',
-						'default' => 'hsl(0, 0%, 0%)',
-						'cssVar' => '--trvlr-heading-color',
-					),
-					'textMutedColor' => array(
-						'label' => 'Text Muted',
-						'type' => 'color',
-						'default' => 'hsl(0, 0%, 40%)',
-						'cssVar' => '--trvlr-text-muted-color',
+				'cols-3' => array(
+					'fields' => array(
+						'primaryColor' => array(
+							'label' => 'Primary Color',
+							'type' => 'color',
+							'default' => 'hsl(245, 90%, 50%)',
+							'cssVar' => '--trvlr-primary-color',
+						),
+						'primaryActiveColor' => array(
+							'label' => 'Primary Hover Color',
+							'type' => 'color',
+							'default' => 'hsl(245, 100%, 40%)',
+							'cssVar' => '--trvlr-primary-active-color',
+						),
+						'accentColor' => array(
+							'label' => 'Accent Color',
+							'type' => 'color',
+							'default' => 'hsl(57, 100%, 50%)',
+							'cssVar' => '--trvlr-accent-color',
+						),
+						'headingColor' => array(
+							'label' => 'Heading Color',
+							'type' => 'color',
+							'default' => 'hsl(0, 0%, 0%)',
+							'cssVar' => '--trvlr-heading-color',
+						),
+						'textMutedColor' => array(
+							'label' => 'Text Muted',
+							'type' => 'color',
+							'default' => 'hsl(0, 0%, 40%)',
+							'cssVar' => '--trvlr-text-muted-color',
+						),
 					),
 				),
 			),
@@ -129,7 +131,8 @@ class Trvlr_Theme_Config
 		$defaults = array();
 
 		foreach ($config as $group) {
-			foreach ($group['fields'] as $key => $field) {
+			$fields = self::extract_fields_from_group($group);
+			foreach ($fields as $key => $field) {
 				$defaults[$key] = $field['default'];
 			}
 		}
@@ -157,7 +160,8 @@ class Trvlr_Theme_Config
 		$css = '';
 
 		foreach ($config as $group) {
-			foreach ($group['fields'] as $key => $field) {
+			$fields = self::extract_fields_from_group($group);
+			foreach ($fields as $key => $field) {
 				$value = isset($settings[$key]) ? $settings[$key] : $field['default'];
 				$unit = isset($field['unit']) ? $field['unit'] : '';
 				$css .= $field['cssVar'] . ': ' . $value . $unit . '; ';
@@ -176,12 +180,37 @@ class Trvlr_Theme_Config
 		$fields = array();
 
 		foreach ($config as $group) {
-			foreach ($group['fields'] as $key => $field) {
+			$group_fields = self::extract_fields_from_group($group);
+			foreach ($group_fields as $key => $field) {
 				$field['key'] = $key;
 				$fields[] = $field;
 			}
 		}
 
 		return $fields;
+	}
+
+	/**
+	 * Extract all fields from a group, handling both direct fields and cols-X wrappers
+	 * @param array $group Group configuration
+	 * @return array Flat array of fields
+	 */
+	private static function extract_fields_from_group($group)
+	{
+		$all_fields = array();
+
+		// Check for direct fields
+		if (isset($group['fields'])) {
+			$all_fields = array_merge($all_fields, $group['fields']);
+		}
+
+		// Check for cols-X wrappers
+		foreach ($group as $key => $value) {
+			if (strpos($key, 'cols-') === 0 && isset($value['fields'])) {
+				$all_fields = array_merge($all_fields, $value['fields']);
+			}
+		}
+
+		return $all_fields;
 	}
 }
