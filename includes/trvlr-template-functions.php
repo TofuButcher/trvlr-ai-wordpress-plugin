@@ -370,6 +370,32 @@ function trvlr_booking_calendar($post_id = null, $args = array())
 	return apply_filters('trvlr_booking_calendar', ob_get_clean(), $post_id, $args);
 }
 
+function trvlr_booking_button($post_id = null, $args = array())
+{
+	$post_id = $post_id ?: get_the_ID();
+
+	$defaults = array(
+		'attraction_id' => get_trvlr_attraction_id($post_id),
+		'class' => '',
+		'label' => 'Book Now',
+	);
+	$args = wp_parse_args($args, $defaults);
+
+	if (is_trvlr_attraction($post_id)) {
+		$args['attraction_id'] = get_trvlr_attraction_id($post_id);
+	} else {
+		return '<p>Sorry this attraction is not available for booking. No Trvlr AI ID found.</p>';
+	}
+
+	ob_start();
+?>
+	<button class="trvlr-book-now<?php echo esc_attr($args['class']); ?>" attraction-id="<?php echo esc_attr($args['attraction_id']); ?>">
+		<span><?php echo esc_html($args['label']); ?></span>
+	</button>
+<?php
+	return apply_filters('trvlr_booking_button', ob_get_clean(), $post_id, $args);
+}
+
 function trvlr_card($post_id = null)
 {
 	$post_id = $post_id ?: get_the_ID();

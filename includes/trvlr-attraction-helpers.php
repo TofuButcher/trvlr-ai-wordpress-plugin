@@ -57,6 +57,13 @@ function get_trvlr_id($post_id = null)
 
 function get_trvlr_attraction_id($post_id = null)
 {
+	$post_id = $post_id ?: get_the_ID();
+	if (!is_trvlr_attraction($post_id)) {
+		$trvlr_attraction = get_field('trvlr_attraction_id') || get_field('trvlr_attraction');
+		if (is_object($trvlr_attraction) && isset($trvlr_attraction->ID)) {
+			$post_id = $trvlr_attraction->ID;
+		}
+	}
 	return get_trvlr_id($post_id);
 }
 
