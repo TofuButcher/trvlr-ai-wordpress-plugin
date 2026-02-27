@@ -11,20 +11,47 @@ export const ManualSyncForm = () => {
    const [progress, setProgress] = useState<{ processed: number; total: number; percentage: number; message: string } | null>(null);
    const pollingInterval = useRef<number | null>(null);
 
+   const stopPolling = () => {
+      if (pollingInterval.current) {
+         clearInterval(pollingInterval.current);
+         pollingInterval.current = null;
+      }
+   };
+
    const pollProgress = async () => {
       try {
          const response: any = await apiFetch({ path: '/trvlr/v1/sync/progress' });
 
          if (response.in_progress && response.progress) {
             setProgress(response.progress);
-         } else {
-            if (pollingInterval.current) {
-               clearInterval(pollingInterval.current);
-               pollingInterval.current = null;
-            }
+         } else if (response.status === 'stale') {
+            stopPolling();
             setSyncing(false);
             setProgress(null);
-            setMessage({ type: 'success', text: __('Sync completed successfully!', 'trvlr') });
+            setMessage({ type: 'error', text: __('Sync appears to have stalled. Please try again.', 'trvlr') });
+         } else {
+            stopPolling();
+            setSyncing(false);
+            setProgress(null);
+
+            if (response.results) {
+               const r = response.results;
+               const parts: string[] = [];
+               if (r.created > 0) parts.push(`${r.created} created`);
+               if (r.updated > 0) parts.push(`${r.updated} updated`);
+               if (r.skipped > 0) parts.push(`${r.skipped} skipped`);
+               if (r.errors > 0) parts.push(`${r.errors} errors`);
+
+               setMessage({
+                  type: r.errors > 0 ? 'error' : 'success',
+                  text: parts.length > 0
+                     ? `Sync completed: ${parts.join(', ')}.`
+                     : __('Sync completed successfully!', 'trvlr'),
+               });
+            } else {
+               setMessage({ type: 'success', text: __('Sync completed successfully!', 'trvlr') });
+            }
+
             await refreshSyncStats();
          }
       } catch (error) {
@@ -32,38 +59,49 @@ export const ManualSyncForm = () => {
       }
    };
 
+   const startPolling = () => {
+      if (pollingInterval.current) return;
+      pollingInterval.current = window.setInterval(pollProgress, 2000);
+   };
+
    const handleManualSync = async () => {
       setSyncing(true);
       setMessage(null);
       setProgress(null);
 
-      pollingInterval.current = window.setInterval(pollProgress, 1000);
-
       try {
-         await apiFetch({
+         const response: any = await apiFetch({
             path: '/trvlr/v1/sync/manual',
             method: 'POST'
          });
-      } catch (error) {
-         if (pollingInterval.current) {
-            clearInterval(pollingInterval.current);
-            pollingInterval.current = null;
-         }
-         setSyncing(false);
-         setProgress(null);
 
-         const errorMessage = error?.message || error?.data?.message || 'Sync failed. Please check logs.';
+         if (response.total) {
+            setProgress({ processed: 0, total: response.total, percentage: 0, message: __('Starting sync...', 'trvlr') });
+         }
+
+         startPolling();
+      } catch (error) {
+         setSyncing(false);
+         const errorMessage = error?.message || error?.data?.message || __('Sync failed. Please check logs.', 'trvlr');
          setMessage({ type: 'error', text: errorMessage });
          console.error('Sync error:', error);
       }
    };
 
    useEffect(() => {
-      return () => {
-         if (pollingInterval.current) {
-            clearInterval(pollingInterval.current);
-         }
+      const checkExistingSync = async () => {
+         try {
+            const response: any = await apiFetch({ path: '/trvlr/v1/sync/progress' });
+            if (response.in_progress && response.progress) {
+               setSyncing(true);
+               setProgress(response.progress);
+               startPolling();
+            }
+         } catch (e) {}
       };
+      checkExistingSync();
+
+      return () => stopPolling();
    }, []);
 
    return (

@@ -535,9 +535,32 @@ class Trvlr_Admin
 		$in_progress = get_transient('trvlr_sync_in_progress');
 		$progress = get_transient('trvlr_sync_progress');
 
+		$state = get_option('trvlr_sync_state', null);
+		$sync_status = null;
+		$sync_results = null;
+
+		if (is_array($state)) {
+			$sync_status = isset($state['status']) ? $state['status'] : null;
+			if ($sync_status === 'completed') {
+				$sync_results = array(
+					'created' => isset($state['created']) ? $state['created'] : 0,
+					'updated' => isset($state['updated']) ? $state['updated'] : 0,
+					'skipped' => isset($state['skipped']) ? $state['skipped'] : 0,
+					'errors'  => isset($state['errors']) ? $state['errors'] : 0,
+				);
+			} elseif ($sync_status === 'in_progress') {
+				$last_batch = isset($state['last_batch_at']) ? $state['last_batch_at'] : 0;
+				if ((time() - $last_batch) > 600) {
+					$sync_status = 'stale';
+				}
+			}
+		}
+
 		return rest_ensure_response(array(
 			'in_progress' => $in_progress ? true : false,
-			'progress' => $progress ? $progress : null
+			'progress' => $progress ? $progress : null,
+			'status' => $sync_status,
+			'results' => $sync_results,
 		));
 	}
 
@@ -559,9 +582,13 @@ class Trvlr_Admin
 			require_once plugin_dir_path(dirname(__FILE__)) . 'core/class-trvlr-sync.php';
 
 			$syncer = new Trvlr_Sync();
-			$syncer->sync_all();
+			$result = $syncer->start_sync();
 
-			wp_send_json_success('Sync completed successfully.');
+			if ($result['success']) {
+				wp_send_json_success($result);
+			} else {
+				wp_send_json_error($result['message']);
+			}
 		} catch (Exception $e) {
 			if (class_exists('Trvlr_Logger')) {
 				Trvlr_Logger::log('error', 'Manual sync failed: ' . $e->getMessage(), array(

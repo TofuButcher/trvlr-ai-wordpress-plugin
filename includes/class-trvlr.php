@@ -177,6 +177,7 @@ class Trvlr
 		// Cron jobs
 		$this->loader->add_action('trvlr_daily_log_cleanup', 'Trvlr_Logger', 'run_daily_cleanup');
 		$this->loader->add_action('trvlr_scheduled_sync', 'Trvlr_Scheduler', 'run_scheduled_sync');
+		$this->loader->add_action('trvlr_process_sync_batch', 'Trvlr_Scheduler', 'run_sync_batch');
 		$this->loader->add_action('trvlr_weekly_summary', 'Trvlr_Notifier', 'send_weekly_summary');
 
 		// Add custom cron schedules

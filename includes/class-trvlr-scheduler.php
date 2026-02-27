@@ -88,7 +88,14 @@ class Trvlr_Scheduler
 
 		require_once plugin_dir_path(dirname(__FILE__)) . 'core/class-trvlr-sync.php';
 		$sync = new Trvlr_Sync();
-		$sync->sync_all();
+		$sync->start_sync();
+	}
+
+	public static function run_sync_batch()
+	{
+		require_once plugin_dir_path(dirname(__FILE__)) . 'core/class-trvlr-sync.php';
+		$sync = new Trvlr_Sync();
+		$sync->process_batch();
 	}
 
 	/**

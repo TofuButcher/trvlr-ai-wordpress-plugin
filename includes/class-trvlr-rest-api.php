@@ -346,12 +346,17 @@ class Trvlr_REST_API
 			require_once plugin_dir_path(dirname(__FILE__)) . 'core/class-trvlr-sync.php';
 
 			$syncer = new Trvlr_Sync();
-			$syncer->sync_all();
+			$result = $syncer->start_sync();
 
-			return rest_ensure_response(array(
-				'success' => true,
-				'message' => 'Sync completed successfully.',
-			));
+			if (!$result['success']) {
+				return new WP_Error(
+					'sync_start_failed',
+					$result['message'],
+					array('status' => 400)
+				);
+			}
+
+			return rest_ensure_response($result);
 		} catch (Exception $e) {
 			if (class_exists('Trvlr_Logger')) {
 				Trvlr_Logger::log('error', 'Manual sync failed: ' . $e->getMessage(), array(

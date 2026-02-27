@@ -9,6 +9,11 @@
 
 class Trvlr_Sync
 {
+    const SYNC_STATE_OPTION = 'trvlr_sync_state';
+    const BATCH_CRON_HOOK = 'trvlr_process_sync_batch';
+    const DEFAULT_BATCH_SIZE = 2;
+    const STALE_TIMEOUT = 600;
+
     public function sync_single($post_id)
     {
         $trvlr_id = get_post_meta($post_id, 'trvlr_id', true);
@@ -56,45 +61,107 @@ class Trvlr_Sync
 
     public function sync_all()
     {
+        $state = $this->get_sync_state();
+        if ($state && $state['status'] === 'in_progress' && (time() - $state['last_batch_at']) < self::STALE_TIMEOUT) {
+            return;
+        }
+        $this->start_sync();
+    }
+
+    public function start_sync(): array
+    {
+        $state = $this->get_sync_state();
+        if ($state && $state['status'] === 'in_progress' && (time() - $state['last_batch_at']) < self::STALE_TIMEOUT) {
+            return array(
+                'success' => false,
+                'message' => 'A sync is already in progress.',
+            );
+        }
+
         $session_id = 'sync_' . date('YmdHis') . '_' . substr(md5(uniqid()), 0, 8);
-        $GLOBALS['trvlr_current_sync_session'] = $session_id;
-
-        set_transient('trvlr_sync_in_progress', true, 3600);
-        $this->update_sync_progress(0, 0, 'Starting sync...');
-
-        Trvlr_Logger::log('sync_start', 'Sync initiated', array('user_id' => get_current_user_id()), $session_id);
-
-        $created = 0;
-        $updated = 0;
-        $skipped = 0;
-        $errors = 0;
 
         $api_data = $this->fetch_attractions_from_api();
 
         if (is_wp_error($api_data)) {
             Trvlr_Logger::log('error', 'API fetch failed: ' . $api_data->get_error_message());
-            delete_transient('trvlr_sync_in_progress');
-            delete_transient('trvlr_sync_progress');
-            return;
+            return array(
+                'success' => false,
+                'message' => 'Failed to fetch attractions: ' . $api_data->get_error_message(),
+            );
         }
 
         if (empty($api_data['results'])) {
             Trvlr_Logger::log('error', 'No attractions found in API response');
-            delete_transient('trvlr_sync_in_progress');
-            delete_transient('trvlr_sync_progress');
-            return;
+            return array(
+                'success' => false,
+                'message' => 'No attractions found in API response',
+            );
         }
 
         $total = count($api_data['results']);
-        $processed = 0;
 
-        foreach ($api_data['results'] as $list_item) {
+        $sync_state = array(
+            'session_id'    => $session_id,
+            'attractions'   => $api_data['results'],
+            'current_index' => 0,
+            'total'         => $total,
+            'created'       => 0,
+            'updated'       => 0,
+            'skipped'       => 0,
+            'errors'        => 0,
+            'status'        => 'in_progress',
+            'started_at'    => time(),
+            'last_batch_at' => time(),
+        );
+
+        $this->save_sync_state($sync_state);
+        set_transient('trvlr_sync_in_progress', true, 3600);
+        $this->update_sync_progress(0, $total, 'Starting sync...');
+
+        Trvlr_Logger::log('sync_start', 'Sync initiated', array(
+            'user_id' => get_current_user_id(),
+            'total'   => $total,
+        ), $session_id);
+
+        $this->schedule_next_batch();
+
+        return array(
+            'success' => true,
+            'total'   => $total,
+            'message' => "Sync started. Processing {$total} attractions in batches.",
+        );
+    }
+
+    public function process_batch(int $batch_size = self::DEFAULT_BATCH_SIZE): void
+    {
+        $state = $this->get_sync_state();
+
+        if (!$state || $state['status'] !== 'in_progress') {
+            return;
+        }
+
+        $GLOBALS['trvlr_current_sync_session'] = $state['session_id'];
+
+        @set_time_limit(120);
+
+        $processed_in_batch = 0;
+        $memory_limit = $this->get_memory_limit_bytes();
+
+        while ($state['current_index'] < $state['total'] && $processed_in_batch < $batch_size) {
+            if ($memory_limit > 0 && memory_get_usage(true) > $memory_limit * 0.8) {
+                break;
+            }
+
+            $index = $state['current_index'];
+            $list_item = $state['attractions'][$index];
+
             $attraction_id = isset($list_item['pk']) ? $list_item['pk'] : (isset($list_item['id']) ? $list_item['id'] : 0);
 
             if (!$attraction_id) {
-                $errors++;
-                $processed++;
-                $this->update_sync_progress($processed, $total, "Processing {$processed} of {$total}...");
+                $state['errors']++;
+                $state['current_index']++;
+                $processed_in_batch++;
+                $this->update_sync_progress($state['current_index'], $state['total'], "Processing {$state['current_index']} of {$state['total']}...");
                 continue;
             }
 
@@ -102,9 +169,10 @@ class Trvlr_Sync
 
             if (!$attraction_data) {
                 Trvlr_Logger::log('error', "Failed to fetch details for attraction ID: {$attraction_id}");
-                $errors++;
-                $processed++;
-                $this->update_sync_progress($processed, $total, "Processing {$processed} of {$total}...");
+                $state['errors']++;
+                $state['current_index']++;
+                $processed_in_batch++;
+                $this->update_sync_progress($state['current_index'], $state['total'], "Processing {$state['current_index']} of {$state['total']}...");
                 continue;
             }
 
@@ -114,28 +182,105 @@ class Trvlr_Sync
 
             $result = $this->update_attraction_post($attraction_data);
 
-            if ($result === 'created') $created++;
-            elseif ($result === 'updated' || $result === 'partial') $updated++;
-            elseif ($result === 'skipped' || $result === 'no_changes') $skipped++;
-            elseif ($result === 'error') $errors++;
+            if ($result === 'created') $state['created']++;
+            elseif ($result === 'updated' || $result === 'partial') $state['updated']++;
+            elseif ($result === 'skipped' || $result === 'no_changes') $state['skipped']++;
+            elseif ($result === 'error') $state['errors']++;
 
-            $processed++;
-            $this->update_sync_progress($processed, $total, "Synced {$processed} of {$total}");
+            $state['current_index']++;
+            $processed_in_batch++;
+            $state['last_batch_at'] = time();
+            $this->save_sync_state($state);
+            $this->update_sync_progress(
+                $state['current_index'],
+                $state['total'],
+                "Synced {$state['current_index']} of {$state['total']}"
+            );
+
+            unset($attraction_data);
+            wp_cache_flush();
+            if (function_exists('gc_collect_cycles')) {
+                gc_collect_cycles();
+            }
         }
 
-        $message = "Sync completed: {$created} created, {$updated} updated, {$skipped} skipped" . ($errors > 0 ? ", {$errors} errors" : "");
-        Trvlr_Logger::log('sync_complete', $message, array(
-            'created' => $created,
-            'updated' => $updated,
-            'skipped' => $skipped,
-            'errors' => $errors
-        ), $session_id);
+        $state['last_batch_at'] = time();
 
-        Trvlr_Notifier::notify_sync_complete($created, $updated, $skipped, $errors);
+        if ($state['current_index'] >= $state['total']) {
+            $this->complete_sync($state);
+        } else {
+            $this->save_sync_state($state);
+            $this->schedule_next_batch();
+        }
+
+        unset($GLOBALS['trvlr_current_sync_session']);
+    }
+
+    private function complete_sync(array $state): void
+    {
+        $state['status'] = 'completed';
+
+        $message = sprintf(
+            'Sync completed: %d created, %d updated, %d skipped%s',
+            $state['created'],
+            $state['updated'],
+            $state['skipped'],
+            $state['errors'] > 0 ? ", {$state['errors']} errors" : ''
+        );
+
+        Trvlr_Logger::log('sync_complete', $message, array(
+            'created' => $state['created'],
+            'updated' => $state['updated'],
+            'skipped' => $state['skipped'],
+            'errors'  => $state['errors'],
+        ), $state['session_id']);
+
+        Trvlr_Notifier::notify_sync_complete(
+            $state['created'],
+            $state['updated'],
+            $state['skipped'],
+            $state['errors']
+        );
 
         delete_transient('trvlr_sync_in_progress');
         delete_transient('trvlr_sync_progress');
-        unset($GLOBALS['trvlr_current_sync_session']);
+
+        $state['attractions'] = array();
+        $this->save_sync_state($state);
+    }
+
+    private function schedule_next_batch(): void
+    {
+        if (!wp_next_scheduled(self::BATCH_CRON_HOOK)) {
+            wp_schedule_single_event(time() + 1, self::BATCH_CRON_HOOK);
+        }
+    }
+
+    private function get_sync_state(): ?array
+    {
+        $state = get_option(self::SYNC_STATE_OPTION, null);
+        return is_array($state) ? $state : null;
+    }
+
+    private function save_sync_state(array $state): void
+    {
+        update_option(self::SYNC_STATE_OPTION, $state, false);
+    }
+
+    private function get_memory_limit_bytes(): int
+    {
+        $limit = ini_get('memory_limit');
+        if ($limit === '-1') return 0;
+
+        $unit = strtolower(substr(trim($limit), -1));
+        $value = (int) $limit;
+        $multipliers = array('k' => 1024, 'm' => 1048576, 'g' => 1073741824);
+
+        if (isset($multipliers[$unit])) {
+            $value *= $multipliers[$unit];
+        }
+
+        return $value;
     }
 
     private function update_sync_progress($processed, $total, $message)
@@ -606,6 +751,12 @@ class Trvlr_Sync
     {
         if (empty($images)) return array();
 
+        $size_filter = function ($sizes) {
+            unset($sizes['1536x1536'], $sizes['2048x2048']);
+            return $sizes;
+        };
+        add_filter('intermediate_image_sizes_advanced', $size_filter);
+
         $gallery_ids = array();
         $first_image_id = null;
         $processed_urls = array();
@@ -689,6 +840,8 @@ class Trvlr_Sync
             }
         }
 
+        remove_filter('intermediate_image_sizes_advanced', $size_filter);
+
         return $updated_fields;
     }
 
@@ -722,7 +875,7 @@ class Trvlr_Sync
         $parsed_url = parse_url($image_url);
         $original_filename = basename($parsed_url['path']);
 
-        $tmp = download_url($image_url);
+        $tmp = download_url($image_url, 30);
 
         if (is_wp_error($tmp)) {
             return $tmp;
