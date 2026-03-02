@@ -12,6 +12,29 @@ if (! defined('ABSPATH')) {
 	exit;
 }
 
+(function () {
+	$current_dir = basename(dirname(__FILE__));
+	if ($current_dir === 'trvlr') return;
+
+	$new_path = WP_PLUGIN_DIR . '/trvlr';
+	if (file_exists($new_path)) return;
+
+	$old_path = WP_PLUGIN_DIR . '/' . $current_dir;
+	if (!@rename($old_path, $new_path)) return;
+
+	$active_plugins = get_option('active_plugins', array());
+	$key = array_search($current_dir . '/trvlr.php', $active_plugins);
+	if ($key !== false) {
+		$active_plugins[$key] = 'trvlr/trvlr.php';
+		update_option('active_plugins', $active_plugins);
+	}
+
+	if (!headers_sent()) {
+		header('Location: ' . $_SERVER['REQUEST_URI']);
+		exit;
+	}
+})();
+
 // Define Constants
 define('TRVLR_VERSION', '0.1.1');
 define('TRVLR_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -74,17 +97,17 @@ $myUpdateChecker = PucFactory::buildUpdateChecker(
 
 $myUpdateChecker->setBranch('main');
 
-add_filter('upgrader_source_selection', function ($source, $remote_source, $upgrader, $hook_extra) {
-	if (isset($hook_extra['plugin']) && $hook_extra['plugin'] === plugin_basename(__FILE__)) {
-		$expected = trailingslashit($remote_source) . 'trvlr-wordpress-manager/';
-		if ($source !== $expected) {
+add_filter('upgrader_source_selection', function ($source, $remote_source) {
+	if (is_dir($source) && file_exists($source . 'trvlr.php')) {
+		$expected = trailingslashit($remote_source) . 'trvlr/';
+		if ($source !== $expected && !file_exists($expected)) {
 			if (@rename($source, $expected)) {
 				return $expected;
 			}
 		}
 	}
 	return $source;
-}, 10, 4);
+}, 10, 2);
 
 // Temp test files
 if (file_exists(TRVLR_PLUGIN_DIR . 'test-api.php')) {
