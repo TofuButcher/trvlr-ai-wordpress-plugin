@@ -1,13 +1,6 @@
 /node_modules
 *.md
 
-/admin/build/*.js
-/admin/build/*.js.map
-/admin/build/*.css
-/admin/build/*.css.map
-/admin/build/*.asset.php
-/admin/build/*
-
 /~api/
 /~dev/
 /~docs/

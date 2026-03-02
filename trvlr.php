@@ -12,29 +12,6 @@ if (! defined('ABSPATH')) {
 	exit;
 }
 
-(function () {
-	$current_dir = basename(dirname(__FILE__));
-	if ($current_dir === 'trvlr') return;
-
-	$new_path = WP_PLUGIN_DIR . '/trvlr';
-	if (file_exists($new_path)) return;
-
-	$old_path = WP_PLUGIN_DIR . '/' . $current_dir;
-	if (!@rename($old_path, $new_path)) return;
-
-	$active_plugins = get_option('active_plugins', array());
-	$key = array_search($current_dir . '/trvlr.php', $active_plugins);
-	if ($key !== false) {
-		$active_plugins[$key] = 'trvlr/trvlr.php';
-		update_option('active_plugins', $active_plugins);
-	}
-
-	if (!headers_sent()) {
-		header('Location: ' . $_SERVER['REQUEST_URI']);
-		exit;
-	}
-})();
-
 // Define Constants
 define('TRVLR_VERSION', '0.1.2');
 define('TRVLR_PLUGIN_DIR', plugin_dir_path(__FILE__));

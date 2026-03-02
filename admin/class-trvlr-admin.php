@@ -75,10 +75,17 @@ class Trvlr_Admin
 
 		// Enqueue React settings components on settings page
 		if ($screen && $screen->id === 'toplevel_page_trvlr_settings') {
-			// React app
-			$theme_asset = include(plugin_dir_path(__FILE__) . 'build/trvlr-admin-root.jsx.asset.php');
+			$asset_file = plugin_dir_path(__FILE__) . 'build/trvlr-admin-root.jsx.asset.php';
 
-			// Force cache busting during development
+			if (!file_exists($asset_file)) {
+				add_action('admin_notices', function () {
+					echo '<div class="notice notice-error"><p><strong>TRVLR:</strong> Build files are missing. The admin interface requires compiled assets (admin/build/). Please reinstall the plugin from a release build.</p></div>';
+				});
+				return;
+			}
+
+			$theme_asset = include($asset_file);
+
 			$version = $theme_asset['version'] . '-' . time();
 
 			wp_enqueue_script(
@@ -89,7 +96,6 @@ class Trvlr_Admin
 				true
 			);
 
-			// Enqueue React app styles
 			wp_enqueue_style(
 				'trvlr-admin-root',
 				plugin_dir_url(__FILE__) . 'build/trvlr-admin-root.jsx.css',
