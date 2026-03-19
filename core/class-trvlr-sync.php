@@ -378,7 +378,7 @@ class Trvlr_Sync
 
         $existing_post = $this->get_post_by_trvlr_id($attraction_id);
         $new_title = sanitize_text_field($data['title']);
-        $new_description = $this->prepare_for_wp_editor(isset($data['description']) ? $data['description'] : '');
+        $new_description = Trvlr_Data_Transform::prepare_for_wp_editor(isset($data['description']) ? $data['description'] : '');
 
         $has_images = !empty($data['images']['all_images']) || !empty($data['list_image']);
         $is_new_post = !$existing_post;
@@ -398,9 +398,9 @@ class Trvlr_Sync
                 'trvlr_pk' => isset($data['pk']) ? $data['pk'] : '',
                 'trvlr_raw_data' => json_encode($data),
                 'trvlr_description' => $new_description,
-                'trvlr_short_description' => isset($data['short_description']) ? $this->prepare_for_wp_editor($data['short_description']) : '',
+                'trvlr_short_description' => isset($data['short_description']) ? Trvlr_Data_Transform::prepare_for_wp_editor($data['short_description']) : '',
                 'trvlr_duration' => isset($data['duration']) ? sanitize_text_field($data['duration']) : '',
-                'trvlr_additional_info' => isset($data['additional_info']) ? $this->prepare_for_wp_editor($data['additional_info']) : '',
+                'trvlr_additional_info' => isset($data['additional_info']) ? Trvlr_Data_Transform::prepare_for_wp_editor($data['additional_info']) : '',
                 'trvlr_start_time' => isset($data['start_time']) ? sanitize_text_field($data['start_time']) : '',
                 'trvlr_end_time' => isset($data['end_time']) ? sanitize_text_field($data['end_time']) : '',
             ),
@@ -442,8 +442,8 @@ class Trvlr_Sync
         }
         $post_args['meta_input']['trvlr_locations'] = $location_rows;
 
-        $post_args['meta_input']['trvlr_inclusions'] = !empty($data['inclusions']) ? $this->prepare_for_wp_editor($this->maybe_parse_json_list($data['inclusions'])) : '';
-        $post_args['meta_input']['trvlr_highlights'] = !empty($data['highlights']) ? $this->prepare_for_wp_editor($this->maybe_parse_json_list($data['highlights'])) : '';
+        $post_args['meta_input']['trvlr_inclusions'] = !empty($data['inclusions']) ? Trvlr_Data_Transform::transform_list_field($data['inclusions']) : '';
+        $post_args['meta_input']['trvlr_highlights'] = !empty($data['highlights']) ? Trvlr_Data_Transform::transform_list_field($data['highlights']) : '';
 
         $skipped_fields = array();
         $updated_fields = array();
@@ -921,94 +921,4 @@ class Trvlr_Sync
      * @param string $content Raw HTML content from API
      * @return string Plain text with line breaks matching wp_editor storage format
      */
-    private function maybe_parse_json_list($content)
-    {
-        if (!is_string($content) || empty($content)) {
-            return $content;
-        }
-
-        $trimmed = trim($content);
-        if ($trimmed[0] !== '{' && $trimmed[0] !== '[') {
-            return $content;
-        }
-
-        $decoded = json_decode($trimmed, true);
-        if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
-            return $content;
-        }
-
-        $items = array();
-
-        if (isset($decoded['items']) && is_array($decoded['items'])) {
-            foreach ($decoded['items'] as $item) {
-                if (isset($item['content']) && $item['content'] !== '') {
-                    $items[] = $item['content'];
-                }
-            }
-        } elseif (isset($decoded['highlights']) && is_array($decoded['highlights'])) {
-            foreach ($decoded['highlights'] as $item) {
-                if (is_string($item) && $item !== '') {
-                    $items[] = $item;
-                }
-            }
-        } elseif (array_values($decoded) === $decoded) {
-            foreach ($decoded as $item) {
-                if (is_string($item) && $item !== '') {
-                    $items[] = $item;
-                } elseif (is_array($item) && isset($item['content']) && $item['content'] !== '') {
-                    $items[] = $item['content'];
-                }
-            }
-        }
-
-        if (empty($items)) {
-            return $content;
-        }
-
-        $html = '<ul>';
-        foreach ($items as $item) {
-            $html .= '<li>' . esc_html($item) . '</li>';
-        }
-        $html .= '</ul>';
-
-        return $html;
-    }
-
-    private function prepare_for_wp_editor($content)
-    {
-        if (empty($content)) {
-            return '';
-        }
-
-        // Sanitize HTML first
-        $content = wp_kses_post($content);
-
-        // Normalize line endings to \n
-        $content = str_replace(array("\r\n", "\r"), "\n", $content);
-
-        // Strip opening <p> tags
-        $content = preg_replace('#\s*<p[^>]*>\s*#i', '', $content);
-
-        // Convert closing </p> tags to double line breaks
-        $content = preg_replace('#\s*</p>\s*#i', "\n\n", $content);
-
-        // Convert <br> tags to single line breaks
-        $content = preg_replace('#<br\s*/?>#i', "\n", $content);
-
-        // Strip <div> tags
-        $content = preg_replace('#</?div[^>]*>#i', '', $content);
-
-        // Collapse excess blank lines
-        $content = preg_replace("/\n{3,}/", "\n\n", $content);
-
-        // Trim each line individually (editor strips leading/trailing spaces per line)
-        $lines = explode("\n", $content);
-        $lines = array_map('trim', $lines);
-        $content = implode("\n", $lines);
-
-        // Trim overall
-        $content = trim($content);
-
-        return $content;
-    }
 }

@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Trvlr AI Booking System
  * Description: Wordpress plugin for integrating the trvlr.ai booking system.
- * Version: 0.1.2
+ * Version: 0.1.3
  * Author: Paris Welch
  * Text Domain: trvlr
  */
@@ -13,7 +13,7 @@ if (! defined('ABSPATH')) {
 }
 
 // Define Constants
-define('TRVLR_VERSION', '0.1.2');
+define('TRVLR_VERSION', '0.1.3');
 define('TRVLR_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('TRVLR_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -91,9 +91,9 @@ if (file_exists(TRVLR_PLUGIN_DIR . 'test-api.php')) {
 	require_once TRVLR_PLUGIN_DIR . 'test-api.php';
 }
 
-// Data transform testing (access with ?testing=true)
+// Data transform testing (access with ?trvlr_test=true)
 add_action('init', function () {
-	if (isset($_GET['test']) && $_GET['test'] == 'true') {
+	if (isset($_GET['trvlr_test']) && $_GET['trvlr_test'] === 'true') {
 		require_once TRVLR_PLUGIN_DIR . 'core/data-transform-testing.php';
 	}
 

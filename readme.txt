@@ -3,7 +3,7 @@ Contributors: pariswelch
 Tags: booking, reservations, tours, trvlr, booking system
 Requires at least: 5.0
 Tested up to: 6.4
-Stable tag: 0.1.2
+Stable tag: 0.1.3
 Requires PHP: 7.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
