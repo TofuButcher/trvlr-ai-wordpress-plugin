@@ -461,6 +461,33 @@ function trvlr_card($post_id = null)
 	return apply_filters('trvlr_card', ob_get_clean(), $post_id);
 }
 
+/**
+ * Output a grid of attraction cards from a WP_Query over `trvlr_attraction`.
+ *
+ * Usage:
+ * - With an empty `$args` on a main archive/taxonomy screen, uses the main query (loop).
+ * - Otherwise runs a dedicated query. Pass `query_args` as a full `WP_Query` argument array
+ *   for a complete override (defaults `post_type` to `trvlr_attraction` if omitted).
+ * - Or pass the parameters below; they are merged with defaults (`posts_per_page` 16, etc.).
+ *
+ * Taxonomy filters (combined with AND across groups; within a group use the matching `*_relation`):
+ * - **WordPress tags** (`post_tag`): `tag` (comma-separated slugs), `tag_id` (comma-separated term IDs),
+ *   `tag_slug` (comma-separated slugs), `tag_relation` (`AND`/`OR` when multiple of these dimensions apply).
+ *   Synced/API “attraction type” terms live on `trvlr_attraction_tag` — filter those with `trvlr_tag`, `trvlr_tag_slug`, or `trvlr_tag_id`, not `tag` / `tag_slug`.
+ * - **Categories** (`category`): `category` (comma-separated slugs), `category_id` (comma-separated term IDs),
+ *   `category_slug` (comma-separated slugs), `category_relation`.
+ * - **TRVLR attraction tags** (`trvlr_attraction_tag`): `trvlr_tag` (comma-separated names),
+ *   `trvlr_tag_id` (comma-separated term IDs), `trvlr_tag_slug` (comma-separated slugs), `trvlr_tag_relation`.
+ *
+ * Other common `$args`: `posts_per_page`, `orderby`, `order`, `post__in` (via shortcode `ids`), `exclude` (post IDs
+ * → `post__not_in`), `meta_key` / `meta_value` / `meta_compare`, `meta_query`, or a raw `tax_query` array (replaces
+ * all built-in taxonomy arguments above).
+ *
+ * Shortcode: `[trvlr_attraction_cards]` accepts the same argument names as attributes.
+ *
+ * @param array $args Query options, `query_args` override, or empty for main-query mode.
+ * @return string HTML for the cards container.
+ */
 function trvlr_cards($args = array())
 {
 	$use_main_query = false;
@@ -483,10 +510,8 @@ function trvlr_cards($args = array())
 		}
 		echo '</div></div>';
 	} else {
-		// Check if query_args is provided for complete override
 		if (isset($args['query_args']) && is_array($args['query_args'])) {
 			$query_args = $args['query_args'];
-			// Ensure post_type is set to trvlr_attraction if not specified
 			if (!isset($query_args['post_type'])) {
 				$query_args['post_type'] = 'trvlr_attraction';
 			}
@@ -497,55 +522,185 @@ function trvlr_cards($args = array())
 				'post_status' => 'publish',
 			);
 
-			// Build query args from individual parameters
 			$query_args = wp_parse_args($args, $defaults);
 
-			// Handle taxonomy query
+			$tax_groups = array();
+
 			if (!empty($args['tag']) || !empty($args['tag_id']) || !empty($args['tag_slug'])) {
-				$tax_query = array();
-
+				$clauses = array();
 				if (!empty($args['tag'])) {
-					$tax_query[] = array(
-						'taxonomy' => 'trvlr_attraction_tag',
-						'field' => 'name',
-						'terms' => is_array($args['tag']) ? $args['tag'] : explode(',', $args['tag']),
-					);
+					$terms = is_array($args['tag']) ? $args['tag'] : explode(',', $args['tag']);
+					$terms = array_map('sanitize_text_field', array_map('trim', $terms));
+					$terms = array_filter($terms);
+					if (!empty($terms)) {
+						$clauses[] = array(
+							'taxonomy' => 'post_tag',
+							'field' => 'slug',
+							'terms' => $terms,
+						);
+					}
 				}
-
 				if (!empty($args['tag_id'])) {
-					$tax_query[] = array(
-						'taxonomy' => 'trvlr_attraction_tag',
-						'field' => 'term_id',
-						'terms' => is_array($args['tag_id']) ? $args['tag_id'] : array_map('intval', explode(',', $args['tag_id'])),
-					);
+					$terms = is_array($args['tag_id']) ? $args['tag_id'] : array_map('intval', explode(',', $args['tag_id']));
+					$terms = array_filter($terms);
+					if (!empty($terms)) {
+						$clauses[] = array(
+							'taxonomy' => 'post_tag',
+							'field' => 'term_id',
+							'terms' => $terms,
+						);
+					}
 				}
-
 				if (!empty($args['tag_slug'])) {
-					$tax_query[] = array(
-						'taxonomy' => 'trvlr_attraction_tag',
-						'field' => 'slug',
-						'terms' => is_array($args['tag_slug']) ? $args['tag_slug'] : explode(',', $args['tag_slug']),
-					);
+					$terms = is_array($args['tag_slug']) ? $args['tag_slug'] : explode(',', $args['tag_slug']);
+					$terms = array_map('sanitize_text_field', array_map('trim', $terms));
+					$terms = array_filter($terms);
+					if (!empty($terms)) {
+						$clauses[] = array(
+							'taxonomy' => 'post_tag',
+							'field' => 'slug',
+							'terms' => $terms,
+						);
+					}
 				}
-
-				if (count($tax_query) > 1) {
-					$tax_query['relation'] = !empty($args['tag_relation']) ? strtoupper($args['tag_relation']) : 'AND';
+				if (!empty($clauses)) {
+					if (count($clauses) > 1) {
+						$tax_groups[] = array_merge(
+							array(
+								'relation' => !empty($args['tag_relation']) ? strtoupper(sanitize_text_field($args['tag_relation'])) : 'AND',
+							),
+							$clauses
+						);
+					} else {
+						$tax_groups[] = $clauses[0];
+					}
 				}
-
-				$query_args['tax_query'] = $tax_query;
 			}
 
-			// Handle custom taxonomy query (allows full tax_query array)
+			if (!empty($args['category']) || !empty($args['category_id']) || !empty($args['category_slug'])) {
+				$clauses = array();
+				if (!empty($args['category'])) {
+					$terms = is_array($args['category']) ? $args['category'] : explode(',', $args['category']);
+					$terms = array_map('sanitize_text_field', array_map('trim', $terms));
+					$terms = array_filter($terms);
+					if (!empty($terms)) {
+						$clauses[] = array(
+							'taxonomy' => 'category',
+							'field' => 'slug',
+							'terms' => $terms,
+						);
+					}
+				}
+				if (!empty($args['category_id'])) {
+					$terms = is_array($args['category_id']) ? $args['category_id'] : array_map('intval', explode(',', $args['category_id']));
+					$terms = array_filter($terms);
+					if (!empty($terms)) {
+						$clauses[] = array(
+							'taxonomy' => 'category',
+							'field' => 'term_id',
+							'terms' => $terms,
+						);
+					}
+				}
+				if (!empty($args['category_slug'])) {
+					$terms = is_array($args['category_slug']) ? $args['category_slug'] : explode(',', $args['category_slug']);
+					$terms = array_map('sanitize_text_field', array_map('trim', $terms));
+					$terms = array_filter($terms);
+					if (!empty($terms)) {
+						$clauses[] = array(
+							'taxonomy' => 'category',
+							'field' => 'slug',
+							'terms' => $terms,
+						);
+					}
+				}
+				if (!empty($clauses)) {
+					if (count($clauses) > 1) {
+						$tax_groups[] = array_merge(
+							array(
+								'relation' => !empty($args['category_relation']) ? strtoupper(sanitize_text_field($args['category_relation'])) : 'AND',
+							),
+							$clauses
+						);
+					} else {
+						$tax_groups[] = $clauses[0];
+					}
+				}
+			}
+
+			if (!empty($args['trvlr_tag']) || !empty($args['trvlr_tag_id']) || !empty($args['trvlr_tag_slug'])) {
+				$clauses = array();
+				if (!empty($args['trvlr_tag'])) {
+					$terms = is_array($args['trvlr_tag']) ? $args['trvlr_tag'] : explode(',', $args['trvlr_tag']);
+					$terms = array_map('sanitize_text_field', array_map('trim', $terms));
+					$terms = array_filter($terms);
+					if (!empty($terms)) {
+						$clauses[] = array(
+							'taxonomy' => 'trvlr_attraction_tag',
+							'field' => 'name',
+							'terms' => $terms,
+						);
+					}
+				}
+				if (!empty($args['trvlr_tag_id'])) {
+					$terms = is_array($args['trvlr_tag_id']) ? $args['trvlr_tag_id'] : array_map('intval', explode(',', $args['trvlr_tag_id']));
+					$terms = array_filter($terms);
+					if (!empty($terms)) {
+						$clauses[] = array(
+							'taxonomy' => 'trvlr_attraction_tag',
+							'field' => 'term_id',
+							'terms' => $terms,
+						);
+					}
+				}
+				if (!empty($args['trvlr_tag_slug'])) {
+					$terms = is_array($args['trvlr_tag_slug']) ? $args['trvlr_tag_slug'] : explode(',', $args['trvlr_tag_slug']);
+					$terms = array_map('sanitize_text_field', array_map('trim', $terms));
+					$terms = array_filter($terms);
+					if (!empty($terms)) {
+						$clauses[] = array(
+							'taxonomy' => 'trvlr_attraction_tag',
+							'field' => 'slug',
+							'terms' => $terms,
+						);
+					}
+				}
+				if (!empty($clauses)) {
+					if (count($clauses) > 1) {
+						$tax_groups[] = array_merge(
+							array(
+								'relation' => !empty($args['trvlr_tag_relation']) ? strtoupper(sanitize_text_field($args['trvlr_tag_relation'])) : 'AND',
+							),
+							$clauses
+						);
+					} else {
+						$tax_groups[] = $clauses[0];
+					}
+				}
+			}
+
+			if (!empty($tax_groups)) {
+				if (count($tax_groups) > 1) {
+					$query_args['tax_query'] = array_merge(
+						array('relation' => 'AND'),
+						$tax_groups
+					);
+				} else {
+					$single = $tax_groups[0];
+					$query_args['tax_query'] = isset($single['relation'])
+						? $single
+						: array($single);
+				}
+			}
+
 			if (!empty($args['tax_query']) && is_array($args['tax_query'])) {
 				$query_args['tax_query'] = $args['tax_query'];
 			}
 
-			// Handle meta query
 			if (!empty($args['meta_query']) && is_array($args['meta_query'])) {
 				$query_args['meta_query'] = $args['meta_query'];
 			}
 
-			// Handle meta key/value for simple meta queries
 			if (!empty($args['meta_key'])) {
 				$query_args['meta_key'] = $args['meta_key'];
 				if (!empty($args['meta_value'])) {
@@ -556,13 +711,26 @@ function trvlr_cards($args = array())
 				}
 			}
 
-			// Handle exclude/include
 			if (!empty($args['exclude'])) {
 				$query_args['post__not_in'] = is_array($args['exclude']) ? $args['exclude'] : array_map('intval', explode(',', $args['exclude']));
 			}
 
-			// Clean up our custom args that aren't WP_Query params
-			$custom_args = array('tag', 'tag_id', 'tag_slug', 'tag_relation', 'exclude', 'query_args');
+			$custom_args = array(
+				'tag',
+				'tag_id',
+				'tag_slug',
+				'tag_relation',
+				'category',
+				'category_id',
+				'category_slug',
+				'category_relation',
+				'trvlr_tag',
+				'trvlr_tag_id',
+				'trvlr_tag_slug',
+				'trvlr_tag_relation',
+				'exclude',
+				'query_args',
+			);
 			foreach ($custom_args as $custom_arg) {
 				unset($query_args[$custom_arg]);
 			}

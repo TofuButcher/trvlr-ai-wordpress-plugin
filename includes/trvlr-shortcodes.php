@@ -221,6 +221,7 @@ add_shortcode('trvlr_attraction_card', 'trvlr_shortcode_attraction_card');
 
 function trvlr_shortcode_attraction_cards($atts)
 {
+
 	$atts = shortcode_atts(array(
 		'posts_per_page' => -1,
 		'orderby' => 'date',
@@ -230,7 +231,15 @@ function trvlr_shortcode_attraction_cards($atts)
 		'tag' => '',
 		'tag_id' => '',
 		'tag_slug' => '',
-		'tag_relation' => 'AND',
+		'tag_relation' => '',
+		'category' => '',
+		'category_id' => '',
+		'category_slug' => '',
+		'category_relation' => '',
+		'trvlr_tag' => '',
+		'trvlr_tag_id' => '',
+		'trvlr_tag_slug' => '',
+		'trvlr_tag_relation' => '',
 		'meta_key' => '',
 		'meta_value' => '',
 		'meta_compare' => '=',
@@ -264,8 +273,40 @@ function trvlr_shortcode_attraction_cards($atts)
 		$query_args['tag_slug'] = sanitize_text_field($atts['tag_slug']);
 	}
 
-	if (!empty($atts['tag_relation'])) {
+	if ($atts['tag_relation'] !== '') {
 		$query_args['tag_relation'] = sanitize_text_field($atts['tag_relation']);
+	}
+
+	if (!empty($atts['category'])) {
+		$query_args['category'] = sanitize_text_field($atts['category']);
+	}
+
+	if (!empty($atts['category_id'])) {
+		$query_args['category_id'] = sanitize_text_field($atts['category_id']);
+	}
+
+	if (!empty($atts['category_slug'])) {
+		$query_args['category_slug'] = sanitize_text_field($atts['category_slug']);
+	}
+
+	if ($atts['category_relation'] !== '') {
+		$query_args['category_relation'] = sanitize_text_field($atts['category_relation']);
+	}
+
+	if (!empty($atts['trvlr_tag'])) {
+		$query_args['trvlr_tag'] = sanitize_text_field($atts['trvlr_tag']);
+	}
+
+	if (!empty($atts['trvlr_tag_id'])) {
+		$query_args['trvlr_tag_id'] = sanitize_text_field($atts['trvlr_tag_id']);
+	}
+
+	if (!empty($atts['trvlr_tag_slug'])) {
+		$query_args['trvlr_tag_slug'] = sanitize_text_field($atts['trvlr_tag_slug']);
+	}
+
+	if ($atts['trvlr_tag_relation'] !== '') {
+		$query_args['trvlr_tag_relation'] = sanitize_text_field($atts['trvlr_tag_relation']);
 	}
 
 	if (!empty($atts['meta_key'])) {
