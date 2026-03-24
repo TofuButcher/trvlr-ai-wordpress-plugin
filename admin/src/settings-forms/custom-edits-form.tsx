@@ -25,6 +25,16 @@ interface CustomEdit {
    force_sync_fields_labels: string[];
 }
 
+const asStringArray = (v: unknown): string[] => {
+   if (Array.isArray(v)) {
+      return v.filter((x): x is string => typeof x === 'string');
+   }
+   if (v && typeof v === 'object') {
+      return Object.values(v as Record<string, string>).filter((x) => typeof x === 'string');
+   }
+   return [];
+};
+
 export const CustomEditsForm = () => {
    const [customEdits, setCustomEdits] = useState<CustomEdit[]>([]);
    const [loading, setLoading] = useState(true);
@@ -38,12 +48,19 @@ export const CustomEditsForm = () => {
 
    const loadCustomEdits = async () => {
       try {
-         const edits = await apiFetch({ path: '/trvlr/v1/sync/custom-edits' }) as CustomEdit[];
+         const raw = await apiFetch({ path: '/trvlr/v1/sync/custom-edits' }) as CustomEdit[];
+         const edits = raw.map((edit) => ({
+            ...edit,
+            edited_fields: asStringArray(edit.edited_fields),
+            force_sync_fields: asStringArray(edit.force_sync_fields),
+            edited_fields_labels: asStringArray(edit.edited_fields_labels),
+            force_sync_fields_labels: asStringArray(edit.force_sync_fields_labels),
+         }));
          setCustomEdits(edits);
 
          const initial: Record<number, string[]> = {};
          edits.forEach((edit) => {
-            initial[edit.id] = edit.force_sync_fields || [];
+            initial[edit.id] = edit.force_sync_fields;
          });
          setForceSyncSettings(initial);
       } catch (error: any) {
@@ -94,6 +111,45 @@ export const CustomEditsForm = () => {
          setMessage({ type: 'success', text: response.message });
       } catch (error) {
          setMessage({ type: 'error', text: __('Failed to save force sync settings.', 'trvlr') });
+      }
+
+      setSaving(false);
+   };
+
+   const handleMarkAllForForceSync = async () => {
+      if (
+         !confirm(
+            __(
+               'Mark every edited field on every listed attraction to be overwritten from the API on the next sync? This replaces your current force sync selections.',
+               'trvlr'
+            )
+         )
+      ) {
+         return;
+      }
+
+      const all: Record<number, string[]> = {};
+      customEdits.forEach((edit) => {
+         all[edit.id] = [...edit.edited_fields];
+      });
+      setForceSyncSettings(all);
+
+      setSaving(true);
+      setMessage(null);
+
+      try {
+         const response = await apiFetch({
+            path: '/trvlr/v1/sync/force-sync',
+            method: 'POST',
+            data: { force_sync_fields: all },
+         }) as { message: string };
+
+         setMessage({ type: 'success', text: response.message });
+      } catch (error) {
+         setMessage({
+            type: 'error',
+            text: __('Failed to save force sync settings.', 'trvlr'),
+         });
       }
 
       setSaving(false);
@@ -163,7 +219,7 @@ export const CustomEditsForm = () => {
                            </td>
                            <td>
                               <span style={{ background: '#f0f0f1', padding: '4px 8px', borderRadius: '3px', fontSize: '12px' }}>
-                                 {edit.edited_fields_labels?.join(', ')}
+                                 {edit.edited_fields_labels.join(', ')}
                               </span>
                            </td>
                            <td>{edit.modified}</td>
@@ -225,7 +281,7 @@ export const CustomEditsForm = () => {
             </table>
          </div>
 
-         <div style={{ display: 'flex', gap: '10px' }}>
+         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
             <Button
                variant="primary"
                onClick={handleSave}
@@ -236,7 +292,16 @@ export const CustomEditsForm = () => {
             </Button>
             <Button
                variant="secondary"
+               onClick={handleMarkAllForForceSync}
+               isBusy={saving}
+               disabled={saving}
+            >
+               {__('Mark All Fields for Force Sync', 'trvlr')}
+            </Button>
+            <Button
+               variant="secondary"
                onClick={handleClear}
+               disabled={saving}
             >
                {__('Clear All Force Sync Settings', 'trvlr')}
             </Button>

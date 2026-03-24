@@ -429,8 +429,16 @@ class Trvlr_REST_API
 			$edited_fields = get_post_meta($post->ID, '_trvlr_edited_fields', true);
 			$force_sync_fields = get_post_meta($post->ID, '_trvlr_force_sync_fields', true);
 
-			if (!is_array($edited_fields)) $edited_fields = array();
-			if (!is_array($force_sync_fields)) $force_sync_fields = array();
+			if (!is_array($edited_fields)) {
+				$edited_fields = array();
+			} else {
+				$edited_fields = array_values($edited_fields);
+			}
+			if (!is_array($force_sync_fields)) {
+				$force_sync_fields = array();
+			} else {
+				$force_sync_fields = array_values($force_sync_fields);
+			}
 
 			$results[] = array(
 				'id' => $post->ID,
@@ -439,12 +447,12 @@ class Trvlr_REST_API
 				'modified' => get_the_modified_date('Y-m-d H:i', $post->ID),
 				'edited_fields' => $edited_fields,
 				'force_sync_fields' => $force_sync_fields,
-				'edited_fields_labels' => array_map(function ($field) use ($field_labels) {
+				'edited_fields_labels' => array_values(array_map(function ($field) use ($field_labels) {
 					return isset($field_labels[$field]) ? $field_labels[$field] : $field;
-				}, $edited_fields),
-				'force_sync_fields_labels' => array_map(function ($field) use ($field_labels) {
+				}, $edited_fields)),
+				'force_sync_fields_labels' => array_values(array_map(function ($field) use ($field_labels) {
 					return isset($field_labels[$field]) ? $field_labels[$field] : $field;
-				}, $force_sync_fields),
+				}, $force_sync_fields)),
 			);
 		}
 

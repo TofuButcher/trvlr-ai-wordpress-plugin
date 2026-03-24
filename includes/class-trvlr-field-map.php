@@ -134,9 +134,10 @@ class Trvlr_Field_Map
 
 		switch ($type) {
 			case 'array':
-				// Sort arrays to ensure consistent ordering
+				if ($value === null || $value === false || $value === '') {
+					$value = array();
+				}
 				if (is_array($value)) {
-					// Deep sort for nested arrays
 					$value = self::normalize_array($value);
 					return md5(json_encode($value));
 				}
@@ -148,11 +149,47 @@ class Trvlr_Field_Map
 
 			case 'string':
 			default:
-				// Normalize line endings to \n (WordPress may save as \r\n)
 				$value = is_string($value) ? trim($value) : (string) $value;
 				$value = str_replace(array("\r\n", "\r"), "\n", $value);
+				if ($field_name === 'post_title') {
+					$value = html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+				}
+				if (self::is_rich_text_meta_field($field_name)) {
+					$value = self::normalize_editor_html_for_hash($value);
+				}
 				return md5($value);
 		}
+	}
+
+	private static function is_rich_text_meta_field($field_name)
+	{
+		static $fields = array(
+			'trvlr_description',
+			'trvlr_short_description',
+			'trvlr_inclusions',
+			'trvlr_highlights',
+			'trvlr_additional_info',
+		);
+		return in_array($field_name, $fields, true);
+	}
+
+	private static function normalize_editor_html_for_hash($html)
+	{
+		if ($html === '') {
+			return '';
+		}
+		$html = Trvlr_Data_Transform::normalize_text_for_editor_storage($html);
+		$html = preg_replace('/\s+data-[a-zA-Z0-9_-]+="[^"]*"/', '', $html);
+		$html = preg_replace("/\s+data-[a-zA-Z0-9_-]+='[^']*'/", '', $html);
+		$html = preg_replace('#<p>\s*</p>#i', '', $html);
+		$html = preg_replace('/>\s+</', '><', $html);
+		foreach (array('li', 'p', 'ul', 'ol', 'div') as $tag) {
+			$q = preg_quote($tag, '/');
+			$html = preg_replace('/<' . $q . '([^>]*)>\s+/iu', '<' . $tag . '$1>', $html);
+			$html = preg_replace('/\s+<\/' . $q . '>/iu', '</' . $tag . '>', $html);
+		}
+		$html = preg_replace('/\s+/u', ' ', $html);
+		return trim($html);
 	}
 
 	/**
@@ -167,12 +204,11 @@ class Trvlr_Field_Map
 			return $array;
 		}
 
-		// Remove empty values
 		$array = array_filter($array, function ($value) {
 			if (is_array($value)) {
 				return !empty($value);
 			}
-			return $value !== '' && $value !== null;
+			return $value !== null;
 		});
 
 		// Sort by keys for associative arrays
@@ -184,9 +220,9 @@ class Trvlr_Field_Map
 		foreach ($array as $key => $value) {
 			if (is_array($value)) {
 				$array[$key] = self::normalize_array($value);
+			} elseif (($key === 'lat' || $key === 'lng') && $value !== '' && $value !== null && is_numeric($value)) {
+				$array[$key] = number_format((float) $value, 6, '.', '');
 			} elseif (is_numeric($value)) {
-				// Normalize numeric strings to integers (e.g., "31" -> 31)
-				// This ensures consistency between sync (strings) and manual saves (integers)
 				$array[$key] = intval($value);
 			}
 		}
@@ -223,7 +259,11 @@ class Trvlr_Field_Map
 			return get_post_thumbnail_id($post_id);
 		}
 
-		return get_post_meta($post_id, $field_name, true);
+		$meta = get_post_meta($post_id, $field_name, true);
+		if (self::get_field_type($field_name) === 'array' && !is_array($meta)) {
+			return array();
+		}
+		return $meta;
 	}
 
 	/**

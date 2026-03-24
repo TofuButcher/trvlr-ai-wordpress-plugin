@@ -91,16 +91,15 @@ if (file_exists(TRVLR_PLUGIN_DIR . 'test-api.php')) {
 	require_once TRVLR_PLUGIN_DIR . 'test-api.php';
 }
 
-// Data transform testing (access with ?trvlr_test=true)
-add_action('init', function () {
+// Data transform testing (access with ?trvlr_test=true) — wp hook so main query exists on frontend (init is too early)
+add_action('wp', function () {
 	if (isset($_GET['trvlr_test']) && $_GET['trvlr_test'] === 'true') {
 		require_once TRVLR_PLUGIN_DIR . 'core/data-transform-testing.php';
 	}
+}, 0);
 
+add_action('init', function () {
 	if (isset($_GET['temp']) && $_GET['temp'] == 'true') {
-		// Fetch all attractions, loop through the trvlr_price repeater field and get the price type for each price row.
-		// Die() and output to screen a set of all price types used on attractions.
-
 		$attractions = get_posts(array(
 			'post_type' => 'trvlr_attraction',
 			'posts_per_page' => -1,

@@ -198,7 +198,10 @@ class Trvlr_Sync
             );
 
             unset($attraction_data);
-            wp_cache_flush();
+            $cache_post = $this->get_post_by_trvlr_id($attraction_id);
+            if ($cache_post) {
+                clean_post_cache($cache_post->ID);
+            }
             if (function_exists('gc_collect_cycles')) {
                 gc_collect_cycles();
             }
@@ -377,7 +380,7 @@ class Trvlr_Sync
         }
 
         $existing_post = $this->get_post_by_trvlr_id($attraction_id);
-        $new_title = sanitize_text_field($data['title']);
+        $new_title = Trvlr_Data_Transform::normalize_post_title_for_sync(isset($data['title']) ? $data['title'] : '');
         $new_description = Trvlr_Data_Transform::prepare_for_wp_editor(isset($data['description']) ? $data['description'] : '');
 
         $has_images = !empty($data['images']['all_images']) || !empty($data['list_image']);
@@ -406,41 +409,10 @@ class Trvlr_Sync
             ),
         );
 
-        $pricing_rows = array();
-        if (!empty($data['pricing']) && is_array($data['pricing'])) {
-            foreach ($data['pricing'] as $p) {
-                $pricing_rows[] = array(
-                    'type' => isset($p['pricing_type']) ? sanitize_text_field($p['pricing_type']) : '',
-                    'price' => isset($p['max_price']) ? sanitize_text_field($p['max_price']) : '',
-                    'sale_price' => '',
-                );
-            }
-        }
-        $post_args['meta_input']['trvlr_pricing'] = $pricing_rows;
-
-        $location_rows = array();
-        if (!empty($data['location_start'])) {
-            $loc_start = is_string($data['location_start']) ? json_decode($data['location_start'], true) : $data['location_start'];
-            if (is_array($loc_start) && !empty($loc_start[0])) {
-                $l = $loc_start[0];
-                $location_rows[] = array(
-                    'type' => 'Start',
-                    'address' => isset($l['building']) ? $l['building'] . ', ' . (isset($l['city']) ? $l['city'] : '') : '',
-                    'lat' => isset($l['latitude']) ? $l['latitude'] : '',
-                    'lng' => isset($l['longitude']) ? $l['longitude'] : '',
-                );
-            }
-        }
-        if (!empty($data['location']['coordinates'])) {
-            $coords = $data['location']['coordinates'];
-            $location_rows[] = array(
-                'type' => 'Start',
-                'address' => isset($data['location']['address']) ? $data['location']['address'] : '',
-                'lat' => isset($coords[0]) ? $coords[0] : '',
-                'lng' => isset($coords[1]) ? $coords[1] : '',
-            );
-        }
-        $post_args['meta_input']['trvlr_locations'] = $location_rows;
+        $post_args['meta_input']['trvlr_pricing'] = Trvlr_Data_Transform::build_pricing_rows_from_api(
+            isset($data['pricing']) && is_array($data['pricing']) ? $data['pricing'] : array()
+        );
+        $post_args['meta_input']['trvlr_locations'] = Trvlr_Data_Transform::build_location_rows_from_api($data);
 
         $post_args['meta_input']['trvlr_inclusions'] = !empty($data['inclusions']) ? Trvlr_Data_Transform::transform_list_field($data['inclusions']) : '';
         $post_args['meta_input']['trvlr_highlights'] = !empty($data['highlights']) ? Trvlr_Data_Transform::transform_list_field($data['highlights']) : '';
@@ -463,18 +435,16 @@ class Trvlr_Sync
             if (!$force_sync_title && in_array('post_title', $existing_edited_fields)) {
                 $skipped_fields[] = 'post_title';
             } else {
-                $existing_title_decoded = html_entity_decode($existing_post->post_title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                $new_title_decoded = html_entity_decode($new_title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                $current_title_hash = md5($existing_title_decoded);
+                $current_title_hash = Trvlr_Field_Map::hash_field_value($existing_post->post_title, 'post_title');
+                $new_title_hash = Trvlr_Field_Map::hash_field_value($new_title, 'post_title');
                 $last_synced_title_hash = get_post_meta($existing_post->ID, '_trvlr_sync_hash_post_title', true);
 
                 if (!$force_sync_title && $last_synced_title_hash && $current_title_hash !== $last_synced_title_hash) {
                     $skipped_fields[] = 'post_title';
                     $this->mark_field_as_edited($existing_post->ID, 'post_title');
                 } else {
-                    // Check if title is actually different (after decoding)
-                    if ($existing_title_decoded !== $new_title_decoded) {
-                        $post_args['post_title'] = $new_title;
+                    $post_args['post_title'] = $new_title;
+                    if ($current_title_hash !== $new_title_hash || $existing_post->post_title !== $new_title) {
                         $updated_fields[] = 'post_title';
                     }
                 }
@@ -628,7 +598,7 @@ class Trvlr_Sync
 
         if (!in_array($field_name, $edited_fields)) {
             $edited_fields[] = $field_name;
-            update_post_meta($post_id, '_trvlr_edited_fields', $edited_fields);
+            update_post_meta($post_id, '_trvlr_edited_fields', array_values($edited_fields));
             update_post_meta($post_id, '_trvlr_has_custom_edits', '1');
         }
     }

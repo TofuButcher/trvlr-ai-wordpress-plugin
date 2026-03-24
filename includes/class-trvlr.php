@@ -107,14 +107,14 @@ class Trvlr
 		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-notifier.php';
 
 		/**
+		 * Static data transformation utilities for attraction fields (before field map; hash uses transforms)
+		 */
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-data-transform.php';
+
+		/**
 		 * The field map class for centralized field configuration
 		 */
 		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-field-map.php';
-
-		/**
-		 * Static data transformation utilities for attraction fields
-		 */
-		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-data-transform.php';
 
 		/**
 		 * The edit tracker class for real-time edit detection
