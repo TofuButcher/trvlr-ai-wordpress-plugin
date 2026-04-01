@@ -4,7 +4,7 @@
  * Theme Configuration
  * 
  * Single source of truth for theme settings (PHP version).
- * Mirrors the TypeScript config in admin/src/config/themeConfig.ts
+ * See docs/reference/theme-config.md for the React side.
  *
  * @package    Trvlr
  * @subpackage Trvlr/includes

@@ -1,9 +1,7 @@
 /node_modules
-*.md
 
 /~api/
 /~dev/
-/~docs/
 package-lock.json
 trvlr.zip
 trvlr_*.zip

@@ -8,101 +8,124 @@ Requires PHP: 7.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
-WordPress plugin for integrating the trvlr.ai booking system into any WordPress site.
+WordPress plugin for integrating the trvlr.ai booking platform: synced attractions, a TRVLR settings dashboard, and front-end booking components.
 
 == Description ==
 
-Trvlr AI Booking System provides a seamless integration with the trvlr.ai booking platform, allowing you to add booking capabilities to your WordPress site with minimal setup.
+Trvlr AI Booking System connects your WordPress site to **trvlr.ai**. It syncs tours and experiences into the **`trvlr_attraction`** custom post type, lets you adjust copy and media while respecting or overriding remote updates, and provides booking UI (modals, calendars, payment confirmation) you can place with shortcodes and template tags.
+
+**Documentation for maintainers** ships with the plugin in the `docs/` folder (overview, core sync model, admin and public behavior, and optional `docs/reference/` for detailed technical specs).
 
 = Features =
 
-* Modal-based booking flow
-* Floating cart button
-* Payment confirmation page
-* Booking calendar integration
-* Automatic cart synchronization
-* Responsive design
-* Easy configuration through admin settings
-* Disable frontend elements
+* Sync attractions from trvlr with batched full sync and single-attraction refresh
+* Track local edits per field; optional force-sync for specific fields
+* Scheduled sync, structured sync logs, optional email notifications
+* TRVLR admin app (Getting Started, Connection, Theme, Sync, Logs) backed by the REST API
+* Theme tokens (colors, spacing, cards) exposed as CSS variables on the front end
+* Default single-attraction template, Splide galleries, booking and checkout iframes
+* Shortcodes for attraction fields, booking calendar, and payment confirmation
+* Payment confirmation page support for return URLs from trvlr checkout
 
 = Usage =
 
-After installation and configuration:
-
-1. Configure your trvlr.ai base domain in the plugin settings
-2. Add booking buttons to your pages with `class="book-now"` and `attraction-id="YOUR_ID"` attributes
-3. Use shortcodes for payment confirmation and booking calendars
-4. Customize which post types display attraction ID fields
+1. Install and activate the plugin.
+2. Open **TRVLR** in the WordPress admin and set **Connection** (Organization ID and API key as required by your account).
+3. Run a sync from the **Sync** tab or edit an attraction and use **Sync from TRVLR** in the sidebar when a trvlr ID exists.
+4. Use shortcodes or the default single-attraction template to display content; add booking controls with `attraction-id` and classes such as `trvlr-book-now` or `trvlr-check-availability` (see plugin `docs/public/` for behavior).
 
 == Installation ==
 
-1. Upload the `trvlr` folder to your `/wp-content/plugins/` directory
-2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Go to 'Trvlr Settings' in the WordPress admin menu
-4. Enter your trvlr base domain (e.g., `https://yourdomain.trvlr.ai`)
-5. Save the settings
+1. Upload the `trvlr` folder to `/wp-content/plugins/`.
+2. Activate the plugin through the **Plugins** screen.
+3. Go to **TRVLR** in the admin menu and complete connection and sync setup.
+
+The plugin registers the attraction post type, creates log storage, and may create a **Payment Confirmation** page on activation.
 
 == Frequently Asked Questions ==
 
-= How do I get a trvlr.ai domain? =
+= How do I get a trvlr.ai account or subdomain? =
 
-Contact trvlr.ai to set up your booking system domain.
-
-= Can I disable the plugin's frontend elements? =
-
-Yes, there is a "Disable Frontend Elements" checkbox in the settings that allows you to disable the booking modals and JavaScript while keeping the plugin active for custom implementations.
+Contact trvlr.ai to set up your booking system and obtain Organization ID / API credentials as they apply to your integration.
 
 = What shortcodes are available? =
 
-* `[trvlr_payment_confirmation]` - Displays the payment confirmation page
-* `[trvlr_booking_calendar]` - Displays a booking calendar. Automatically uses the Attraction ID field from the current post, or you can specify one with `attraction_id="123"`
+The plugin registers many shortcodes for titles, descriptions, galleries, pricing, booking calendar, payment confirmation, and more. See `includes/trvlr-shortcodes.php` in the plugin or the `docs/public/` folder for how they relate to templates.
 
 = How do I add a booking calendar? =
 
-Simply add `[trvlr_booking_calendar]` to any post or page. If the post has an Attraction ID field (configured via Tour Post Types setting), it will automatically use that ID.
+Use the booking calendar shortcode on any post or page. Attraction context can be inferred from the current post when appropriate, or you can pass an attraction identifier depending on shortcode attributes (see shortcode definitions).
 
-You can also manually specify an attraction ID: `[trvlr_booking_calendar attraction_id="123"]`
+= How do booking buttons work? =
 
-= How do I add book now buttons? =
+The front-end booking script listens for elements that include an `attraction-id` attribute and the appropriate classes (for example `trvlr-book-now` for booking). Use the same patterns as the default templates or the plugin documentation.
 
-Add the following attributes to any button or element:
-* Class: `book-now`
-* Attribute: `attraction-id` with your attraction ID value
+= Where is developer documentation? =
 
-Example: `<button class="book-now" attraction-id="123">Book Now</button>`
+See the `docs/` directory inside the plugin: `README.md` is the index; `reference/` holds optional detailed specs (e.g. REST payloads) when provided.
 
 == Changelog ==
 
+= 0.1.4 =
+* Stable tag and version metadata updated for release
+* Attraction cards shortcode and query: separate WordPress vs TRVLR tag filters, optional categories, safer `tax_query` wrapping for single-clause cases
+* Debug tooling, data transform behavior, and bulk force-sync workflow improvements
+
+= 0.1.3 =
+* Extracted attraction data transforms into `Trvlr_Data_Transform` (shared normalization and list/pricing helpers)
+* Improved data-transform testing route for inspecting API-shaped data
+* Post type labels use a clear **TRVLR** prefix on `trvlr_attraction` to avoid clashing with other “attraction” post types
+* Ensured compiled React admin assets are included in the distributable build
+* Version bump and stable-tag alignment for 0.1.3
+
+= 0.1.2 =
+* Further plugin directory / update-checker naming fixes for reliable self-updates from GitHub
+* Version number alignment with tagged releases
+
+= 0.1.1 =
+* Renamed a filter hook for consistent plugin directory naming (update checker / paths)
+
+= 0.1.0 =
+* Full sync refactored to **batched processing** with WP-Cron continuations to avoid timeouts on large catalogs and modest hosts
+* **trvlr_attraction** custom post type with rich meta, sync engine, change tracking, and dedicated TRVLR admin area (connection, sync, logs)
+* **React-based TRVLR settings** app (single mount), WordPress components, theme tab with live card preview
+* Theme configuration driven from PHP with CSS variables on the front end; merged theme config for one source of truth between server and UI
+* **REST API** (`trvlr/v1`) for settings, sync, logs, and setup operations used by the dashboard
+* Connected sync to the **live trvlr API**; field mapping and data transforms aligned with production payloads
+* Core front end: booking scripts and styles, attraction **card grid** shortcode, **single attraction** template, Splide gallery support, many field shortcodes
+* Mobile responsiveness for single attraction and card grids; container-query grid for cards in non-full-width areas
+* Per-attraction **Sync from TRVLR** on the editor, **live sync progress** for full sync, clearer logging
+* Optional `~dev`-style local overrides for template testing without shipping dev files
+* SCSS build pipeline for public and admin assets; ongoing admin UI and instruction content updates
+* Removed redundant connection/API key UI where organisation-based auth is sufficient
+
 = 0.0.3 =
-* Changed "Enable Frontend" to "Disable Frontend Elements" checkbox with inverted logic (defaults to false/unchecked)
-* Booking calendar shortcode now automatically detects attraction ID from current post - no need to specify attraction_id attribute
-* Added tour post types configuration to register attraction_id fields
-* Added automatic payment confirmation page creation button
-* Improved admin UI with custom fonts and styling
-* Added comprehensive setup instructions in admin settings
-* Refactored JavaScript to class-based architecture for better maintainability
-* Created proper meta field registration system supporting both ACF and native WordPress custom fields
-* Updated all documentation to reflect automatic attraction ID detection
+* Added packaged plugin files, `readme.txt`, branding asset, and expanded `trvlr.php` settings (including frontend visibility and tour post types)
+* Meta fields for attraction ID on supported post types; optional automatic **payment confirmation** page creation
+* Admin styles and setup-oriented copy on the settings screen
+* Changed “Enable Frontend” to **Disable Frontend Elements** (inverted default)
+* Booking calendar shortcode can resolve attraction ID from the current post when attributes are omitted
+* Tour post types configuration for registering attraction ID fields where needed
+* Refactored front-end booking script to a class-based structure; improved modal handling, validation, and booking calendar shortcode defaults
+* Documentation and development outline updates
 
 = 0.0.2 =
-* Added frontend enable/disable control in admin settings
-* Conditional loading of JS/CSS based on configuration
-* Improved admin settings interface
-* Booking modals and scripts now respect enable setting
+* **Enable / disable front-end** booking assets from settings (conditional enqueue of JS/CSS when enabled and configured)
+* Booking modals and scripts respect the toggle; shortcodes remain available for custom layouts
+* Admin settings presentation improvements
 
 = 0.0.1 =
-* Initial release
-* Basic booking system integration
-* Modal-based booking flow
-* Payment confirmation page
-* Booking calendar shortcode
-* Admin configuration panel
+* Aligned plugin version and description with GitHub releases
+* **Plugin Update Checker** integration for updates from the GitHub repository inside WordPress
+* Initial public booking integration: modal flow, payment confirmation page, booking calendar shortcode, and base admin settings
 
 == Upgrade Notice ==
 
+= 0.1.4 =
+Maintenance and fixes for attraction card queries, sync tooling, and release metadata.
+
 = 0.0.3 =
-Major improvements to admin interface and booking calendar shortcode. The booking calendar now automatically detects attraction IDs from posts, making setup much easier.
+Major improvements to admin interface, packaged release files, and booking calendar behavior (automatic attraction ID from context where possible).
 
 = 0.0.2 =
-This version adds the ability to disable frontend elements, useful for custom implementations or during development.
-
+Adds optional disabling of front-end booking assets while keeping shortcodes available for custom implementations.
