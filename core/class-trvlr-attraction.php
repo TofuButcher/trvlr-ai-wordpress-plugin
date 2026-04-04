@@ -24,6 +24,9 @@ class Trvlr_Attraction
 	 */
 	public function register_post_type()
 	{
+		if (function_exists('trvlr_is_attraction_post_type_disabled') && trvlr_is_attraction_post_type_disabled()) {
+			return;
+		}
 
 		$labels = array(
 			'name'                  => _x('TRVLR Attractions', 'Post Type General Name', 'trvlr'),
@@ -85,6 +88,9 @@ class Trvlr_Attraction
 	 */
 	public function register_taxonomy()
 	{
+		if (function_exists('trvlr_is_attraction_post_type_disabled') && trvlr_is_attraction_post_type_disabled()) {
+			return;
+		}
 
 		$labels = array(
 			'name'                       => _x('Attraction Tags', 'Taxonomy General Name', 'trvlr'),

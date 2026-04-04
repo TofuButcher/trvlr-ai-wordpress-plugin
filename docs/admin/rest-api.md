@@ -4,7 +4,7 @@
 
 **`includes/class-trvlr-rest-api.php`** registers the **`trvlr/v1`** namespace used by the React settings app via `apiFetch`. Routes are grouped conceptually into:
 
-- **Settings** — Theme, connection, and notification options (`/settings/theme`, `/settings/connection`, `/settings/notifications`).
+- **Settings** — Theme, connection (including organisation ID, API key, and [feature flags](../reference/feature-flags.md)), and notification options (`/settings/theme`, `/settings/connection`, `/settings/notifications`).
 - **Sync** — Manual runs, schedule, progress, statistics, custom-edit listings, force-sync/clear operations, and bulk delete helpers under `/sync/...`.
 - **Logs** — Querying grouped or flat logs, clearing old or all entries, CSV export.
 - **Setup** — Payment page creation, connection test, status flags.

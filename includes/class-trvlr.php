@@ -86,6 +86,8 @@ class Trvlr
 		 */
 		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-loader.php';
 
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/trvlr-feature-flags.php';
+
 		/**
 		 * The class responsible for defining the CPT and business logic for Attractions.
 		 */

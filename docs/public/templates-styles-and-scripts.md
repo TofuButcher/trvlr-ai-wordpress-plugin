@@ -19,7 +19,7 @@ The admin settings screen optionally loads the same public card/shell CSS so **t
 ## Scripts
 
 - **`trvlr-public.js`** — jQuery + Splide: gallery sync (main + vertical nav), back-link behavior, and an in-file **SimpleAccordion** implementation for attraction accordions.
-- **`trvlr-bookings.js`** — Standalone booking UI: modal dialog, checkout iframe container, `postMessage` handling, cart/update flows, and delegation for `.trvlr-book-now` / `.trvlr-check-availability` controls. Localized as `trvlrConfig` with base iframe URL and home URL.
+- **`trvlr-bookings.js`** — Standalone booking UI: modal dialog, checkout iframe container, `postMessage` handling, cart/update flows, and delegation for `.trvlr-book-now` / `.trvlr-check-availability` controls. Localized as `trvlrConfig` with base iframe URL and home URL. Not enqueued when **`trvlr_disable_frontend_booking`** is enabled (Connection → TRVLR features); see [feature flags](../reference/feature-flags.md).
 - **`simple-accordion.js`** — Duplicate accordion helper exists as a separate file; the active single template path relies on the accordion class embedded in `trvlr-public.js` unless you enqueue the standalone file separately.
 
 ## Theme variables

@@ -86,8 +86,16 @@ class Trvlr_Public
 	 */
 	public function enqueue_scripts()
 	{
+		if (! function_exists('trvlr_is_frontend_booking_disabled')) {
+			require_once TRVLR_PLUGIN_DIR . 'includes/trvlr-feature-flags.php';
+		}
+
 		wp_enqueue_script('splide', plugin_dir_url(__FILE__) . '/dist/splide.min.js', array(), '4.1.3', true);
 		wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/trvlr-public.js', array('jquery', 'splide'), $this->version, false);
+
+		if (trvlr_is_frontend_booking_disabled()) {
+			return;
+		}
 
 		wp_enqueue_script('trvlr-bookings-script', plugin_dir_url(__FILE__) . 'js/trvlr-bookings.js', array(), $this->version, true);
 

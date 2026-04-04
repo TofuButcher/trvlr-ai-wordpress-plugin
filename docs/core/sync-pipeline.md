@@ -2,7 +2,7 @@
 
 ## Overview
 
-Sync is the process of aligning WordPress `trvlr_attraction` posts with the remote trvlr catalog. Two entry paths exist:
+Sync aligns WordPress `trvlr_attraction` posts with the remote trvlr catalog. If **`trvlr_disable_attraction_sync`** or **`trvlr_disable_attraction_post_type`** is enabled, syncing is disabled end-to-end—see [feature flags](../reference/feature-flags.md). Two entry paths exist:
 
 1. **Full (catalog) sync** — Fetches a list of attractions from the API, then processes each item in **batches** so PHP time and memory limits are not exceeded on large catalogs.
 2. **Single-attraction sync** — Fetches one record by trvlr ID and updates the matching post (or creates it), using the same update rules as the full sync.

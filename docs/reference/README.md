@@ -15,6 +15,7 @@ Use **kebab-case** filenames only.
 | [admin-rest-api.md](admin-rest-api.md) | `trvlr/v1` endpoints, methods, example bodies. |
 | [sync-settings-react.md](sync-settings-react.md) | Sync tab responsibilities and REST map. |
 | [react-context-provider.md](react-context-provider.md) | `TrvlrProvider`, `trvlrInitialData`, `useTrvlr()`. |
+| [feature-flags.md](feature-flags.md) | `trvlr_disable_attraction_post_type`, sync, and front-end booking options. |
 
 ## Dropped material
 

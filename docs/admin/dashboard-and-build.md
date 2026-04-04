@@ -19,6 +19,10 @@ The root component wraps children in **`TrvlrProvider`**, which holds settings/s
 
 Subpages cover onboarding copy, organisation/API connection, **theme tokens** (colors, spacing, badges) with live-oriented preview, **manual and scheduled sync**, custom-edit tooling, log viewers, and destructive/data operations where implemented.
 
+## Connection tab: TRVLR features
+
+The **Connection** tab includes **Organisation ID** and a **TRVLR features** block (subtitle: “Turn off what you don’t need”) with three toggles backed by options `trvlr_disable_attraction_post_type`, `trvlr_disable_attraction_sync`, and `trvlr_disable_frontend_booking`. When the post type is disabled, the sync toggle is forced on and disabled in the UI, and the server enforces no syncing. Details: [feature flags](../reference/feature-flags.md).
+
 ## Initial payload
 
 `get_initial_data()` bundles theme settings, connection snapshot, notification preferences, sync statistics (including counts of posts with custom edits), scheduler state, payment page status, REST nonces, and admin AJAX nonce into **`trvlrInitialData`** so the first paint can avoid redundant round trips. The provider may still refetch via REST after mount.

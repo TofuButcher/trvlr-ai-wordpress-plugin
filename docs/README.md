@@ -15,6 +15,7 @@ The plugin connects a WordPress site to the **trvlr.ai** booking platform. It **
 - **Front-end experience** — Default single-attraction template, card-oriented CSS, Splide-based galleries, theme CSS variables from settings, booking modal/calendar scripts, and shortcodes for embedding pieces anywhere.
 - **Admin dashboard** — Tabbed React app (Getting Started, Connection, Theme, Sync, Logs) backed by the **`trvlr/v1`** REST API; classic **meta boxes** on each attraction for detailed edits and per-post sync.
 - **Activation setup** — On activation, the plugin registers the attraction post type, creates the sync log table, seeds a **payment confirmation** page when appropriate, and schedules maintenance crons.
+- **Optional integration modes** — Under **Connection → TRVLR features**, you can disable the built-in attraction post type, disable API syncing, or disable front-end booking scripts while keeping other plugin behavior. See [feature flags](reference/feature-flags.md).
 
 ## Repository map
 

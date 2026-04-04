@@ -80,6 +80,10 @@ class Trvlr_Scheduler
 	 */
 	public static function run_scheduled_sync()
 	{
+		if (function_exists('trvlr_is_attraction_sync_disabled') && trvlr_is_attraction_sync_disabled()) {
+			return;
+		}
+
 		if (!self::is_sync_enabled()) {
 			return;
 		}
@@ -93,6 +97,10 @@ class Trvlr_Scheduler
 
 	public static function run_sync_batch()
 	{
+		if (function_exists('trvlr_is_attraction_sync_disabled') && trvlr_is_attraction_sync_disabled()) {
+			return;
+		}
+
 		require_once plugin_dir_path(dirname(__FILE__)) . 'core/class-trvlr-sync.php';
 		$sync = new Trvlr_Sync();
 		$sync->process_batch();

@@ -276,22 +276,38 @@ class Trvlr_REST_API
 
 	public function get_connection_settings($request)
 	{
-		return rest_ensure_response(array(
-			'organisation_id' => get_option('trvlr_organisation_id', ''),
-		));
+		if (! function_exists('trvlr_get_connection_settings_array')) {
+			require_once plugin_dir_path(__FILE__) . 'trvlr-feature-flags.php';
+		}
+		return rest_ensure_response(trvlr_get_connection_settings_array());
 	}
 
 	public function update_connection_settings($request)
 	{
-		$data = $request->get_json_params();
-		if (isset($data['organisation_id'])) {
-			update_option('trvlr_organisation_id', sanitize_text_field($data['organisation_id']));
+		if (! function_exists('trvlr_update_connection_settings_from_request')) {
+			require_once plugin_dir_path(__FILE__) . 'trvlr-feature-flags.php';
 		}
+
+		$prev_pt = (bool) get_option('trvlr_disable_attraction_post_type', false);
+
+		$data = $request->get_json_params();
+		if (! is_array($data)) {
+			$data = array();
+		}
+		trvlr_update_connection_settings_from_request($data);
+
+		if (function_exists('trvlr_is_attraction_sync_disabled') && trvlr_is_attraction_sync_disabled()) {
+			Trvlr_Scheduler::unschedule_sync();
+		}
+
+		$new_pt = (bool) get_option('trvlr_disable_attraction_post_type', false);
+		if ($prev_pt !== $new_pt) {
+			flush_rewrite_rules(false);
+		}
+
 		return rest_ensure_response(array(
 			'success' => true,
-			'settings' => array(
-				'organisation_id' => get_option('trvlr_organisation_id', ''),
-			),
+			'settings' => trvlr_get_connection_settings_array(),
 		));
 	}
 
@@ -339,6 +355,17 @@ class Trvlr_REST_API
 
 	public function trigger_manual_sync($request)
 	{
+		if (! function_exists('trvlr_is_attraction_sync_disabled')) {
+			require_once plugin_dir_path(__FILE__) . 'trvlr-feature-flags.php';
+		}
+		if (trvlr_is_attraction_sync_disabled()) {
+			return new WP_Error(
+				'sync_disabled',
+				__('Attraction syncing is disabled in TRVLR settings.', 'trvlr'),
+				array('status' => 403)
+			);
+		}
+
 		try {
 			require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-field-map.php';
 			require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-logger.php';
@@ -375,6 +402,17 @@ class Trvlr_REST_API
 
 	public function get_schedule_settings($request)
 	{
+		if (! function_exists('trvlr_is_attraction_sync_disabled')) {
+			require_once plugin_dir_path(__FILE__) . 'trvlr-feature-flags.php';
+		}
+		if (trvlr_is_attraction_sync_disabled()) {
+			return rest_ensure_response(array(
+				'enabled' => false,
+				'frequency' => Trvlr_Scheduler::get_sync_frequency(),
+				'next_sync' => null,
+			));
+		}
+
 		$sync_enabled = Trvlr_Scheduler::is_sync_enabled();
 		$sync_frequency = Trvlr_Scheduler::get_sync_frequency();
 		$next_sync = Trvlr_Scheduler::get_next_sync_time();
@@ -388,6 +426,17 @@ class Trvlr_REST_API
 
 	public function update_schedule_settings($request)
 	{
+		if (! function_exists('trvlr_is_attraction_sync_disabled')) {
+			require_once plugin_dir_path(__FILE__) . 'trvlr-feature-flags.php';
+		}
+		if (trvlr_is_attraction_sync_disabled()) {
+			return new WP_Error(
+				'sync_disabled',
+				__('Attraction syncing is disabled in TRVLR settings.', 'trvlr'),
+				array('status' => 403)
+			);
+		}
+
 		$data = $request->get_json_params();
 		$enabled = isset($data['enabled']) && $data['enabled'];
 		$frequency = isset($data['frequency']) ? sanitize_text_field($data['frequency']) : 'daily';

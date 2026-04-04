@@ -12,7 +12,7 @@ The main plugin file loads the `Trvlr` class from `includes/class-trvlr.php` and
 
 **Core (always-on)**
 
-- **Custom post type and taxonomy** — Registered on `init` for `trvlr_attraction` and `trvlr_attraction_tag`.
+- **Custom post type and taxonomy** — Registered on `init` for `trvlr_attraction` and `trvlr_attraction_tag`, unless `trvlr_disable_attraction_post_type` is enabled (see [feature flags](../reference/feature-flags.md)).
 - **Cron callbacks** — Daily log cleanup, scheduled full sync, batched sync continuation, and optional weekly email summary are bound to their hook names.
 - **Cron schedules filter** — Ensures intervals such as weekly exist for sync scheduling.
 - **Edit tracking** — On `save_post`, after normal save processing, attractions are analyzed for divergences from last synced content (see [data model and change detection](data-model-and-change-detection.md)).

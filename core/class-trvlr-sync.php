@@ -16,6 +16,13 @@ class Trvlr_Sync
 
     public function sync_single($post_id)
     {
+        if (function_exists('trvlr_is_attraction_sync_disabled') && trvlr_is_attraction_sync_disabled()) {
+            return array(
+                'success' => false,
+                'message' => 'Attraction syncing is disabled in TRVLR settings.',
+            );
+        }
+
         $trvlr_id = get_post_meta($post_id, 'trvlr_id', true);
 
         if (!$trvlr_id) {
@@ -70,6 +77,13 @@ class Trvlr_Sync
 
     public function start_sync(): array
     {
+        if (function_exists('trvlr_is_attraction_sync_disabled') && trvlr_is_attraction_sync_disabled()) {
+            return array(
+                'success' => false,
+                'message' => 'Attraction syncing is disabled in TRVLR settings.',
+            );
+        }
+
         $state = $this->get_sync_state();
         if ($state && $state['status'] === 'in_progress' && (time() - $state['last_batch_at']) < self::STALE_TIMEOUT) {
             return array(
@@ -134,6 +148,10 @@ class Trvlr_Sync
 
     public function process_batch(int $batch_size = self::DEFAULT_BATCH_SIZE): void
     {
+        if (function_exists('trvlr_is_attraction_sync_disabled') && trvlr_is_attraction_sync_disabled()) {
+            return;
+        }
+
         $state = $this->get_sync_state();
 
         if (!$state || $state['status'] !== 'in_progress') {

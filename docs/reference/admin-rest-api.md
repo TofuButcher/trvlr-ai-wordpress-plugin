@@ -30,14 +30,29 @@ GET  /settings/connection
 POST /settings/connection
 ```
 
+**GET/POST fields** (partial POST is allowed; omitted keys are left unchanged):
+
+| Field | Type | Notes |
+|-------|------|--------|
+| `organisation_id` | string | |
+| `api_key` | string | |
+| `disable_attraction_post_type` | boolean | Option `trvlr_disable_attraction_post_type`. |
+| `disable_attraction_sync` | boolean | Option `trvlr_disable_attraction_sync`. Forced `true` when post type is disabled. |
+| `disable_frontend_booking` | boolean | Option `trvlr_disable_frontend_booking`. |
+
 **POST body example:**
 
 ```json
 {
   "organisation_id": "your-subdomain",
-  "api_key": ""
+  "api_key": "",
+  "disable_attraction_post_type": false,
+  "disable_attraction_sync": false,
+  "disable_frontend_booking": false
 }
 ```
+
+See [feature flags](feature-flags.md).
 
 ### Notifications
 

@@ -217,8 +217,11 @@ class Trvlr_Admin
 	 */
 	public function init_meta_boxes()
 	{
+		if (function_exists('trvlr_is_attraction_post_type_disabled') && trvlr_is_attraction_post_type_disabled()) {
+			return;
+		}
+
 		require_once plugin_dir_path(__FILE__) . 'meta-fields.php';
-		// The require executes the add_action calls inside meta-fields.php
 	}
 
 	/**
@@ -238,6 +241,24 @@ class Trvlr_Admin
 		register_setting('trvlr_settings_group', 'trvlr_organisation_id', array(
 			'type' => 'string',
 			'default' => '',
+			'show_in_rest' => true,
+		));
+
+		register_setting('trvlr_settings_group', 'trvlr_disable_attraction_post_type', array(
+			'type' => 'boolean',
+			'default' => false,
+			'show_in_rest' => true,
+		));
+
+		register_setting('trvlr_settings_group', 'trvlr_disable_attraction_sync', array(
+			'type' => 'boolean',
+			'default' => false,
+			'show_in_rest' => true,
+		));
+
+		register_setting('trvlr_settings_group', 'trvlr_disable_frontend_booking', array(
+			'type' => 'boolean',
+			'default' => false,
 			'show_in_rest' => true,
 		));
 
@@ -306,6 +327,10 @@ class Trvlr_Admin
 	 */
 	private function get_initial_data()
 	{
+		if (! function_exists('trvlr_get_connection_settings_array')) {
+			require_once plugin_dir_path(dirname(__FILE__)) . 'includes/trvlr-feature-flags.php';
+		}
+
 		// Get sync statistics
 		$post_counts = wp_count_posts('trvlr_attraction');
 		$total_attractions = $post_counts->publish + $post_counts->draft + $post_counts->pending + $post_counts->private;
@@ -340,9 +365,7 @@ class Trvlr_Admin
 		return array(
 			'settings' => array(
 				'theme' => Trvlr_Theme_Config::merge_with_defaults(get_option('trvlr_theme_settings', array())),
-				'connection' => array(
-					'organisation_id' => get_option('trvlr_organisation_id', ''),
-				),
+				'connection' => trvlr_get_connection_settings_array(),
 				'notifications' => get_option('trvlr_notification_settings', array()),
 			),
 			'themeConfig' => Trvlr_Theme_Config::get_config(),
@@ -474,11 +497,10 @@ class Trvlr_Admin
 	 */
 	public function get_connection_settings_rest($request)
 	{
-		$settings = array(
-			'organisation_id' => get_option('trvlr_organisation_id', ''),
-			'api_key' => get_option('trvlr_api_key', ''),
-		);
-		return rest_ensure_response($settings);
+		if (! function_exists('trvlr_get_connection_settings_array')) {
+			require_once plugin_dir_path(dirname(__FILE__)) . 'includes/trvlr-feature-flags.php';
+		}
+		return rest_ensure_response(trvlr_get_connection_settings_array());
 	}
 
 	/**
@@ -486,22 +508,30 @@ class Trvlr_Admin
 	 */
 	public function update_connection_settings_rest($request)
 	{
-		$data = $request->get_json_params();
-
-		if (isset($data['organisation_id'])) {
-			update_option('trvlr_organisation_id', sanitize_text_field($data['organisation_id']));
+		if (! function_exists('trvlr_update_connection_settings_from_request')) {
+			require_once plugin_dir_path(dirname(__FILE__)) . 'includes/trvlr-feature-flags.php';
 		}
 
-		if (isset($data['api_key'])) {
-			update_option('trvlr_api_key', sanitize_text_field($data['api_key']));
+		$prev_pt = (bool) get_option('trvlr_disable_attraction_post_type', false);
+
+		$data = $request->get_json_params();
+		if (! is_array($data)) {
+			$data = array();
+		}
+		trvlr_update_connection_settings_from_request($data);
+
+		if (function_exists('trvlr_is_attraction_sync_disabled') && trvlr_is_attraction_sync_disabled()) {
+			Trvlr_Scheduler::unschedule_sync();
+		}
+
+		$new_pt = (bool) get_option('trvlr_disable_attraction_post_type', false);
+		if ($prev_pt !== $new_pt) {
+			flush_rewrite_rules(false);
 		}
 
 		return rest_ensure_response(array(
 			'success' => true,
-			'settings' => array(
-				'organisation_id' => get_option('trvlr_organisation_id', ''),
-				'api_key' => get_option('trvlr_api_key', ''),
-			),
+			'settings' => trvlr_get_connection_settings_array(),
 		));
 	}
 
@@ -579,6 +609,10 @@ class Trvlr_Admin
 
 		if (! current_user_can('manage_options')) {
 			wp_send_json_error('Insufficient permissions.');
+		}
+
+		if (function_exists('trvlr_is_attraction_sync_disabled') && trvlr_is_attraction_sync_disabled()) {
+			wp_send_json_error(__('Attraction syncing is disabled in TRVLR settings.', 'trvlr'));
 		}
 
 		try {
@@ -672,6 +706,10 @@ class Trvlr_Admin
 
 		if (!current_user_can('edit_posts')) {
 			wp_send_json_error(array('message' => 'Insufficient permissions'));
+		}
+
+		if (function_exists('trvlr_is_attraction_sync_disabled') && trvlr_is_attraction_sync_disabled()) {
+			wp_send_json_error(array('message' => __('Attraction syncing is disabled in TRVLR settings.', 'trvlr')));
 		}
 
 		$post_id = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;

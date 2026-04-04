@@ -2,7 +2,7 @@
 
 ## Entry point
 
-`Trvlr_Admin::init_meta_boxes()` loads **`admin/meta-fields.php`**, which registers meta boxes and save handlers for the `trvlr_attraction` post type.
+`Trvlr_Admin::init_meta_boxes()` loads **`admin/meta-fields.php`**, which registers meta boxes and save handlers for the `trvlr_attraction` post type. If **`trvlr_disable_attraction_post_type`** is enabled, `meta-fields.php` is not loaded (there is no TRVLR attraction editor screen). See [feature flags](../reference/feature-flags.md).
 
 ## Meta boxes
 

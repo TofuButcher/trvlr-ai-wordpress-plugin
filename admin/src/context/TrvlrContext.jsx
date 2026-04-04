@@ -170,7 +170,11 @@ export const TrvlrProvider = ({ children }) => {
                 method: 'POST',
                 data: settings,
             });
-            setConnectionSettings(settings);
+            if (response && response.settings) {
+                setConnectionSettings(response.settings);
+            } else {
+                setConnectionSettings(settings);
+            }
             return { success: true, data: response };
         } catch (error) {
             return { success: false, error };
