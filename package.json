@@ -5,12 +5,14 @@
   "main": "index.js",
   "scripts": {
     "start": "wp-scripts start",
-    "build": "wp-scripts build"
+    "build": "wp-scripts build",
+    "dist": "npm run build && node scripts/dist-zip.cjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "archiver": "^7.0.1",
     "@wordpress/scripts": "^31.1.0",
     "css-loader": "^7.1.2",
     "mini-css-extract-plugin": "^2.9.4",
