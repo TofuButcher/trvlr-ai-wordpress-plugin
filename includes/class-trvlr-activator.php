@@ -88,7 +88,7 @@ class Trvlr_Activator
 		$page_data = array(
 			'post_title'     => __('Payment Confirmation', 'trvlr'),
 			'post_name'      => 'payments',
-			'post_content'   => '',
+			'post_content'   => '[trvlr_payment_confirmation]',
 			'post_status'    => 'publish',
 			'post_type'      => 'page',
 			'post_author'    => 1,

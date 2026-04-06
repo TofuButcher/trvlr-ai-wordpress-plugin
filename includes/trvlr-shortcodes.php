@@ -332,3 +332,9 @@ function trvlr_shortcode_attraction_gallery($atts)
 	return trvlr_gallery($atts['id']);
 }
 add_shortcode('trvlr_attraction_gallery', 'trvlr_shortcode_attraction_gallery');
+
+function trvlr_shortcode_payment_confirmation($atts)
+{
+	return trvlr_payment_confirmation_markup();
+}
+add_shortcode('trvlr_payment_confirmation', 'trvlr_shortcode_payment_confirmation');

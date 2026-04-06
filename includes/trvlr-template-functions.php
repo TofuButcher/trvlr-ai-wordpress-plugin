@@ -798,3 +798,43 @@ function trvlr_get_attraction_accordion($post_id = null)
 {
 	return trvlr_accordion($post_id);
 }
+
+function trvlr_payment_confirmation_markup()
+{
+	$org_id = get_trvlr_organisation_id();
+
+	if (empty($org_id)) {
+		return '<p>' . esc_html__('Sorry. This site has not been connected to trvlr.ai properly...  Please contact support.', 'trvlr') . '</p>';
+	}
+
+	$base_domain = get_trvlr_base_domain($org_id);
+
+	ob_start();
+	?>
+		<div id="trvlr-payment-confirmation-container" class="trvlr-payment-wrapper">
+			<iframe
+				id="trvlr-payment-confirmation-iframe"
+				src="<?php echo esc_url($base_domain . '/payment/confirmation.html'); ?>"
+				title="<?php esc_attr_e('Payment Confirmation', 'trvlr'); ?>"
+				frameborder="0"></iframe>
+		</div>
+		<script>
+			(function() {
+				console.log('Payment confirmation iframe loaded');
+				window.addEventListener('message', function(event) {
+					console.log('Payment confirmation message received:', event.data);
+
+					if (event.data.type === 'REFRESH_PAGE') {
+						console.log('Setting refresh page flag in localStorage');
+						localStorage.setItem('isRefreshPage', 'true');
+
+						setTimeout(function() {
+							window.location.href = '<?php echo esc_url(home_url()); ?>';
+						}, 2000);
+					}
+				});
+			})();
+		</script>
+	<?php
+	return ob_get_clean();
+}

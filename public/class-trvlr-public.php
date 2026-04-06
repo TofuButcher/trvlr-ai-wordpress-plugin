@@ -153,53 +153,11 @@ class Trvlr_Public
 			return $content;
 		}
 
-		// Get Organisation ID
-		$org_id = $this->get_trvlr_organisation_id();
-
-		if (empty($org_id)) {
-			return '<p>' . __('Sorry. This site has not been connected to trvlr.ai properly...  Please contact support.', 'trvlr') . '</p>';
+		if (has_shortcode($content, 'trvlr_payment_confirmation')) {
+			return $content;
 		}
 
-		// Build base domain
-		$base_domain = $this->get_trvlr_base_domain($org_id);
-
-		ob_start();
-?>
-		<div id="trvlr-payment-confirmation-container" class="trvlr-payment-wrapper">
-			<iframe
-				id="trvlr-payment-confirmation-iframe"
-				src="<?php echo esc_url($base_domain . '/payment/confirmation.html'); ?>"
-				title="<?php esc_attr_e('Payment Confirmation', 'trvlr'); ?>"
-				frameborder="0"></iframe>
-		</div>
-		<script>
-			(function() {
-				console.log('Payment confirmation iframe loaded');
-				window.addEventListener('message', function(event) {
-					console.log('Payment confirmation message received:', event.data);
-
-					if (event.data.type === 'REFRESH_PAGE') {
-						console.log('Setting refresh page flag in localStorage');
-						localStorage.setItem('isRefreshPage', 'true');
-
-						setTimeout(function() {
-							window.location.href = '<?php echo esc_url(home_url()); ?>';
-						}, 2000);
-					}
-				});
-			})();
-		</script>
-	<?php
-		return ob_get_clean();
-	}
-
-	/**
-	 * Get Organisation ID / Trvlr ID
-	 * Wrapper for global helper function
-	 */
-	private function get_trvlr_organisation_id()
-	{
-		return get_trvlr_organisation_id();
+		return trvlr_payment_confirmation_markup();
 	}
 
 	/**
