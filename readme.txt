@@ -3,7 +3,7 @@ Contributors: pariswelch
 Tags: booking, reservations, tours, trvlr, booking system
 Requires at least: 5.0
 Tested up to: 6.4
-Stable tag: 0.1.4
+Stable tag: 0.1.5
 Requires PHP: 7.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
@@ -65,6 +65,12 @@ The front-end booking script listens for elements that include an `attraction-id
 See the `docs/` directory inside the plugin: `README.md` is the index; `reference/` holds optional detailed specs (e.g. REST payloads) when provided.
 
 == Changelog ==
+
+= 0.1.5 =
+* More comprehensive documentation and updated feature outlines
+* Added controls to disable front-end booking, syncing, and the trvlr_attraction post type
+* Fixed `trvlr_payment_confirmation` shortcode for embedding the payment confirmation iframe
+* Content of Automatically created Payment confirmation page set to the `trvlr_payment_confirmation` shortcode
 
 = 0.1.4 =
 * Stable tag and version metadata updated for release
