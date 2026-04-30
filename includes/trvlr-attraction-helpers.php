@@ -45,7 +45,7 @@ function get_trvlr_base_domain($org_id = null)
 	}
 
 	// Build domain
-	return 'https://' . $org_id . '.portal.trvlr.ai';
+	return 'https://' . $org_id . '.portal.traveloris.com';
 }
 
 function get_trvlr_id($post_id = null)
@@ -271,6 +271,15 @@ function get_trvlr_attraction_tags($post_id = null)
 	}
 
 	return apply_filters('trvlr_attraction_tags', $terms, $post_id);
+}
+
+function get_trvlr_main_tag($post_id = null)
+{
+	$tags = get_trvlr_attraction_tags($post_id);
+	$tags = array_filter($tags, function ($tag) {
+		return is_object($tag) && isset($tag->slug) && $tag->slug !== 'popular';
+	});
+	return ! empty($tags) ? $tags[0] : null;
 }
 
 function get_trvlr_attraction_advertised_price_value($post_id = null)

@@ -129,6 +129,12 @@ class Trvlr
 		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-theme-config.php';
 
 		/**
+		 * Card and single-attraction template registry
+		 */
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-template-registry.php';
+		Trvlr_Template_Registry::bootstrap();
+
+		/**
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
 		require_once plugin_dir_path(dirname(__FILE__)) . 'admin/class-trvlr-admin.php';

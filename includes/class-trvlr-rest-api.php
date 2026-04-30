@@ -260,8 +260,14 @@ class Trvlr_REST_API
 
 	public function get_theme_settings($request)
 	{
-		$settings = get_option('trvlr_theme_settings', array());
-		return rest_ensure_response($settings);
+		$stored = get_option('trvlr_theme_settings', array());
+		$merged = Trvlr_Theme_Config::merge_with_defaults(is_array($stored) ? $stored : array());
+		if (class_exists('Trvlr_Template_Registry')) {
+			$merged['presentationTheme'] = Trvlr_Template_Registry::get_active_presentation_theme_slug();
+			$merged['cardTemplate'] = Trvlr_Template_Registry::get_active_card_slug();
+			$merged['attractionPageTemplate'] = Trvlr_Template_Registry::get_active_single_slug();
+		}
+		return rest_ensure_response($merged);
 	}
 
 	public function update_theme_settings($request)
@@ -270,8 +276,32 @@ class Trvlr_REST_API
 		if (empty($settings) || !is_array($settings)) {
 			return new WP_Error('invalid_data', 'Invalid settings data', array('status' => 400));
 		}
-		update_option('trvlr_theme_settings', $settings);
-		return rest_ensure_response(array('success' => true, 'settings' => $settings));
+
+		if (class_exists('Trvlr_Template_Registry')) {
+			if (array_key_exists('presentationTheme', $settings)) {
+				$pt = sanitize_key((string) $settings['presentationTheme']);
+				if ($pt !== '' && isset(Trvlr_Template_Registry::get_presentation_themes()[$pt])) {
+					Trvlr_Template_Registry::set_active_presentation_theme($pt);
+				}
+			}
+		}
+
+		$theme_only = $settings;
+		unset(
+			$theme_only['presentationTheme'],
+			$theme_only['cardTemplate'],
+			$theme_only['attractionPageTemplate']
+		);
+		update_option('trvlr_theme_settings', $theme_only);
+
+		$returned = Trvlr_Theme_Config::merge_with_defaults($theme_only);
+		if (class_exists('Trvlr_Template_Registry')) {
+			$returned['presentationTheme'] = Trvlr_Template_Registry::get_active_presentation_theme_slug();
+			$returned['cardTemplate'] = Trvlr_Template_Registry::get_active_card_slug();
+			$returned['attractionPageTemplate'] = Trvlr_Template_Registry::get_active_single_slug();
+		}
+
+		return rest_ensure_response(array('success' => true, 'settings' => $returned));
 	}
 
 	public function get_connection_settings($request)

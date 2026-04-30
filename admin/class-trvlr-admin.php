@@ -55,6 +55,43 @@ class Trvlr_Admin
 		if ($screen && $screen->id === 'toplevel_page_trvlr_settings') {
 			wp_enqueue_style('trvlr-public', plugin_dir_url(dirname(__FILE__)) . 'public/css/trvlr-public.css', array(), $this->version, 'all');
 			wp_enqueue_style('trvlr-cards', plugin_dir_url(dirname(__FILE__)) . 'public/css/trvlr-cards.css', array(), $this->version, 'all');
+
+			if (class_exists('Trvlr_Template_Registry')) {
+				$theme_css = Trvlr_Template_Registry::get_active_card_theme_stylesheet_basename();
+				if ($theme_css !== '') {
+					$theme_path = plugin_dir_path(dirname(__FILE__)) . 'public/css/' . $theme_css;
+					if (is_readable($theme_path)) {
+						wp_enqueue_style(
+							'trvlr-cards-theme',
+							plugin_dir_url(dirname(__FILE__)) . 'public/css/' . $theme_css,
+							array('trvlr-cards'),
+							filemtime($theme_path) ? (string) filemtime($theme_path) : $this->version,
+							'all'
+						);
+					}
+				}
+
+				wp_enqueue_style(
+					'trvlr-single-attraction-styles',
+					plugin_dir_url(dirname(__FILE__)) . 'public/css/trvlr-single-attraction.css',
+					array(),
+					$this->version,
+					'all'
+				);
+				$single_theme_css = Trvlr_Template_Registry::get_active_single_template_stylesheet_basename();
+				if ($single_theme_css !== '') {
+					$single_theme_path = plugin_dir_path(dirname(__FILE__)) . 'public/css/' . $single_theme_css;
+					if (is_readable($single_theme_path)) {
+						wp_enqueue_style(
+							'trvlr-single-attraction-theme',
+							plugin_dir_url(dirname(__FILE__)) . 'public/css/' . $single_theme_css,
+							array('trvlr-single-attraction-styles'),
+							filemtime($single_theme_path) ? (string) filemtime($single_theme_path) : $this->version,
+							'all'
+						);
+					}
+				}
+			}
 		}
 	}
 
@@ -362,13 +399,28 @@ class Trvlr_Admin
 			}
 		}
 
+		$theme_stored = get_option('trvlr_theme_settings', array());
+		$theme_merged = Trvlr_Theme_Config::merge_with_defaults(is_array($theme_stored) ? $theme_stored : array());
+		if (class_exists('Trvlr_Template_Registry')) {
+			$theme_merged['presentationTheme'] = Trvlr_Template_Registry::get_active_presentation_theme_slug();
+			$theme_merged['cardTemplate'] = Trvlr_Template_Registry::get_active_card_slug();
+			$theme_merged['attractionPageTemplate'] = Trvlr_Template_Registry::get_active_single_slug();
+		}
+
 		return array(
 			'settings' => array(
-				'theme' => Trvlr_Theme_Config::merge_with_defaults(get_option('trvlr_theme_settings', array())),
+				'theme' => $theme_merged,
 				'connection' => trvlr_get_connection_settings_array(),
 				'notifications' => get_option('trvlr_notification_settings', array()),
 			),
 			'themeConfig' => Trvlr_Theme_Config::get_config(),
+			'templateChoices' => class_exists('Trvlr_Template_Registry')
+				? Trvlr_Template_Registry::get_template_choices_for_admin()
+				: array(
+					'cards' => array(),
+					'singles' => array(),
+					'presentationThemes' => array(),
+				),
 			'sync' => array(
 				'stats' => array(
 					'total_attractions' => $total_attractions,
@@ -469,8 +521,14 @@ class Trvlr_Admin
 	 */
 	public function get_theme_settings_rest($request)
 	{
-		$settings = get_option('trvlr_theme_settings', array());
-		return rest_ensure_response($settings);
+		$stored = get_option('trvlr_theme_settings', array());
+		$merged = Trvlr_Theme_Config::merge_with_defaults(is_array($stored) ? $stored : array());
+		if (class_exists('Trvlr_Template_Registry')) {
+			$merged['presentationTheme'] = Trvlr_Template_Registry::get_active_presentation_theme_slug();
+			$merged['cardTemplate'] = Trvlr_Template_Registry::get_active_card_slug();
+			$merged['attractionPageTemplate'] = Trvlr_Template_Registry::get_active_single_slug();
+		}
+		return rest_ensure_response($merged);
 	}
 
 	/**
@@ -484,11 +542,33 @@ class Trvlr_Admin
 			return new WP_Error('invalid_data', 'Invalid settings data', array('status' => 400));
 		}
 
-		update_option('trvlr_theme_settings', $settings);
+		if (class_exists('Trvlr_Template_Registry')) {
+			if (array_key_exists('presentationTheme', $settings)) {
+				$pt = sanitize_key((string) $settings['presentationTheme']);
+				if ($pt !== '' && isset(Trvlr_Template_Registry::get_presentation_themes()[$pt])) {
+					Trvlr_Template_Registry::set_active_presentation_theme($pt);
+				}
+			}
+		}
+
+		$theme_only = $settings;
+		unset(
+			$theme_only['presentationTheme'],
+			$theme_only['cardTemplate'],
+			$theme_only['attractionPageTemplate']
+		);
+		update_option('trvlr_theme_settings', $theme_only);
+
+		$returned = Trvlr_Theme_Config::merge_with_defaults($theme_only);
+		if (class_exists('Trvlr_Template_Registry')) {
+			$returned['presentationTheme'] = Trvlr_Template_Registry::get_active_presentation_theme_slug();
+			$returned['cardTemplate'] = Trvlr_Template_Registry::get_active_card_slug();
+			$returned['attractionPageTemplate'] = Trvlr_Template_Registry::get_active_single_slug();
+		}
 
 		return rest_ensure_response(array(
 			'success' => true,
-			'settings' => $settings,
+			'settings' => $returned,
 		));
 	}
 

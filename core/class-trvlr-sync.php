@@ -318,7 +318,7 @@ class Trvlr_Sync
 
     private function fetch_attractions_from_api()
     {
-        $api_url = 'https://sl.portal.trvlr.ai/api/process/webapi_handler/generic_attractions';
+        $api_url = 'https://sl.portal.traveloris.com/api/process/webapi_handler/generic_attractions';
         $headers = $this->get_api_headers();
 
         $response = wp_remote_post($api_url, array(
@@ -346,7 +346,7 @@ class Trvlr_Sync
 
     private function fetch_single_attraction($attraction_id)
     {
-        $api_url = 'https://sl.portal.trvlr.ai/api/process/webapi_handler/generic_attraction_with_id';
+        $api_url = 'https://sl.portal.traveloris.com/api/process/webapi_handler/generic_attraction_with_id';
         $headers = $this->get_api_headers();
 
         $response = wp_remote_post($api_url, array(

@@ -6,11 +6,22 @@ The public class enqueues front-end assets, swaps in the single-attraction templ
 
 ## Single attraction template
 
-For singular `trvlr_attraction` views, `template_include` loads `public/partials/single-trvlr_attraction.php` instead of the theme’s single template. That partial builds the layout from **template tag** functions defined in `includes/trvlr-template-functions.php` (title, duration, sale state, gallery with Splide markup, descriptions, accordion, booking calendar snippet, etc.). Post content (`the_content()`) appears in the flow for any extra editor content.
+For singular `trvlr_attraction` views, `template_include` loads `public/partials/single-trvlr_attraction.php` instead of the theme’s single template. That partial handles header/footer (or `~dev` replacements) and includes the resolved layout file from **`public/templates/single-attraction/`**. The layout uses **template tag** functions defined in `includes/trvlr-template-functions.php` (title, duration, sale state, gallery with Splide markup, descriptions, accordion, booking calendar snippet, etc.). Post content (`the_content()`) appears in the flow for any extra editor content.
+
+## Card and single PHP templates (`Trvlr_Template_Registry`)
+
+Built-in card markup and single-attraction layouts live under:
+
+- `public/templates/cards/` — one file per card template; slugs (e.g. `card-1`) map to files such as `card-template-1.php`.
+- `public/templates/single-attraction/` — one file per single layout (e.g. `single-template-1.php`).
+
+`includes/class-trvlr-template-registry.php` registers card and single templates, runs the `trvlr_register_templates` action so more can be added from outside the plugin, and **presentation themes** bundle a card + single + their theme CSS. The active presentation theme is stored in the option `trvlr_presentation_theme` (e.g. `theme-1`, `theme-2`); the registry maps each to a card slug and a single-attraction slug, syncs the legacy options `trvlr_card_template` and `trvlr_single_attraction_template` to match, and can migrate from older per-field values when a matching pair is found. Use `trvlr_register_presentation_themes` to register additional paired themes after registering the underlying card/single files. The Theme admin screen only exposes the presentation choice; the REST payload includes `presentationTheme` plus derived `cardTemplate` and `attractionPageTemplate` for debugging or integrations. `trvlr_card()` loads the card file; the single shell loads the single file. Root nodes expose `data-trvlr-card-template` / `data-trvlr-single-template` (and BEM-style `--template-{slug}` classes) for scoped styling.
+
+- **Per-template theme CSS** (card and single each use `themes-{slug}.css` for their respective slugs, e.g. `themes-card-1.css` and `themes-page-1.css` from `public/src/styles/themes/`), enqueued for the **active** card and single slugs when those files exist.
 
 ## Styles
 
-- **Compiled CSS** in `public/css/` (`trvlr-public.css`, `trvlr-cards.css`, `trvlr-single-attraction.css`) is what WordPress enqueues.
+- **Compiled CSS** in `public/css/` (`trvlr-public.css`, `trvlr-cards.css`, `trvlr-single-attraction.css`) is what WordPress enqueues. For the **active card and single slugs** (from the selected presentation theme), `Trvlr_Public` also enqueues each matching **`themes-{slug}.css`** when that file exists (built from `public/src/styles/themes/` via webpack), after the base card / single CSS.
 - **Source** SCSS lives under `public/src/styles/` and should be compiled to those CSS files when you change styling.
 - **Splide** carousel assets ship under `public/dist/` (minified JS + CSS) for image galleries.
 
