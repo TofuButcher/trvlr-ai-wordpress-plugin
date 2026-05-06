@@ -1,6 +1,6 @@
 import React from '@wordpress/element';
 import { useState, useEffect } from '@wordpress/element';
-import { Panel, PanelBody, Button } from '@wordpress/components';
+import { Panel, PanelBody, Button, RadioControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { useTrvlr, getAllFieldsFromConfig, getThemeDefaults, mergeWithDefaults } from '../context/TrvlrContext';
 import { PageHeading } from '../components/page-heading';
@@ -8,12 +8,16 @@ import { ThemeField } from '../components/theme-field';
 import { AttractionCardPreview } from '../components/theme-preview';
 
 export const ThemeSettings = () => {
-   const { themeSettings, saveThemeSettings, saving, themeConfig, processedThemeConfig } = useTrvlr();
+   const { themeSettings, saveThemeSettings, saving, themeConfig, processedThemeConfig, templateChoices } = useTrvlr();
 
    // Initialize state with merged defaults + saved settings
    const [settings, setSettings] = useState(() =>
       mergeWithDefaults(themeSettings, themeConfig)
    );
+
+   useEffect(() => {
+      setSettings(mergeWithDefaults(themeSettings, themeConfig));
+   }, [themeSettings, themeConfig]);
 
    // Update a single field
    const updateField = (key: string, value: string | number) => {
@@ -26,7 +30,13 @@ export const ThemeSettings = () => {
    // Reset to defaults
    const resetToDefaults = () => {
       if (confirm(__('Reset all theme settings to defaults?', 'trvlr'))) {
-         setSettings(getThemeDefaults(themeConfig));
+         setSettings((prev) => {
+            const p = prev as Record<string, string | number>;
+            return {
+               ...getThemeDefaults(themeConfig),
+               presentationTheme: p.presentationTheme,
+            };
+         });
       }
    };
 
@@ -127,6 +137,21 @@ export const ThemeSettings = () => {
                         </div>
                      </PanelBody>
                   ))}
+               </Panel>
+            </div>
+            <div style={{ marginTop: '16px' }}>
+               <Panel>
+                  <PanelBody title={__('Presentation theme', 'trvlr')} initialOpen={true}>
+                  <RadioControl
+                     label={__('Theme (card, attraction page, and styles)', 'trvlr')}
+                     selected={String((settings as Record<string, string>).presentationTheme ?? '')}
+                     options={(templateChoices.presentationThemes || []).map((c: { slug: string; label: string }) => ({
+                        label: c.label,
+                        value: c.slug,
+                     }))}
+                     onChange={(value) => updateField('presentationTheme', value)}
+                  />
+                  </PanelBody>
                </Panel>
             </div>
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px', flexGrow: 1, alignItems: 'flex-end' }}>

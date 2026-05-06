@@ -120,6 +120,7 @@ export const TrvlrProvider = ({ children }) => {
         sync: {},
         system: {},
         themeConfig: {},
+        templateChoices: { cards: [], singles: [], presentationThemes: [] },
         nonce: '',
     };
 
@@ -153,14 +154,18 @@ export const TrvlrProvider = ({ children }) => {
                 method: 'POST',
                 data: settings,
             });
-            setThemeSettings(settings);
+            if (response?.settings) {
+                setThemeSettings(mergeWithDefaults(response.settings, themeConfig));
+            } else {
+                setThemeSettings(mergeWithDefaults(settings, themeConfig));
+            }
             return { success: true, data: response };
         } catch (error) {
             return { success: false, error };
         } finally {
             setSaving(false);
         }
-    }, []);
+    }, [themeConfig]);
 
     const saveConnectionSettings = useCallback(async (settings) => {
         setSaving(true);
@@ -311,6 +316,7 @@ export const TrvlrProvider = ({ children }) => {
         // Theme Config
         themeConfig,
         processedThemeConfig,
+        templateChoices: initialData.templateChoices || { cards: [], singles: [], presentationThemes: [] },
 
         // Sync
         syncStats,
