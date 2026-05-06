@@ -23,6 +23,7 @@ class Trvlr_REST_API
 		$this->register_sync_routes();
 		$this->register_logs_routes();
 		$this->register_setup_routes();
+		$this->register_cards_routes();
 	}
 
 	/**
@@ -216,6 +217,117 @@ class Trvlr_REST_API
 			'callback' => array($this, 'test_api_connection'),
 			'permission_callback' => array($this, 'check_admin_permission'),
 		));
+	}
+
+	/**
+	 * Public Cards Routes
+	 */
+	private function register_cards_routes()
+	{
+		$string_param = array('type' => 'string', 'sanitize_callback' => 'sanitize_text_field');
+		$relation_param = array('type' => 'string', 'enum' => array('AND', 'OR'));
+
+		$args = array(
+			'posts_per_page'    => array('type' => 'integer', 'default' => 16, 'minimum' => 1, 'maximum' => 100),
+			'paged'             => array('type' => 'integer', 'default' => 1, 'minimum' => 1),
+			'orderby'           => array_merge($string_param, array('default' => 'date')),
+			'order'             => array('type' => 'string', 'default' => 'DESC', 'enum' => array('ASC', 'DESC', 'asc', 'desc'), 'sanitize_callback' => static function ($v) { return strtoupper($v); }),
+			'ids'               => $string_param,
+			'exclude'           => $string_param,
+			'tag'               => $string_param,
+			'tag_id'            => $string_param,
+			'tag_slug'          => $string_param,
+			'tag_relation'      => $relation_param,
+			'category'          => $string_param,
+			'category_id'       => $string_param,
+			'category_slug'     => $string_param,
+			'category_relation' => $relation_param,
+			'trvlr_tag'         => $string_param,
+			'trvlr_tag_id'      => $string_param,
+			'trvlr_tag_slug'    => $string_param,
+			'trvlr_tag_relation' => $relation_param,
+			'meta_key'          => $string_param,
+			'meta_value'        => $string_param,
+			'meta_compare'      => $string_param,
+		);
+
+		register_rest_route($this->namespace, '/cards', array(
+			array(
+				'methods'             => 'GET',
+				'callback'            => array($this, 'get_cards'),
+				'permission_callback' => '__return_true',
+				'args'                => $args,
+			),
+			array(
+				'methods'             => 'POST',
+				'callback'            => array($this, 'get_cards'),
+				'permission_callback' => '__return_true',
+			),
+		));
+	}
+
+	/**
+	 * GET|POST /trvlr/v1/cards
+	 *
+	 * Public endpoint — returns rendered attraction card HTML plus pagination metadata.
+	 * Accepts the same named params as `trvlr_attraction_cards` shortcode via GET query
+	 * string. POST requests may additionally include a `query_args` object in the JSON
+	 * body for a full WP_Query override (same as the `query_args` key accepted by
+	 * `trvlr_cards()` / `trvlr_build_query_args()`).
+	 *
+	 * The `trvlr_ajax_query_args` filter fires before execution, giving server-side code
+	 * full control over the final WP_Query args.
+	 *
+	 * Response shape:
+	 *   html         string  Inner `<div class="trvlr-cards">` element.
+	 *   found_posts  int     Total matching posts (ignores pagination).
+	 *   max_pages    int     Total pages for the current posts_per_page.
+	 *   current_page int     Page rendered in this response.
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response
+	 */
+	public function get_cards($request)
+	{
+		$named_params = array(
+			'posts_per_page', 'paged', 'orderby', 'order',
+			'ids', 'exclude',
+			'tag', 'tag_id', 'tag_slug', 'tag_relation',
+			'category', 'category_id', 'category_slug', 'category_relation',
+			'trvlr_tag', 'trvlr_tag_id', 'trvlr_tag_slug', 'trvlr_tag_relation',
+			'meta_key', 'meta_value', 'meta_compare',
+		);
+
+		$args = array();
+		foreach ($named_params as $param) {
+			$value = $request->get_param($param);
+			if ($value !== null && $value !== '') {
+				$args[$param] = $value;
+			}
+		}
+
+		if (isset($args['posts_per_page'])) {
+			$args['posts_per_page'] = min(100, max(1, intval($args['posts_per_page'])));
+		}
+		if (isset($args['paged'])) {
+			$args['paged'] = max(1, intval($args['paged']));
+		}
+
+		$body = $request->get_json_params();
+		if (!empty($body['query_args']) && is_array($body['query_args'])) {
+			$args['query_args'] = $body['query_args'];
+		}
+
+		$query_args = trvlr_build_query_args($args);
+
+		$query_args = apply_filters('trvlr_ajax_query_args', $query_args, $args, $request);
+
+		$query_args['post_type']   = 'trvlr_attraction';
+		$query_args['post_status'] = 'publish';
+
+		$result = trvlr_build_cards_result($query_args);
+
+		return rest_ensure_response($result);
 	}
 
 	/**

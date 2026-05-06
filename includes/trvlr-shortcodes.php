@@ -174,16 +174,13 @@ add_shortcode('trvlr_card', 'trvlr_shortcode_card');
 
 function trvlr_shortcode_cards($atts)
 {
-	if (empty($atts)) {
-		return trvlr_cards(array());
-	}
-
 	$atts = shortcode_atts(array(
 		'posts_per_page' => '',
-		'orderby' => '',
-		'order' => '',
-		'ids' => '',
-	), $atts, 'trvlr_cards');
+		'orderby'        => '',
+		'order'          => '',
+		'ids'            => '',
+		'id'             => '',
+	), $atts ?? array(), 'trvlr_cards');
 
 	$query_args = array();
 
@@ -205,6 +202,10 @@ function trvlr_shortcode_cards($atts)
 		$query_args['orderby'] = 'post__in';
 	}
 
+	if (!empty($atts['id'])) {
+		$query_args['grid_id'] = $atts['id'];
+	}
+
 	return trvlr_cards($query_args);
 }
 add_shortcode('trvlr_cards', 'trvlr_shortcode_cards');
@@ -223,26 +224,27 @@ function trvlr_shortcode_attraction_cards($atts)
 {
 
 	$atts = shortcode_atts(array(
-		'posts_per_page' => -1,
-		'orderby' => 'date',
-		'order' => 'DESC',
-		'ids' => '',
-		'exclude' => '',
-		'tag' => '',
-		'tag_id' => '',
-		'tag_slug' => '',
-		'tag_relation' => '',
-		'category' => '',
-		'category_id' => '',
-		'category_slug' => '',
-		'category_relation' => '',
-		'trvlr_tag' => '',
-		'trvlr_tag_id' => '',
-		'trvlr_tag_slug' => '',
+		'posts_per_page'     => -1,
+		'orderby'            => 'date',
+		'order'              => 'DESC',
+		'ids'                => '',
+		'exclude'            => '',
+		'tag'                => '',
+		'tag_id'             => '',
+		'tag_slug'           => '',
+		'tag_relation'       => '',
+		'category'           => '',
+		'category_id'        => '',
+		'category_slug'      => '',
+		'category_relation'  => '',
+		'trvlr_tag'          => '',
+		'trvlr_tag_id'       => '',
+		'trvlr_tag_slug'     => '',
 		'trvlr_tag_relation' => '',
-		'meta_key' => '',
-		'meta_value' => '',
-		'meta_compare' => '=',
+		'meta_key'           => '',
+		'meta_value'         => '',
+		'meta_compare'       => '=',
+		'id'                 => '',
 	), $atts, 'trvlr_attraction_cards');
 
 	$query_args = array(
@@ -319,9 +321,19 @@ function trvlr_shortcode_attraction_cards($atts)
 		}
 	}
 
+	if (!empty($atts['id'])) {
+		$query_args['grid_id'] = $atts['id'];
+	}
+
 	return trvlr_cards($query_args);
 }
 add_shortcode('trvlr_attraction_cards', 'trvlr_shortcode_attraction_cards');
+
+function trvlr_shortcode_attraction_filter($atts)
+{
+	return trvlr_attraction_filter($atts ?? array());
+}
+add_shortcode('trvlr_attraction_filter', 'trvlr_shortcode_attraction_filter');
 
 function trvlr_shortcode_attraction_gallery($atts)
 {

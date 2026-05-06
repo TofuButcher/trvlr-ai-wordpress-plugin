@@ -8,7 +8,7 @@
  */
 :root {
   --trvlr-cards-gap: 40px;
-  --trvlr-cards-row-gap: 80px;
+  --trvlr-cards-row-gap: var(--trvlr-cards-gap);
   --trvlr-cards-columns: repeat(4, 1fr);
   --trvlr-card-background: transparent;
   --trvlr-card-padding: 4px;
@@ -37,8 +37,7 @@
 }
 @container (max-width: 1200px) {
   .trvlr-cards {
-    -moz-column-gap: 3vw;
-         column-gap: 3vw;
+    --trvlr-cards-gap: 3vw;
   }
 }
 @container (max-width: 1024px) {
@@ -49,15 +48,14 @@
 @container (max-width: 920px) {
   .trvlr-cards {
     grid-template-columns: repeat(2, 1fr);
-    -moz-column-gap: 5%;
-         column-gap: 5%;
-    row-gap: 50px;
+    --trvlr-cards-gap: 5%;
+    --trvlr-cards-row-gap: 50px;
   }
 }
 @container (max-width: 560px) {
   .trvlr-cards {
     grid-template-columns: repeat(1, 1fr);
-    row-gap: 20px;
+    --trvlr-cards-row-gap: 20px;
   }
 }
 

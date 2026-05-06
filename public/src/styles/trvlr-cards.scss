@@ -5,57 +5,56 @@
  */
 
 :root {
-   --trvlr-cards-gap: 40px;
-   --trvlr-cards-row-gap: 80px;
-   // --trvlr-cards-columns: repeat(auto-fill, minmax(270px, 1fr));
-   --trvlr-cards-columns: repeat(4, 1fr);
+	--trvlr-cards-gap: 40px;
+	--trvlr-cards-row-gap: var(--trvlr-cards-gap);
+	--trvlr-cards-columns: repeat(4, 1fr);
 
-   --trvlr-card-background: transparent;
-   --trvlr-card-padding: 4px;
-   --trvlr-card-border-radius: 8px;
-   --trvlr-card-image-border-radius: 8px;
+	--trvlr-card-background: transparent;
+	--trvlr-card-padding: 4px;
+	--trvlr-card-border-radius: 8px;
+	--trvlr-card-image-border-radius: 8px;
 
-   --trvlr-card-title-font-size: 18px;
-   --trvlr-card-title-font-weight: 600;
-   --trvlr-card-focus-color: #000;
+	--trvlr-card-title-font-size: 18px;
+	--trvlr-card-title-font-weight: 600;
+	--trvlr-card-focus-color: #000;
 
-   --trvlr-card-icon-size: 18px;
-   --trvlr-card-icon-color: #000;
+	--trvlr-card-icon-size: 18px;
+	--trvlr-card-icon-color: #000;
 
-   --trvlr-card-image-wrap-margin-bottom: 10px;
-   --trvlr-card-title-margin-bottom: 8px;
-   --trvlr-card-meta-margin-bottom: 0px;
-   --trvlr-card-footer-margin-top: 20px;
+	--trvlr-card-image-wrap-margin-bottom: 10px;
+	--trvlr-card-title-margin-bottom: 8px;
+	--trvlr-card-meta-margin-bottom: 0px;
+	--trvlr-card-footer-margin-top: 20px;
 }
 
 .trvlr-cards-container {
-   width: 100%;
-   container-type: inline-size;
+	width: 100%;
+	container-type: inline-size;
 }
 
 .trvlr-cards {
-   display: grid;
-   grid-template-columns: var(--trvlr-cards-columns);
-   gap: var(--trvlr-cards-gap);
-   row-gap: var(--trvlr-cards-row-gap);
-   width: 100%;
+	display: grid;
+	grid-template-columns: var(--trvlr-cards-columns);
+	gap: var(--trvlr-cards-gap);
+	row-gap: var(--trvlr-cards-row-gap);
+	width: 100%;
 
-   @container (max-width: 1200px) {
-      column-gap: 3vw;
-   }
+	@container (max-width: 1200px) {
+		--trvlr-cards-gap: 3vw;
+	}
 
-   @container (max-width: 1024px) {
-      grid-template-columns: repeat(3, 1fr);
-   }
+	@container (max-width: 1024px) {
+		grid-template-columns: repeat(3, 1fr);
+	}
 
-   @container (max-width: 920px) {
-      grid-template-columns: repeat(2, 1fr);
-      column-gap: 5%;
-      row-gap: 50px;
-   }
+	@container (max-width: 920px) {
+		grid-template-columns: repeat(2, 1fr);
+		--trvlr-cards-gap: 5%;
+		--trvlr-cards-row-gap: 50px;
+	}
 
-   @container (max-width: 560px) {
-      grid-template-columns: repeat(1, 1fr);
-      row-gap: 20px;
-   }
+	@container (max-width: 560px) {
+		grid-template-columns: repeat(1, 1fr);
+		--trvlr-cards-row-gap: 20px;
+	}
 }

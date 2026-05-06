@@ -57,20 +57,6 @@ class Trvlr_Admin
 			wp_enqueue_style('trvlr-cards', plugin_dir_url(dirname(__FILE__)) . 'public/css/trvlr-cards.css', array(), $this->version, 'all');
 
 			if (class_exists('Trvlr_Template_Registry')) {
-				$theme_css = Trvlr_Template_Registry::get_active_card_theme_stylesheet_basename();
-				if ($theme_css !== '') {
-					$theme_path = plugin_dir_path(dirname(__FILE__)) . 'public/css/' . $theme_css;
-					if (is_readable($theme_path)) {
-						wp_enqueue_style(
-							'trvlr-cards-theme',
-							plugin_dir_url(dirname(__FILE__)) . 'public/css/' . $theme_css,
-							array('trvlr-cards'),
-							filemtime($theme_path) ? (string) filemtime($theme_path) : $this->version,
-							'all'
-						);
-					}
-				}
-
 				wp_enqueue_style(
 					'trvlr-single-attraction-styles',
 					plugin_dir_url(dirname(__FILE__)) . 'public/css/trvlr-single-attraction.css',
@@ -78,15 +64,15 @@ class Trvlr_Admin
 					$this->version,
 					'all'
 				);
-				$single_theme_css = Trvlr_Template_Registry::get_active_single_template_stylesheet_basename();
-				if ($single_theme_css !== '') {
-					$single_theme_path = plugin_dir_path(dirname(__FILE__)) . 'public/css/' . $single_theme_css;
-					if (is_readable($single_theme_path)) {
+				$presentation_theme_css = Trvlr_Template_Registry::get_active_presentation_theme_stylesheet_basename();
+				if ($presentation_theme_css !== '') {
+					$presentation_theme_path = plugin_dir_path(dirname(__FILE__)) . 'public/css/' . $presentation_theme_css;
+					if (is_readable($presentation_theme_path)) {
 						wp_enqueue_style(
-							'trvlr-single-attraction-theme',
-							plugin_dir_url(dirname(__FILE__)) . 'public/css/' . $single_theme_css,
-							array('trvlr-single-attraction-styles'),
-							filemtime($single_theme_path) ? (string) filemtime($single_theme_path) : $this->version,
+							'trvlr-presentation-theme',
+							plugin_dir_url(dirname(__FILE__)) . 'public/css/' . $presentation_theme_css,
+							array('trvlr-cards', 'trvlr-single-attraction-styles'),
+							filemtime($presentation_theme_path) ? (string) filemtime($presentation_theme_path) : $this->version,
 							'all'
 						);
 					}

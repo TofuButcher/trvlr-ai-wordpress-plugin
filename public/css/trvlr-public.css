@@ -7,7 +7,7 @@
  * ----------------------------------------
  */
 body {
-  font-family: "Rethink Sans", sans-serif;
+  font-family: "Inter", sans-serif;
 }
 /*
 * Controllable Variables
@@ -34,8 +34,8 @@ body {
 
 */
 :root {
-  --trvlr-font-family: "Rethink Sans", sans-serif;
-  --trvlr-heading-font-family: "Rethink Sans", sans-serif;
+  --trvlr-font-family: "Inter", sans-serif;
+  --trvlr-heading-font-family: "Inter", sans-serif;
   --trvlr-heading-letter-spacing: -0.04em;
   --trvlr-primary-color: hsl(245, 90%, 50%);
   --trvlr-primary-active-color: hsl(245, 100%, 40%);
@@ -171,7 +171,6 @@ body {
   color: #000;
   font-size: 16px;
   padding: 4px 10px;
-  border-radius: 50px;
   font-size: 12px;
   line-height: 1.1;
   font-weight: 600;

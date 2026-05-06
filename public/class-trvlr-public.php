@@ -48,34 +48,18 @@ class Trvlr_Public
 
 		wp_enqueue_style('trvlr-cards-styles', plugin_dir_url(__FILE__) . 'css/trvlr-cards.css', array(), $this->version, 'all');
 
-		if (class_exists('Trvlr_Template_Registry')) {
-			$theme_css = Trvlr_Template_Registry::get_active_card_theme_stylesheet_basename();
-			if ($theme_css !== '') {
-				$theme_path = plugin_dir_path(__FILE__) . 'css/' . $theme_css;
-				if (is_readable($theme_path)) {
-					wp_enqueue_style(
-						'trvlr-cards-theme',
-						plugin_dir_url(__FILE__) . 'css/' . $theme_css,
-						array('trvlr-cards-styles'),
-						filemtime($theme_path) ? (string) filemtime($theme_path) : $this->version,
-						'all'
-					);
-				}
-			}
-		}
-
 		wp_enqueue_style('trvlr-single-attraction-styles', plugin_dir_url(__FILE__) . 'css/trvlr-single-attraction.css', array(), $this->version, 'all');
 
 		if (class_exists('Trvlr_Template_Registry')) {
-			$single_theme_css = Trvlr_Template_Registry::get_active_single_template_stylesheet_basename();
-			if ($single_theme_css !== '') {
-				$single_theme_path = plugin_dir_path(__FILE__) . 'css/' . $single_theme_css;
-				if (is_readable($single_theme_path)) {
+			$presentation_theme_css = Trvlr_Template_Registry::get_active_presentation_theme_stylesheet_basename();
+			if ($presentation_theme_css !== '') {
+				$presentation_theme_path = plugin_dir_path(__FILE__) . 'css/' . $presentation_theme_css;
+				if (is_readable($presentation_theme_path)) {
 					wp_enqueue_style(
-						'trvlr-single-attraction-theme',
-						plugin_dir_url(__FILE__) . 'css/' . $single_theme_css,
-						array('trvlr-single-attraction-styles'),
-						filemtime($single_theme_path) ? (string) filemtime($single_theme_path) : $this->version,
+						'trvlr-presentation-theme',
+						plugin_dir_url(__FILE__) . 'css/' . $presentation_theme_css,
+						array('trvlr-cards-styles', 'trvlr-single-attraction-styles'),
+						filemtime($presentation_theme_path) ? (string) filemtime($presentation_theme_path) : $this->version,
 						'all'
 					);
 				}
@@ -83,6 +67,14 @@ class Trvlr_Public
 		}
 
 		wp_enqueue_style('splide', plugin_dir_url(__FILE__) . 'dist/splide.min.css', array(), '4.1.3', 'all');
+
+		wp_register_style(
+			'trvlr-attraction-filter',
+			plugin_dir_url(__FILE__) . 'css/trvlr-attraction-filter.css',
+			array(),
+			$this->version,
+			'all'
+		);
 	}
 
 	/**
@@ -125,6 +117,25 @@ class Trvlr_Public
 
 		wp_enqueue_script('splide', plugin_dir_url(__FILE__) . '/dist/splide.min.js', array(), '4.1.3', true);
 		wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/trvlr-public.js', array('jquery', 'splide'), $this->version, false);
+
+		wp_register_script(
+			'trvlr-query-manager',
+			plugin_dir_url(__FILE__) . 'js/trvlr-query-manager.js',
+			array(),
+			$this->version,
+			true
+		);
+		wp_localize_script('trvlr-query-manager', 'trvlrQueryManagerConfig', array(
+			'apiUrl' => rest_url('trvlr/v1/cards'),
+		));
+
+		wp_register_script(
+			'trvlr-attraction-filter',
+			plugin_dir_url(__FILE__) . 'js/trvlr-attraction-filter.js',
+			array('trvlr-query-manager'),
+			$this->version,
+			true
+		);
 
 		if (trvlr_is_frontend_booking_disabled()) {
 			return;

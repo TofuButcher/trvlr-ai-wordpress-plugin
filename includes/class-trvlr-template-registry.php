@@ -70,6 +70,7 @@ class Trvlr_Template_Registry
 				'label' => __('Theme 1', 'trvlr'),
 				'card' => 'card-1',
 				'single' => 'page-1',
+				'stylesheet' => 'themes-variant-1.css',
 			)
 		);
 		self::register_presentation_theme(
@@ -78,6 +79,7 @@ class Trvlr_Template_Registry
 				'label' => __('Theme 2', 'trvlr'),
 				'card' => 'card-2',
 				'single' => 'page-2',
+				'stylesheet' => 'themes-variant-2.css',
 			)
 		);
 	}
@@ -93,11 +95,21 @@ class Trvlr_Template_Registry
 		if ($card === '' || $single === '' || !isset(self::$card_templates[$card]) || !isset(self::$single_templates[$single])) {
 			return;
 		}
+		$stylesheet = '';
+		if (isset($args['stylesheet']) && is_string($args['stylesheet']) && $args['stylesheet'] !== '') {
+			$stylesheet = basename($args['stylesheet']);
+		} elseif (preg_match('/^theme-(.+)$/u', $slug, $m)) {
+			$sfx = sanitize_key($m[1]);
+			if ($sfx !== '') {
+				$stylesheet = 'themes-variant-' . $sfx . '.css';
+			}
+		}
 		self::$presentation_themes[$slug] = array(
 			'slug' => $slug,
 			'label' => isset($args['label']) ? $args['label'] : $slug,
 			'card' => $card,
 			'single' => $single,
+			'stylesheet' => $stylesheet,
 		);
 	}
 
@@ -189,24 +201,15 @@ class Trvlr_Template_Registry
 		);
 	}
 
-	public static function get_active_card_theme_stylesheet_basename()
+	public static function get_active_presentation_theme_stylesheet_basename()
 	{
-		$slug = sanitize_key(self::get_active_card_slug());
-		if ($slug === '') {
+		$pt = self::get_active_presentation_theme_slug();
+		if ($pt === '' || !isset(self::$presentation_themes[$pt])) {
 			return '';
 		}
+		$sheet = isset(self::$presentation_themes[$pt]['stylesheet']) ? (string) self::$presentation_themes[$pt]['stylesheet'] : '';
 
-		return 'themes-' . $slug . '.css';
-	}
-
-	public static function get_active_single_template_stylesheet_basename()
-	{
-		$slug = sanitize_key(self::get_active_single_slug());
-		if ($slug === '') {
-			return '';
-		}
-
-		return 'themes-' . $slug . '.css';
+		return $sheet;
 	}
 
 	public static function get_default_card_slug()

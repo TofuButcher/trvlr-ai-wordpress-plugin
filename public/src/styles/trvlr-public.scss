@@ -5,7 +5,7 @@
  */
 
 body {
-	font-family: "Rethink Sans", sans-serif;
+	font-family: "Inter", sans-serif;
 }
 
 /*
@@ -34,8 +34,10 @@ body {
 */
 
 :root {
-	--trvlr-font-family: "Rethink Sans", sans-serif;
-	--trvlr-heading-font-family: "Rethink Sans", sans-serif;
+	--trvlr-font-family: "Inter", sans-serif;
+	--trvlr-heading-font-family: "Inter", sans-serif;
+	// --trvlr-font-family: "Rethink Sans", sans-serif;
+	// --trvlr-heading-font-family: "Rethink Sans", sans-serif;
 	--trvlr-heading-letter-spacing: -0.04em;
 
 	--trvlr-primary-color: hsl(245, 90%, 50%);
