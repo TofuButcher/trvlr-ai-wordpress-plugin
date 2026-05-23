@@ -8,52 +8,6 @@
 			window.history.back(-1);
 		});
 
-		// Initialize Splide galleries
-		$('.trvlr-gallery--slider').each(function () {
-			var $wrap = $(this);
-			var $main = $wrap.find('.trvlr-gallery__main');
-			var $nav = $wrap.find('.trvlr-gallery__nav');
-
-			if ($main.length && $nav.length && typeof Splide !== 'undefined') {
-
-				var mainSlider = new Splide($main[0], {
-					type: 'slide',
-					direction: 'ltr',
-					pagination: true,
-					arrows: false,
-					gap: '11px',
-					perPage: 1,
-					perMove: 1,
-					speed: 400,
-					interval: 3000
-				});
-
-				var navSlider = new Splide($nav[0], {
-					type: 'slide',
-					direction: 'ttb',
-					height: '460px', // Approximate height for vertical layout
-					fixedHeight: '100px',
-					fixedWidth: '140px',
-					gap: '11px',
-					pagination: false,
-					arrows: false,
-					isNavigation: true,
-					wheel: true,
-					breakpoints: {
-						768: {
-							direction: 'ltr',
-							height: 'auto',
-							fixedWidth: '100px',
-							fixedHeight: '70px'
-						}
-					}
-				});
-
-				mainSlider.sync(navSlider);
-				mainSlider.mount();
-				navSlider.mount();
-			}
-		});
 		const simpleAccordions = document.querySelectorAll('.trvlr-accordion');
 		simpleAccordions.forEach(accordion => {
 			new SimpleAccordion(accordion);

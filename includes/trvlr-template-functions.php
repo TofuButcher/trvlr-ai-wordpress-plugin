@@ -127,6 +127,12 @@ function trvlr_sale_description($post_id = null, $description = null)
 	return apply_filters('trvlr_sale_description', $output, $post_id);
 }
 
+function trvlr_enqueue_gallery_slider_assets()
+{
+	wp_enqueue_style('trvlr-gallery');
+	wp_enqueue_script('trvlr-gallery');
+}
+
 function trvlr_gallery($post_id = null)
 {
 	$post_id = $post_id ?: get_the_ID();
@@ -141,6 +147,8 @@ function trvlr_gallery($post_id = null)
 		$output = '<div class="trvlr-gallery trvlr-gallery--single">' . wp_get_attachment_image($gallery_ids[0], 'large') . '</div>';
 		return apply_filters('trvlr_gallery', $output, $post_id, $gallery_ids);
 	}
+
+	trvlr_enqueue_gallery_slider_assets();
 
 	ob_start();
 	$main_id = 'trvlr-main-slider-' . $post_id;

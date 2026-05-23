@@ -66,8 +66,6 @@ class Trvlr_Public
 			}
 		}
 
-		wp_enqueue_style('splide', plugin_dir_url(__FILE__) . 'dist/splide.min.css', array(), '4.1.3', 'all');
-
 		wp_register_style(
 			'trvlr-attraction-filter',
 			plugin_dir_url(__FILE__) . 'css/trvlr-attraction-filter.css',
@@ -122,8 +120,9 @@ class Trvlr_Public
 			require_once TRVLR_PLUGIN_DIR . 'includes/trvlr-feature-flags.php';
 		}
 
-		wp_enqueue_script('splide', plugin_dir_url(__FILE__) . '/dist/splide.min.js', array(), '4.1.3', true);
-		wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/trvlr-public.js', array('jquery', 'splide'), $this->version, false);
+		$this->register_gallery_assets();
+
+		wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/trvlr-public.js', array('jquery'), $this->version, false);
 
 		wp_register_script(
 			'trvlr-query-manager',
@@ -375,5 +374,39 @@ class Trvlr_Public
 		}
 
 		return $pricing;
+	}
+
+	private function register_gallery_assets()
+	{
+		static $registered = false;
+		if ($registered) {
+			return;
+		}
+		$registered = true;
+
+		$asset_file = plugin_dir_path(__FILE__) . 'dist/trvlr-gallery.asset.php';
+		$asset = array(
+			'dependencies' => array(),
+			'version'      => $this->version,
+		);
+		if (is_readable($asset_file)) {
+			$asset = include $asset_file;
+		}
+
+		wp_register_script(
+			'trvlr-gallery',
+			plugin_dir_url(__FILE__) . 'dist/trvlr-gallery.js',
+			$asset['dependencies'],
+			$asset['version'],
+			true
+		);
+
+		wp_register_style(
+			'trvlr-gallery',
+			plugin_dir_url(__FILE__) . 'dist/trvlr-gallery.css',
+			array(),
+			$asset['version'],
+			'all'
+		);
 	}
 }

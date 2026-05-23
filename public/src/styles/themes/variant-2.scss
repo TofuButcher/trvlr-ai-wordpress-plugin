@@ -438,10 +438,10 @@
 
 	&__inner {
 		display: grid;
-		--outside-space: calc((100vw - var(--content-width)) / 2);
+		--outside-space: calc((100vw - var(--trvlr-content-width)) / 2);
 		grid-template-columns:
 			calc(
-				var(--content-width) - var(--trvlr-sidebar-width) +
+				var(--trvlr-content-width) - var(--trvlr-sidebar-width) +
 					var(--outside-space)
 			)
 			calc(var(--trvlr-sidebar-width) + var(--outside-space));
@@ -459,7 +459,9 @@
 
 		&-container {
 			width: 100%;
-			max-width: calc(var(--content-width) - var(--trvlr-sidebar-width));
+			max-width: calc(
+				var(--trvlr-content-width) - var(--trvlr-sidebar-width)
+			);
 		}
 	}
 
