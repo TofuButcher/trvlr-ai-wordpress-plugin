@@ -1,1 +1,11696 @@
-(()=>{var t={137:function(t,i,e){var s,n;"undefined"!=typeof window&&window,void 0===(n="function"==typeof(s=function(){"use strict";function t(){}var i=t.prototype;return i.on=function(t,i){if(t&&i){var e=this._events=this._events||{},s=e[t]=e[t]||[];return-1==s.indexOf(i)&&s.push(i),this}},i.once=function(t,i){if(t&&i){this.on(t,i);var e=this._onceEvents=this._onceEvents||{};return(e[t]=e[t]||{})[i]=!0,this}},i.off=function(t,i){var e=this._events&&this._events[t];if(e&&e.length){var s=e.indexOf(i);return-1!=s&&e.splice(s,1),this}},i.emitEvent=function(t,i){var e=this._events&&this._events[t];if(e&&e.length){e=e.slice(0),i=i||[];for(var s=this._onceEvents&&this._onceEvents[t],n=0;n<e.length;n++){var o=e[n];s&&s[o]&&(this.off(t,o),delete s[o]),o.apply(this,i)}return this}},i.allOff=function(){delete this._events,delete this._onceEvents},t})?s.call(i,e,i,t):s)||(t.exports=n)},169:(t,i,e)=>{var s,n,o;window,n=[e(137),e(485)],void 0===(o="function"==typeof(s=function(t,i){"use strict";var e=document.documentElement.style,s="string"==typeof e.transition?"transition":"WebkitTransition",n="string"==typeof e.transform?"transform":"WebkitTransform",o={WebkitTransition:"webkitTransitionEnd",transition:"transitionend"}[s],r={transform:n,transition:s,transitionDuration:s+"Duration",transitionProperty:s+"Property",transitionDelay:s+"Delay"};function a(t,i){t&&(this.element=t,this.layout=i,this.position={x:0,y:0},this._create())}var h=a.prototype=Object.create(t.prototype);h.constructor=a,h._create=function(){this._transn={ingProperties:{},clean:{},onEnd:{}},this.css({position:"absolute"})},h.handleEvent=function(t){var i="on"+t.type;this[i]&&this[i](t)},h.getSize=function(){this.size=i(this.element)},h.css=function(t){var i=this.element.style;for(var e in t)i[r[e]||e]=t[e]},h.getPosition=function(){var t=getComputedStyle(this.element),i=this.layout._getOption("originLeft"),e=this.layout._getOption("originTop"),s=t[i?"left":"right"],n=t[e?"top":"bottom"],o=parseFloat(s),r=parseFloat(n),a=this.layout.size;-1!=s.indexOf("%")&&(o=o/100*a.width),-1!=n.indexOf("%")&&(r=r/100*a.height),o=isNaN(o)?0:o,r=isNaN(r)?0:r,o-=i?a.paddingLeft:a.paddingRight,r-=e?a.paddingTop:a.paddingBottom,this.position.x=o,this.position.y=r},h.layoutPosition=function(){var t=this.layout.size,i={},e=this.layout._getOption("originLeft"),s=this.layout._getOption("originTop"),n=e?"paddingLeft":"paddingRight",o=e?"left":"right",r=e?"right":"left",a=this.position.x+t[n];i[o]=this.getXValue(a),i[r]="";var h=s?"paddingTop":"paddingBottom",l=s?"top":"bottom",d=s?"bottom":"top",p=this.position.y+t[h];i[l]=this.getYValue(p),i[d]="",this.css(i),this.emitEvent("layout",[this])},h.getXValue=function(t){var i=this.layout._getOption("horizontal");return this.layout.options.percentPosition&&!i?t/this.layout.size.width*100+"%":t+"px"},h.getYValue=function(t){var i=this.layout._getOption("horizontal");return this.layout.options.percentPosition&&i?t/this.layout.size.height*100+"%":t+"px"},h._transitionTo=function(t,i){this.getPosition();var e=this.position.x,s=this.position.y,n=t==this.position.x&&i==this.position.y;if(this.setPosition(t,i),!n||this.isTransitioning){var o=t-e,r=i-s,a={};a.transform=this.getTranslate(o,r),this.transition({to:a,onTransitionEnd:{transform:this.layoutPosition},isCleaning:!0})}else this.layoutPosition()},h.getTranslate=function(t,i){return"translate3d("+(t=this.layout._getOption("originLeft")?t:-t)+"px, "+(i=this.layout._getOption("originTop")?i:-i)+"px, 0)"},h.goTo=function(t,i){this.setPosition(t,i),this.layoutPosition()},h.moveTo=h._transitionTo,h.setPosition=function(t,i){this.position.x=parseFloat(t),this.position.y=parseFloat(i)},h._nonTransition=function(t){for(var i in this.css(t.to),t.isCleaning&&this._removeStyles(t.to),t.onTransitionEnd)t.onTransitionEnd[i].call(this)},h.transition=function(t){if(parseFloat(this.layout.options.transitionDuration)){var i=this._transn;for(var e in t.onTransitionEnd)i.onEnd[e]=t.onTransitionEnd[e];for(e in t.to)i.ingProperties[e]=!0,t.isCleaning&&(i.clean[e]=!0);t.from&&(this.css(t.from),this.element.offsetHeight),this.enableTransition(t.to),this.css(t.to),this.isTransitioning=!0}else this._nonTransition(t)};var l="opacity,"+n.replace(/([A-Z])/g,function(t){return"-"+t.toLowerCase()});h.enableTransition=function(){if(!this.isTransitioning){var t=this.layout.options.transitionDuration;t="number"==typeof t?t+"ms":t,this.css({transitionProperty:l,transitionDuration:t,transitionDelay:this.staggerDelay||0}),this.element.addEventListener(o,this,!1)}},h.onwebkitTransitionEnd=function(t){this.ontransitionend(t)},h.onotransitionend=function(t){this.ontransitionend(t)};var d={"-webkit-transform":"transform"};h.ontransitionend=function(t){if(t.target===this.element){var i=this._transn,e=d[t.propertyName]||t.propertyName;delete i.ingProperties[e],function(t){for(var i in t)return!1;return!0}(i.ingProperties)&&this.disableTransition(),e in i.clean&&(this.element.style[t.propertyName]="",delete i.clean[e]),e in i.onEnd&&(i.onEnd[e].call(this),delete i.onEnd[e]),this.emitEvent("transitionEnd",[this])}},h.disableTransition=function(){this.removeTransitionStyles(),this.element.removeEventListener(o,this,!1),this.isTransitioning=!1},h._removeStyles=function(t){var i={};for(var e in t)i[e]="";this.css(i)};var p={transitionProperty:"",transitionDuration:"",transitionDelay:""};return h.removeTransitionStyles=function(){this.css(p)},h.stagger=function(t){t=isNaN(t)?0:t,this.staggerDelay=t+"ms"},h.removeElem=function(){this.element.parentNode.removeChild(this.element),this.css({display:""}),this.emitEvent("remove",[this])},h.remove=function(){s&&parseFloat(this.layout.options.transitionDuration)?(this.once("transitionEnd",function(){this.removeElem()}),this.hide()):this.removeElem()},h.reveal=function(){delete this.isHidden,this.css({display:""});var t=this.layout.options,i={};i[this.getHideRevealTransitionEndProperty("visibleStyle")]=this.onRevealTransitionEnd,this.transition({from:t.hiddenStyle,to:t.visibleStyle,isCleaning:!0,onTransitionEnd:i})},h.onRevealTransitionEnd=function(){this.isHidden||this.emitEvent("reveal")},h.getHideRevealTransitionEndProperty=function(t){var i=this.layout.options[t];if(i.opacity)return"opacity";for(var e in i)return e},h.hide=function(){this.isHidden=!0,this.css({display:""});var t=this.layout.options,i={};i[this.getHideRevealTransitionEndProperty("hiddenStyle")]=this.onHideTransitionEnd,this.transition({from:t.visibleStyle,to:t.hiddenStyle,isCleaning:!0,onTransitionEnd:i})},h.onHideTransitionEnd=function(){this.isHidden&&(this.css({display:"none"}),this.emitEvent("hide"))},h.destroy=function(){this.css({position:"",left:"",right:"",top:"",bottom:"",transition:"",transform:""})},a})?s.apply(i,n):s)||(t.exports=o)},485:(t,i,e)=>{var s,n;window,void 0===(n="function"==typeof(s=function(){"use strict";function t(t){var i=parseFloat(t);return-1==t.indexOf("%")&&!isNaN(i)&&i}var i="undefined"==typeof console?function(){}:function(t){console.error(t)},e=["paddingLeft","paddingRight","paddingTop","paddingBottom","marginLeft","marginRight","marginTop","marginBottom","borderLeftWidth","borderRightWidth","borderTopWidth","borderBottomWidth"],s=e.length;function n(t){var e=getComputedStyle(t);return e||i("Style returned "+e+". Are you running this code in a hidden iframe on Firefox? See https://bit.ly/getsizebug1"),e}var o,r=!1;function a(i){if(function(){if(!r){r=!0;var i=document.createElement("div");i.style.width="200px",i.style.padding="1px 2px 3px 4px",i.style.borderStyle="solid",i.style.borderWidth="1px 2px 3px 4px",i.style.boxSizing="border-box";var e=document.body||document.documentElement;e.appendChild(i);var s=n(i);o=200==Math.round(t(s.width)),a.isBoxSizeOuter=o,e.removeChild(i)}}(),"string"==typeof i&&(i=document.querySelector(i)),i&&"object"==typeof i&&i.nodeType){var h=n(i);if("none"==h.display)return function(){for(var t={width:0,height:0,innerWidth:0,innerHeight:0,outerWidth:0,outerHeight:0},i=0;i<s;i++)t[e[i]]=0;return t}();var l={};l.width=i.offsetWidth,l.height=i.offsetHeight;for(var d=l.isBorderBox="border-box"==h.boxSizing,p=0;p<s;p++){var c=e[p],u=h[c],m=parseFloat(u);l[c]=isNaN(m)?0:m}var v=l.paddingLeft+l.paddingRight,g=l.paddingTop+l.paddingBottom,f=l.marginLeft+l.marginRight,y=l.marginTop+l.marginBottom,_=l.borderLeftWidth+l.borderRightWidth,w=l.borderTopWidth+l.borderBottomWidth,x=d&&o,S=t(h.width);!1!==S&&(l.width=S+(x?0:v+_));var P=t(h.height);return!1!==P&&(l.height=P+(x?0:g+w)),l.innerWidth=l.width-(v+_),l.innerHeight=l.height-(g+w),l.outerWidth=l.width+f,l.outerHeight=l.height+y,l}}return a})?s.call(i,e,i,t):s)||(t.exports=n)},786:(t,i,e)=>{var s,n;!function(o,r){"use strict";void 0===(n="function"==typeof(s=r)?s.call(i,e,i,t):s)||(t.exports=n)}(window,function(){"use strict";var t=function(){var t=window.Element.prototype;if(t.matches)return"matches";if(t.matchesSelector)return"matchesSelector";for(var i=["webkit","moz","ms","o"],e=0;e<i.length;e++){var s=i[e]+"MatchesSelector";if(t[s])return s}}();return function(i,e){return i[t](e)}})},831:(t,i,e)=>{var s,n;!function(o){"use strict";s=[e(137),e(485),e(977),e(169)],n=function(t,i,e,s){return function(t,i,e,s,n){var o=t.console,r=t.jQuery,a=function(){},h=0,l={};function d(t,i){var e=s.getQueryElement(t);if(e){this.element=e,r&&(this.$element=r(this.element)),this.options=s.extend({},this.constructor.defaults),this.option(i);var n=++h;this.element.outlayerGUID=n,l[n]=this,this._create(),this._getOption("initLayout")&&this.layout()}else o&&o.error("Bad element for "+this.constructor.namespace+": "+(e||t))}d.namespace="outlayer",d.Item=n,d.defaults={containerStyle:{position:"relative"},initLayout:!0,originLeft:!0,originTop:!0,resize:!0,resizeContainer:!0,transitionDuration:"0.4s",hiddenStyle:{opacity:0,transform:"scale(0.001)"},visibleStyle:{opacity:1,transform:"scale(1)"}};var p=d.prototype;function c(t){function i(){t.apply(this,arguments)}return i.prototype=Object.create(t.prototype),i.prototype.constructor=i,i}s.extend(p,i.prototype),p.option=function(t){s.extend(this.options,t)},p._getOption=function(t){var i=this.constructor.compatOptions[t];return i&&void 0!==this.options[i]?this.options[i]:this.options[t]},d.compatOptions={initLayout:"isInitLayout",horizontal:"isHorizontal",layoutInstant:"isLayoutInstant",originLeft:"isOriginLeft",originTop:"isOriginTop",resize:"isResizeBound",resizeContainer:"isResizingContainer"},p._create=function(){this.reloadItems(),this.stamps=[],this.stamp(this.options.stamp),s.extend(this.element.style,this.options.containerStyle),this._getOption("resize")&&this.bindResize()},p.reloadItems=function(){this.items=this._itemize(this.element.children)},p._itemize=function(t){for(var i=this._filterFindItemElements(t),e=this.constructor.Item,s=[],n=0;n<i.length;n++){var o=new e(i[n],this);s.push(o)}return s},p._filterFindItemElements=function(t){return s.filterFindElements(t,this.options.itemSelector)},p.getItemElements=function(){return this.items.map(function(t){return t.element})},p.layout=function(){this._resetLayout(),this._manageStamps();var t=this._getOption("layoutInstant"),i=void 0!==t?t:!this._isLayoutInited;this.layoutItems(this.items,i),this._isLayoutInited=!0},p._init=p.layout,p._resetLayout=function(){this.getSize()},p.getSize=function(){this.size=e(this.element)},p._getMeasurement=function(t,i){var s,n=this.options[t];n?("string"==typeof n?s=this.element.querySelector(n):n instanceof HTMLElement&&(s=n),this[t]=s?e(s)[i]:n):this[t]=0},p.layoutItems=function(t,i){t=this._getItemsForLayout(t),this._layoutItems(t,i),this._postLayout()},p._getItemsForLayout=function(t){return t.filter(function(t){return!t.isIgnored})},p._layoutItems=function(t,i){if(this._emitCompleteOnItems("layout",t),t&&t.length){var e=[];t.forEach(function(t){var s=this._getItemLayoutPosition(t);s.item=t,s.isInstant=i||t.isLayoutInstant,e.push(s)},this),this._processLayoutQueue(e)}},p._getItemLayoutPosition=function(){return{x:0,y:0}},p._processLayoutQueue=function(t){this.updateStagger(),t.forEach(function(t,i){this._positionItem(t.item,t.x,t.y,t.isInstant,i)},this)},p.updateStagger=function(){var t=this.options.stagger;if(null!=t)return this.stagger=function(t){if("number"==typeof t)return t;var i=t.match(/(^\d*\.?\d*)(\w*)/),e=i&&i[1],s=i&&i[2];return e.length?(e=parseFloat(e))*(u[s]||1):0}(t),this.stagger;this.stagger=0},p._positionItem=function(t,i,e,s,n){s?t.goTo(i,e):(t.stagger(n*this.stagger),t.moveTo(i,e))},p._postLayout=function(){this.resizeContainer()},p.resizeContainer=function(){if(this._getOption("resizeContainer")){var t=this._getContainerSize();t&&(this._setContainerMeasure(t.width,!0),this._setContainerMeasure(t.height,!1))}},p._getContainerSize=a,p._setContainerMeasure=function(t,i){if(void 0!==t){var e=this.size;e.isBorderBox&&(t+=i?e.paddingLeft+e.paddingRight+e.borderLeftWidth+e.borderRightWidth:e.paddingBottom+e.paddingTop+e.borderTopWidth+e.borderBottomWidth),t=Math.max(t,0),this.element.style[i?"width":"height"]=t+"px"}},p._emitCompleteOnItems=function(t,i){var e=this;function s(){e.dispatchEvent(t+"Complete",null,[i])}var n=i.length;if(i&&n){var o=0;i.forEach(function(i){i.once(t,r)})}else s();function r(){++o==n&&s()}},p.dispatchEvent=function(t,i,e){var s=i?[i].concat(e):e;if(this.emitEvent(t,s),r)if(this.$element=this.$element||r(this.element),i){var n=r.Event(i);n.type=t,this.$element.trigger(n,e)}else this.$element.trigger(t,e)},p.ignore=function(t){var i=this.getItem(t);i&&(i.isIgnored=!0)},p.unignore=function(t){var i=this.getItem(t);i&&delete i.isIgnored},p.stamp=function(t){(t=this._find(t))&&(this.stamps=this.stamps.concat(t),t.forEach(this.ignore,this))},p.unstamp=function(t){(t=this._find(t))&&t.forEach(function(t){s.removeFrom(this.stamps,t),this.unignore(t)},this)},p._find=function(t){if(t)return"string"==typeof t&&(t=this.element.querySelectorAll(t)),s.makeArray(t)},p._manageStamps=function(){this.stamps&&this.stamps.length&&(this._getBoundingRect(),this.stamps.forEach(this._manageStamp,this))},p._getBoundingRect=function(){var t=this.element.getBoundingClientRect(),i=this.size;this._boundingRect={left:t.left+i.paddingLeft+i.borderLeftWidth,top:t.top+i.paddingTop+i.borderTopWidth,right:t.right-(i.paddingRight+i.borderRightWidth),bottom:t.bottom-(i.paddingBottom+i.borderBottomWidth)}},p._manageStamp=a,p._getElementOffset=function(t){var i=t.getBoundingClientRect(),s=this._boundingRect,n=e(t);return{left:i.left-s.left-n.marginLeft,top:i.top-s.top-n.marginTop,right:s.right-i.right-n.marginRight,bottom:s.bottom-i.bottom-n.marginBottom}},p.handleEvent=s.handleEvent,p.bindResize=function(){t.addEventListener("resize",this),this.isResizeBound=!0},p.unbindResize=function(){t.removeEventListener("resize",this),this.isResizeBound=!1},p.onresize=function(){this.resize()},s.debounceMethod(d,"onresize",100),p.resize=function(){this.isResizeBound&&this.needsResizeLayout()&&this.layout()},p.needsResizeLayout=function(){var t=e(this.element);return this.size&&t&&t.innerWidth!==this.size.innerWidth},p.addItems=function(t){var i=this._itemize(t);return i.length&&(this.items=this.items.concat(i)),i},p.appended=function(t){var i=this.addItems(t);i.length&&(this.layoutItems(i,!0),this.reveal(i))},p.prepended=function(t){var i=this._itemize(t);if(i.length){var e=this.items.slice(0);this.items=i.concat(e),this._resetLayout(),this._manageStamps(),this.layoutItems(i,!0),this.reveal(i),this.layoutItems(e)}},p.reveal=function(t){if(this._emitCompleteOnItems("reveal",t),t&&t.length){var i=this.updateStagger();t.forEach(function(t,e){t.stagger(e*i),t.reveal()})}},p.hide=function(t){if(this._emitCompleteOnItems("hide",t),t&&t.length){var i=this.updateStagger();t.forEach(function(t,e){t.stagger(e*i),t.hide()})}},p.revealItemElements=function(t){var i=this.getItems(t);this.reveal(i)},p.hideItemElements=function(t){var i=this.getItems(t);this.hide(i)},p.getItem=function(t){for(var i=0;i<this.items.length;i++){var e=this.items[i];if(e.element==t)return e}},p.getItems=function(t){t=s.makeArray(t);var i=[];return t.forEach(function(t){var e=this.getItem(t);e&&i.push(e)},this),i},p.remove=function(t){var i=this.getItems(t);this._emitCompleteOnItems("remove",i),i&&i.length&&i.forEach(function(t){t.remove(),s.removeFrom(this.items,t)},this)},p.destroy=function(){var t=this.element.style;t.height="",t.position="",t.width="",this.items.forEach(function(t){t.destroy()}),this.unbindResize();var i=this.element.outlayerGUID;delete l[i],delete this.element.outlayerGUID,r&&r.removeData(this.element,this.constructor.namespace)},d.data=function(t){var i=(t=s.getQueryElement(t))&&t.outlayerGUID;return i&&l[i]},d.create=function(t,i){var e=c(d);return e.defaults=s.extend({},d.defaults),s.extend(e.defaults,i),e.compatOptions=s.extend({},d.compatOptions),e.namespace=t,e.data=d.data,e.Item=c(n),s.htmlInit(e,t),r&&r.bridget&&r.bridget(t,e),e};var u={ms:1,s:1e3};return d.Item=n,d}(o,t,i,e,s)}.apply(i,s),void 0===n||(t.exports=n)}(window)},977:(t,i,e)=>{var s,n;!function(o){s=[e(786)],n=function(t){return function(t,i){"use strict";var e={extend:function(t,i){for(var e in i)t[e]=i[e];return t},modulo:function(t,i){return(t%i+i)%i}},s=Array.prototype.slice;e.makeArray=function(t){return Array.isArray(t)?t:null==t?[]:"object"==typeof t&&"number"==typeof t.length?s.call(t):[t]},e.removeFrom=function(t,i){var e=t.indexOf(i);-1!=e&&t.splice(e,1)},e.getParent=function(t,e){for(;t.parentNode&&t!=document.body;)if(t=t.parentNode,i(t,e))return t},e.getQueryElement=function(t){return"string"==typeof t?document.querySelector(t):t},e.handleEvent=function(t){var i="on"+t.type;this[i]&&this[i](t)},e.filterFindElements=function(t,s){t=e.makeArray(t);var n=[];return t.forEach(function(t){if(t instanceof HTMLElement)if(s){i(t,s)&&n.push(t);for(var e=t.querySelectorAll(s),o=0;o<e.length;o++)n.push(e[o])}else n.push(t)}),n},e.debounceMethod=function(t,i,e){e=e||100;var s=t.prototype[i],n=i+"Timeout";t.prototype[i]=function(){var t=this[n];clearTimeout(t);var i=arguments,o=this;this[n]=setTimeout(function(){s.apply(o,i),delete o[n]},e)}},e.docReady=function(t){var i=document.readyState;"complete"==i||"interactive"==i?setTimeout(t):document.addEventListener("DOMContentLoaded",t)},e.toDashed=function(t){return t.replace(/(.)([A-Z])/g,function(t,i,e){return i+"-"+e}).toLowerCase()};var n=t.console;return e.htmlInit=function(i,s){e.docReady(function(){var o=e.toDashed(s),r="data-"+o,a=document.querySelectorAll("["+r+"]"),h=document.querySelectorAll(".js-"+o),l=e.makeArray(a).concat(e.makeArray(h)),d=r+"-options",p=t.jQuery;l.forEach(function(t){var e,o=t.getAttribute(r)||t.getAttribute(d);try{e=o&&JSON.parse(o)}catch(i){return void(n&&n.error("Error parsing "+r+" on "+t.className+": "+i))}var a=new i(t,e);p&&p.data(t,s,a)})})},e}(o,t)}.apply(i,s),void 0===n||(t.exports=n)}(window)},994:(t,i,e)=>{var s,n,o;window,n=[e(831),e(485)],void 0===(o="function"==typeof(s=function(t,i){"use strict";var e=t.create("masonry");e.compatOptions.fitWidth="isFitWidth";var s=e.prototype;return s._resetLayout=function(){this.getSize(),this._getMeasurement("columnWidth","outerWidth"),this._getMeasurement("gutter","outerWidth"),this.measureColumns(),this.colYs=[];for(var t=0;t<this.cols;t++)this.colYs.push(0);this.maxY=0,this.horizontalColIndex=0},s.measureColumns=function(){if(this.getContainerWidth(),!this.columnWidth){var t=this.items[0],e=t&&t.element;this.columnWidth=e&&i(e).outerWidth||this.containerWidth}var s=this.columnWidth+=this.gutter,n=this.containerWidth+this.gutter,o=n/s,r=s-n%s;o=Math[r&&r<1?"round":"floor"](o),this.cols=Math.max(o,1)},s.getContainerWidth=function(){var t=this._getOption("fitWidth")?this.element.parentNode:this.element,e=i(t);this.containerWidth=e&&e.innerWidth},s._getItemLayoutPosition=function(t){t.getSize();var i=t.size.outerWidth%this.columnWidth,e=Math[i&&i<1?"round":"ceil"](t.size.outerWidth/this.columnWidth);e=Math.min(e,this.cols);for(var s=this[this.options.horizontalOrder?"_getHorizontalColPosition":"_getTopColPosition"](e,t),n={x:this.columnWidth*s.col,y:s.y},o=s.y+t.size.outerHeight,r=e+s.col,a=s.col;a<r;a++)this.colYs[a]=o;return n},s._getTopColPosition=function(t){var i=this._getTopColGroup(t),e=Math.min.apply(Math,i);return{col:i.indexOf(e),y:e}},s._getTopColGroup=function(t){if(t<2)return this.colYs;for(var i=[],e=this.cols+1-t,s=0;s<e;s++)i[s]=this._getColGroupY(s,t);return i},s._getColGroupY=function(t,i){if(i<2)return this.colYs[t];var e=this.colYs.slice(t,t+i);return Math.max.apply(Math,e)},s._getHorizontalColPosition=function(t,i){var e=this.horizontalColIndex%this.cols;e=t>1&&e+t>this.cols?0:e;var s=i.size.outerWidth&&i.size.outerHeight;return this.horizontalColIndex=s?e+t:this.horizontalColIndex,{col:e,y:this._getColGroupY(e,t)}},s._manageStamp=function(t){var e=i(t),s=this._getElementOffset(t),n=this._getOption("originLeft")?s.left:s.right,o=n+e.outerWidth,r=Math.floor(n/this.columnWidth);r=Math.max(0,r);var a=Math.floor(o/this.columnWidth);a-=o%this.columnWidth?0:1,a=Math.min(this.cols-1,a);for(var h=(this._getOption("originTop")?s.top:s.bottom)+e.outerHeight,l=r;l<=a;l++)this.colYs[l]=Math.max(h,this.colYs[l])},s._getContainerSize=function(){this.maxY=Math.max.apply(Math,this.colYs);var t={height:this.maxY};return this._getOption("fitWidth")&&(t.width=this._getContainerFitWidth()),t},s._getContainerFitWidth=function(){for(var t=0,i=this.cols;--i&&0===this.colYs[i];)t++;return(this.cols-t)*this.columnWidth-this.gutter},s.needsResizeLayout=function(){var t=this.containerWidth;return this.getContainerWidth(),t!=this.containerWidth},e})?s.apply(i,n):s)||(t.exports=o)}},i={};function e(s){var n=i[s];if(void 0!==n)return n.exports;var o=i[s]={exports:{}};return t[s].call(o.exports,o,o.exports,e),o.exports}e.n=t=>{var i=t&&t.__esModule?()=>t.default:()=>t;return e.d(i,{a:i}),i},e.d=(t,i)=>{for(var s in i)e.o(i,s)&&!e.o(t,s)&&Object.defineProperty(t,s,{enumerable:!0,get:i[s]})},e.o=(t,i)=>Object.prototype.hasOwnProperty.call(t,i),(()=>{"use strict";var t=e(994),i=e.n(t);function s(t,i,e){const s=document.createElement(i);return t&&(s.className=t),e&&e.appendChild(s),s}function n(t,i){return t.x=i.x,t.y=i.y,void 0!==i.id&&(t.id=i.id),t}function o(t){t.x=Math.round(t.x),t.y=Math.round(t.y)}function r(t,i){const e=Math.abs(t.x-i.x),s=Math.abs(t.y-i.y);return Math.sqrt(e*e+s*s)}function a(t,i){return t.x===i.x&&t.y===i.y}function h(t,i,e){return Math.min(Math.max(t,i),e)}function l(t,i,e){let s=`translate3d(${t}px,${i||0}px,0)`;return void 0!==e&&(s+=` scale3d(${e},${e},1)`),s}function d(t,i,e,s){t.style.transform=l(i,e,s)}function p(t,i,e,s){t.style.transition=i?`${i} ${e}ms ${s||"cubic-bezier(.4,0,.22,1)"}`:"none"}function c(t,i,e){t.style.width="number"==typeof i?`${i}px`:i,t.style.height="number"==typeof e?`${e}px`:e}const u="loading",m="loaded",v="error";function g(){return!(!navigator.vendor||!navigator.vendor.match(/apple/i))}let f=!1;try{window.addEventListener("test",null,Object.defineProperty({},"passive",{get:()=>{f=!0}}))}catch(t){}class y{constructor(){this._pool=[]}add(t,i,e,s){this._toggleListener(t,i,e,s)}remove(t,i,e,s){this._toggleListener(t,i,e,s,!0)}removeAll(){this._pool.forEach(t=>{this._toggleListener(t.target,t.type,t.listener,t.passive,!0,!0)}),this._pool=[]}_toggleListener(t,i,e,s,n,o){if(!t)return;const r=n?"removeEventListener":"addEventListener";i.split(" ").forEach(i=>{if(i){o||(n?this._pool=this._pool.filter(s=>s.type!==i||s.listener!==e||s.target!==t):this._pool.push({target:t,type:i,listener:e,passive:s}));const a=!!f&&{passive:s||!1};t[r](i,e,a)}})}}function _(t,i){if(t.getViewportSizeFn){const e=t.getViewportSizeFn(t,i);if(e)return e}return{x:document.documentElement.clientWidth,y:window.innerHeight}}function w(t,i,e,s,n){let o=0;if(i.paddingFn)o=i.paddingFn(e,s,n)[t];else if(i.padding)o=i.padding[t];else{const e="padding"+t[0].toUpperCase()+t.slice(1);i[e]&&(o=i[e])}return Number(o)||0}function x(t,i,e,s){return{x:i.x-w("left",t,i,e,s)-w("right",t,i,e,s),y:i.y-w("top",t,i,e,s)-w("bottom",t,i,e,s)}}class S{constructor(t){this.slide=t,this.currZoomLevel=1,this.center={x:0,y:0},this.max={x:0,y:0},this.min={x:0,y:0}}update(t){this.currZoomLevel=t,this.slide.width?(this._updateAxis("x"),this._updateAxis("y"),this.slide.pswp.dispatch("calcBounds",{slide:this.slide})):this.reset()}_updateAxis(t){const{pswp:i}=this.slide,e=this.slide["x"===t?"width":"height"]*this.currZoomLevel,s=w("x"===t?"left":"top",i.options,i.viewportSize,this.slide.data,this.slide.index),n=this.slide.panAreaSize[t];this.center[t]=Math.round((n-e)/2)+s,this.max[t]=e>n?Math.round(n-e)+s:this.center[t],this.min[t]=e>n?s:this.center[t]}reset(){this.center.x=0,this.center.y=0,this.max.x=0,this.max.y=0,this.min.x=0,this.min.y=0}correctPan(t,i){return h(i,this.max[t],this.min[t])}}class P{constructor(t,i,e,s){this.pswp=s,this.options=t,this.itemData=i,this.index=e,this.panAreaSize=null,this.elementSize=null,this.fit=1,this.fill=1,this.vFill=1,this.initial=1,this.secondary=1,this.max=1,this.min=1}update(t,i,e){const s={x:t,y:i};this.elementSize=s,this.panAreaSize=e;const n=e.x/s.x,o=e.y/s.y;this.fit=Math.min(1,n<o?n:o),this.fill=Math.min(1,n>o?n:o),this.vFill=Math.min(1,o),this.initial=this._getInitial(),this.secondary=this._getSecondary(),this.max=Math.max(this.initial,this.secondary,this._getMax()),this.min=Math.min(this.fit,this.initial,this.secondary),this.pswp&&this.pswp.dispatch("zoomLevelsUpdate",{zoomLevels:this,slideData:this.itemData})}_parseZoomLevelOption(t){const i=t+"ZoomLevel",e=this.options[i];if(e)return"function"==typeof e?e(this):"fill"===e?this.fill:"fit"===e?this.fit:Number(e)}_getSecondary(){let t=this._parseZoomLevelOption("secondary");return t||(t=Math.min(1,3*this.fit),this.elementSize&&t*this.elementSize.x>4e3&&(t=4e3/this.elementSize.x),t)}_getInitial(){return this._parseZoomLevelOption("initial")||this.fit}_getMax(){return this._parseZoomLevelOption("max")||Math.max(1,4*this.fit)}}class b{constructor(t,i,e){this.data=t,this.index=i,this.pswp=e,this.isActive=i===e.currIndex,this.currentResolution=0,this.panAreaSize={x:0,y:0},this.pan={x:0,y:0},this.isFirstSlide=this.isActive&&!e.opener.isOpen,this.zoomLevels=new P(e.options,t,i,e),this.pswp.dispatch("gettingData",{slide:this,data:this.data,index:i}),this.content=this.pswp.contentLoader.getContentBySlide(this),this.container=s("pswp__zoom-wrap","div"),this.holderElement=null,this.currZoomLevel=1,this.width=this.content.width,this.height=this.content.height,this.heavyAppended=!1,this.bounds=new S(this),this.prevDisplayedWidth=-1,this.prevDisplayedHeight=-1,this.pswp.dispatch("slideInit",{slide:this})}setIsActive(t){t&&!this.isActive?this.activate():!t&&this.isActive&&this.deactivate()}append(t){this.holderElement=t,this.container.style.transformOrigin="0 0",this.data&&(this.calculateSize(),this.load(),this.updateContentSize(),this.appendHeavy(),this.holderElement.appendChild(this.container),this.zoomAndPanToInitial(),this.pswp.dispatch("firstZoomPan",{slide:this}),this.applyCurrentZoomPan(),this.pswp.dispatch("afterSetContent",{slide:this}),this.isActive&&this.activate())}load(){this.content.load(!1),this.pswp.dispatch("slideLoad",{slide:this})}appendHeavy(){const{pswp:t}=this;!this.heavyAppended&&t.opener.isOpen&&!t.mainScroll.isShifted()&&(this.isActive,1)&&(this.pswp.dispatch("appendHeavy",{slide:this}).defaultPrevented||(this.heavyAppended=!0,this.content.append(),this.pswp.dispatch("appendHeavyContent",{slide:this})))}activate(){this.isActive=!0,this.appendHeavy(),this.content.activate(),this.pswp.dispatch("slideActivate",{slide:this})}deactivate(){this.isActive=!1,this.content.deactivate(),this.currZoomLevel!==this.zoomLevels.initial&&this.calculateSize(),this.currentResolution=0,this.zoomAndPanToInitial(),this.applyCurrentZoomPan(),this.updateContentSize(),this.pswp.dispatch("slideDeactivate",{slide:this})}destroy(){this.content.hasSlide=!1,this.content.remove(),this.container.remove(),this.pswp.dispatch("slideDestroy",{slide:this})}resize(){this.currZoomLevel!==this.zoomLevels.initial&&this.isActive?(this.calculateSize(),this.bounds.update(this.currZoomLevel),this.panTo(this.pan.x,this.pan.y)):(this.calculateSize(),this.currentResolution=0,this.zoomAndPanToInitial(),this.applyCurrentZoomPan(),this.updateContentSize())}updateContentSize(t){const i=this.currentResolution||this.zoomLevels.initial;if(!i)return;const e=Math.round(this.width*i)||this.pswp.viewportSize.x,s=Math.round(this.height*i)||this.pswp.viewportSize.y;(this.sizeChanged(e,s)||t)&&this.content.setDisplayedSize(e,s)}sizeChanged(t,i){return(t!==this.prevDisplayedWidth||i!==this.prevDisplayedHeight)&&(this.prevDisplayedWidth=t,this.prevDisplayedHeight=i,!0)}getPlaceholderElement(){var t;return null===(t=this.content.placeholder)||void 0===t?void 0:t.element}zoomTo(t,i,e,s){const{pswp:n}=this;if(!this.isZoomable()||n.mainScroll.isShifted())return;n.dispatch("beforeZoomTo",{destZoomLevel:t,centerPoint:i,transitionDuration:e}),n.animations.stopAllPan();const r=this.currZoomLevel;s||(t=h(t,this.zoomLevels.min,this.zoomLevels.max)),this.setZoomLevel(t),this.pan.x=this.calculateZoomToPanOffset("x",i,r),this.pan.y=this.calculateZoomToPanOffset("y",i,r),o(this.pan);const a=()=>{this._setResolution(t),this.applyCurrentZoomPan()};e?n.animations.startTransition({isPan:!0,name:"zoomTo",target:this.container,transform:this.getCurrentTransform(),onComplete:a,duration:e,easing:n.options.easing}):a()}toggleZoom(t){this.zoomTo(this.currZoomLevel===this.zoomLevels.initial?this.zoomLevels.secondary:this.zoomLevels.initial,t,this.pswp.options.zoomAnimationDuration)}setZoomLevel(t){this.currZoomLevel=t,this.bounds.update(this.currZoomLevel)}calculateZoomToPanOffset(t,i,e){if(0===this.bounds.max[t]-this.bounds.min[t])return this.bounds.center[t];i||(i=this.pswp.getViewportCenterPoint()),e||(e=this.zoomLevels.initial);const s=this.currZoomLevel/e;return this.bounds.correctPan(t,(this.pan[t]-i[t])*s+i[t])}panTo(t,i){this.pan.x=this.bounds.correctPan("x",t),this.pan.y=this.bounds.correctPan("y",i),this.applyCurrentZoomPan()}isPannable(){return Boolean(this.width)&&this.currZoomLevel>this.zoomLevels.fit}isZoomable(){return Boolean(this.width)&&this.content.isZoomable()}applyCurrentZoomPan(){this._applyZoomTransform(this.pan.x,this.pan.y,this.currZoomLevel),this===this.pswp.currSlide&&this.pswp.dispatch("zoomPanUpdate",{slide:this})}zoomAndPanToInitial(){this.currZoomLevel=this.zoomLevels.initial,this.bounds.update(this.currZoomLevel),n(this.pan,this.bounds.center),this.pswp.dispatch("initialZoomPan",{slide:this})}_applyZoomTransform(t,i,e){e/=this.currentResolution||this.zoomLevels.initial,d(this.container,t,i,e)}calculateSize(){const{pswp:t}=this;n(this.panAreaSize,x(t.options,t.viewportSize,this.data,this.index)),this.zoomLevels.update(this.width,this.height,this.panAreaSize),t.dispatch("calcSlideSize",{slide:this})}getCurrentTransform(){const t=this.currZoomLevel/(this.currentResolution||this.zoomLevels.initial);return l(this.pan.x,this.pan.y,t)}_setResolution(t){t!==this.currentResolution&&(this.currentResolution=t,this.updateContentSize(),this.pswp.dispatch("resolutionChanged"))}}class z{constructor(t){this.gestures=t,this.pswp=t.pswp,this.startPan={x:0,y:0}}start(){this.pswp.currSlide&&n(this.startPan,this.pswp.currSlide.pan),this.pswp.animations.stopAll()}change(){const{p1:t,prevP1:i,dragAxis:e}=this.gestures,{currSlide:s}=this.pswp;if("y"===e&&this.pswp.options.closeOnVerticalDrag&&s&&s.currZoomLevel<=s.zoomLevels.fit&&!this.gestures.isMultitouch){const e=s.pan.y+(t.y-i.y);if(!this.pswp.dispatch("verticalDrag",{panY:e}).defaultPrevented){this._setPanWithFriction("y",e,.6);const t=1-Math.abs(this._getVerticalDragRatio(s.pan.y));this.pswp.applyBgOpacity(t),s.applyCurrentZoomPan()}}else this._panOrMoveMainScroll("x")||(this._panOrMoveMainScroll("y"),s&&(o(s.pan),s.applyCurrentZoomPan()))}end(){const{velocity:t}=this.gestures,{mainScroll:i,currSlide:e}=this.pswp;let s=0;if(this.pswp.animations.stopAll(),i.isShifted()){const e=(i.x-i.getCurrSlideX())/this.pswp.viewportSize.x;t.x<-.5&&e<0||t.x<.1&&e<-.5?(s=1,t.x=Math.min(t.x,0)):(t.x>.5&&e>0||t.x>-.1&&e>.5)&&(s=-1,t.x=Math.max(t.x,0)),i.moveIndexBy(s,!0,t.x)}e&&e.currZoomLevel>e.zoomLevels.max||this.gestures.isMultitouch?this.gestures.zoomLevels.correctZoomPan(!0):(this._finishPanGestureForAxis("x"),this._finishPanGestureForAxis("y"))}_finishPanGestureForAxis(t){const{velocity:i}=this.gestures,{currSlide:e}=this.pswp;if(!e)return;const{pan:s,bounds:n}=e,o=s[t],r=this.pswp.bgOpacity<1&&"y"===t,a=o+.995*i[t]/(1-.995);if(r){const t=this._getVerticalDragRatio(o),i=this._getVerticalDragRatio(a);if(t<0&&i<-.4||t>0&&i>.4)return void this.pswp.close()}const l=n.correctPan(t,a);if(o===l)return;const d=l===a?1:.82,p=this.pswp.bgOpacity,c=l-o;this.pswp.animations.startSpring({name:"panGesture"+t,isPan:!0,start:o,end:l,velocity:i[t],dampingRatio:d,onUpdate:i=>{if(r&&this.pswp.bgOpacity<1){const t=1-(l-i)/c;this.pswp.applyBgOpacity(h(p+(1-p)*t,0,1))}s[t]=Math.floor(i),e.applyCurrentZoomPan()}})}_panOrMoveMainScroll(t){const{p1:i,dragAxis:e,prevP1:s,isMultitouch:n}=this.gestures,{currSlide:o,mainScroll:r}=this.pswp,a=i[t]-s[t],h=r.x+a;if(!a||!o)return!1;if("x"===t&&!o.isPannable()&&!n)return r.moveTo(h,!0),!0;const{bounds:l}=o,d=o.pan[t]+a;if(this.pswp.options.allowPanToNext&&"x"===e&&"x"===t&&!n){const i=r.getCurrSlideX(),e=r.x-i,s=a>0,n=!s;if(d>l.min[t]&&s){if(l.min[t]<=this.startPan[t])return r.moveTo(h,!0),!0;this._setPanWithFriction(t,d)}else if(d<l.max[t]&&n){if(this.startPan[t]<=l.max[t])return r.moveTo(h,!0),!0;this._setPanWithFriction(t,d)}else if(0!==e){if(e>0)return r.moveTo(Math.max(h,i),!0),!0;if(e<0)return r.moveTo(Math.min(h,i),!0),!0}else this._setPanWithFriction(t,d)}else"y"===t&&(r.isShifted()||l.min.y===l.max.y)||this._setPanWithFriction(t,d);return!1}_getVerticalDragRatio(t){var i,e;return(t-(null!==(i=null===(e=this.pswp.currSlide)||void 0===e?void 0:e.bounds.center.y)&&void 0!==i?i:0))/(this.pswp.viewportSize.y/3)}_setPanWithFriction(t,i,e){const{currSlide:s}=this.pswp;if(!s)return;const{pan:n,bounds:o}=s;if(o.correctPan(t,i)!==i||e){const s=Math.round(i-n[t]);n[t]+=s*(e||.35)}else n[t]=i}}function I(t,i,e){return t.x=(i.x+e.x)/2,t.y=(i.y+e.y)/2,t}class C{constructor(t){this.gestures=t,this._startPan={x:0,y:0},this._startZoomPoint={x:0,y:0},this._zoomPoint={x:0,y:0},this._wasOverFitZoomLevel=!1,this._startZoomLevel=1}start(){const{currSlide:t}=this.gestures.pswp;t&&(this._startZoomLevel=t.currZoomLevel,n(this._startPan,t.pan)),this.gestures.pswp.animations.stopAllPan(),this._wasOverFitZoomLevel=!1}change(){const{p1:t,startP1:i,p2:e,startP2:s,pswp:n}=this.gestures,{currSlide:o}=n;if(!o)return;const a=o.zoomLevels.min,h=o.zoomLevels.max;if(!o.isZoomable()||n.mainScroll.isShifted())return;I(this._startZoomPoint,i,s),I(this._zoomPoint,t,e);let l=1/r(i,s)*r(t,e)*this._startZoomLevel;if(l>o.zoomLevels.initial+o.zoomLevels.initial/15&&(this._wasOverFitZoomLevel=!0),l<a)if(n.options.pinchToClose&&!this._wasOverFitZoomLevel&&this._startZoomLevel<=o.zoomLevels.initial){const t=1-(a-l)/(a/1.2);n.dispatch("pinchClose",{bgOpacity:t}).defaultPrevented||n.applyBgOpacity(t)}else l=a-.15*(a-l);else l>h&&(l=h+.05*(l-h));o.pan.x=this._calculatePanForZoomLevel("x",l),o.pan.y=this._calculatePanForZoomLevel("y",l),o.setZoomLevel(l),o.applyCurrentZoomPan()}end(){const{pswp:t}=this.gestures,{currSlide:i}=t;(!i||i.currZoomLevel<i.zoomLevels.initial)&&!this._wasOverFitZoomLevel&&t.options.pinchToClose?t.close():this.correctZoomPan()}_calculatePanForZoomLevel(t,i){const e=i/this._startZoomLevel;return this._zoomPoint[t]-(this._startZoomPoint[t]-this._startPan[t])*e}correctZoomPan(t){const{pswp:i}=this.gestures,{currSlide:e}=i;if(null==e||!e.isZoomable())return;0===this._zoomPoint.x&&(t=!0);const s=e.currZoomLevel;let o,r=!0;s<e.zoomLevels.initial?o=e.zoomLevels.initial:s>e.zoomLevels.max?o=e.zoomLevels.max:(r=!1,o=s);const l=i.bgOpacity,d=i.bgOpacity<1,p=n({x:0,y:0},e.pan);let c=n({x:0,y:0},p);t&&(this._zoomPoint.x=0,this._zoomPoint.y=0,this._startZoomPoint.x=0,this._startZoomPoint.y=0,this._startZoomLevel=s,n(this._startPan,p)),r&&(c={x:this._calculatePanForZoomLevel("x",o),y:this._calculatePanForZoomLevel("y",o)}),e.setZoomLevel(o),c={x:e.bounds.correctPan("x",c.x),y:e.bounds.correctPan("y",c.y)},e.setZoomLevel(s);const u=!a(c,p);if(!u&&!r&&!d)return e._setResolution(o),void e.applyCurrentZoomPan();i.animations.stopAllPan(),i.animations.startSpring({isPan:!0,start:0,end:1e3,velocity:0,dampingRatio:1,naturalFrequency:40,onUpdate:t=>{if(t/=1e3,u||r){if(u&&(e.pan.x=p.x+(c.x-p.x)*t,e.pan.y=p.y+(c.y-p.y)*t),r){const i=s+(o-s)*t;e.setZoomLevel(i)}e.applyCurrentZoomPan()}d&&i.bgOpacity<1&&i.applyBgOpacity(h(l+(1-l)*t,0,1))},onComplete:()=>{e._setResolution(o),e.applyCurrentZoomPan()}})}}function L(t){return!!t.target.closest(".pswp__container")}class T{constructor(t){this.gestures=t}click(t,i){const e=i.target.classList,s=e.contains("pswp__img"),n=e.contains("pswp__item")||e.contains("pswp__zoom-wrap");s?this._doClickOrTapAction("imageClick",t,i):n&&this._doClickOrTapAction("bgClick",t,i)}tap(t,i){L(i)&&this._doClickOrTapAction("tap",t,i)}doubleTap(t,i){L(i)&&this._doClickOrTapAction("doubleTap",t,i)}_doClickOrTapAction(t,i,e){var s;const{pswp:n}=this.gestures,{currSlide:o}=n,r=t+"Action",a=n.options[r];if(!n.dispatch(r,{point:i,originalEvent:e}).defaultPrevented)if("function"!=typeof a)switch(a){case"close":case"next":n[a]();break;case"zoom":null==o||o.toggleZoom(i);break;case"zoom-or-close":null!=o&&o.isZoomable()&&o.zoomLevels.secondary!==o.zoomLevels.initial?o.toggleZoom(i):n.options.clickToCloseNonZoomable&&n.close();break;case"toggle-controls":null===(s=this.gestures.pswp.element)||void 0===s||s.classList.toggle("pswp--ui-visible")}else a.call(n,i,e)}}class E{constructor(t){this.pswp=t,this.dragAxis=null,this.p1={x:0,y:0},this.p2={x:0,y:0},this.prevP1={x:0,y:0},this.prevP2={x:0,y:0},this.startP1={x:0,y:0},this.startP2={x:0,y:0},this.velocity={x:0,y:0},this._lastStartP1={x:0,y:0},this._intervalP1={x:0,y:0},this._numActivePoints=0,this._ongoingPointers=[],this._touchEventEnabled="ontouchstart"in window,this._pointerEventEnabled=!!window.PointerEvent,this.supportsTouch=this._touchEventEnabled||this._pointerEventEnabled&&navigator.maxTouchPoints>1,this._numActivePoints=0,this._intervalTime=0,this._velocityCalculated=!1,this.isMultitouch=!1,this.isDragging=!1,this.isZooming=!1,this.raf=null,this._tapTimer=null,this.supportsTouch||(t.options.allowPanToNext=!1),this.drag=new z(this),this.zoomLevels=new C(this),this.tapHandler=new T(this),t.on("bindEvents",()=>{t.events.add(t.scrollWrap,"click",this._onClick.bind(this)),this._pointerEventEnabled?this._bindEvents("pointer","down","up","cancel"):this._touchEventEnabled?(this._bindEvents("touch","start","end","cancel"),t.scrollWrap&&(t.scrollWrap.ontouchmove=()=>{},t.scrollWrap.ontouchend=()=>{})):this._bindEvents("mouse","down","up")})}_bindEvents(t,i,e,s){const{pswp:n}=this,{events:o}=n,r=s?t+s:"";o.add(n.scrollWrap,t+i,this.onPointerDown.bind(this)),o.add(window,t+"move",this.onPointerMove.bind(this)),o.add(window,t+e,this.onPointerUp.bind(this)),r&&o.add(n.scrollWrap,r,this.onPointerUp.bind(this))}onPointerDown(t){const i="mousedown"===t.type||"mouse"===t.pointerType;if(i&&t.button>0)return;const{pswp:e}=this;e.opener.isOpen?e.dispatch("pointerDown",{originalEvent:t}).defaultPrevented||(i&&(e.mouseDetected(),this._preventPointerEventBehaviour(t,"down")),e.animations.stopAll(),this._updatePoints(t,"down"),1===this._numActivePoints&&(this.dragAxis=null,n(this.startP1,this.p1)),this._numActivePoints>1?(this._clearTapTimer(),this.isMultitouch=!0):this.isMultitouch=!1):t.preventDefault()}onPointerMove(t){this._preventPointerEventBehaviour(t,"move"),this._numActivePoints&&(this._updatePoints(t,"move"),this.pswp.dispatch("pointerMove",{originalEvent:t}).defaultPrevented||(1!==this._numActivePoints||this.isDragging?this._numActivePoints>1&&!this.isZooming&&(this._finishDrag(),this.isZooming=!0,this._updateStartPoints(),this.zoomLevels.start(),this._rafStopLoop(),this._rafRenderLoop()):(this.dragAxis||this._calculateDragDirection(),this.dragAxis&&!this.isDragging&&(this.isZooming&&(this.isZooming=!1,this.zoomLevels.end()),this.isDragging=!0,this._clearTapTimer(),this._updateStartPoints(),this._intervalTime=Date.now(),this._velocityCalculated=!1,n(this._intervalP1,this.p1),this.velocity.x=0,this.velocity.y=0,this.drag.start(),this._rafStopLoop(),this._rafRenderLoop()))))}_finishDrag(){this.isDragging&&(this.isDragging=!1,this._velocityCalculated||this._updateVelocity(!0),this.drag.end(),this.dragAxis=null)}onPointerUp(t){this._numActivePoints&&(this._updatePoints(t,"up"),this.pswp.dispatch("pointerUp",{originalEvent:t}).defaultPrevented||(0===this._numActivePoints&&(this._rafStopLoop(),this.isDragging?this._finishDrag():this.isZooming||this.isMultitouch||this._finishTap(t)),this._numActivePoints<2&&this.isZooming&&(this.isZooming=!1,this.zoomLevels.end(),1===this._numActivePoints&&(this.dragAxis=null,this._updateStartPoints()))))}_rafRenderLoop(){(this.isDragging||this.isZooming)&&(this._updateVelocity(),this.isDragging?a(this.p1,this.prevP1)||this.drag.change():a(this.p1,this.prevP1)&&a(this.p2,this.prevP2)||this.zoomLevels.change(),this._updatePrevPoints(),this.raf=requestAnimationFrame(this._rafRenderLoop.bind(this)))}_updateVelocity(t){const i=Date.now(),e=i-this._intervalTime;e<50&&!t||(this.velocity.x=this._getVelocity("x",e),this.velocity.y=this._getVelocity("y",e),this._intervalTime=i,n(this._intervalP1,this.p1),this._velocityCalculated=!0)}_finishTap(t){const{mainScroll:i}=this.pswp;if(i.isShifted())return void i.moveIndexBy(0,!0);if(t.type.indexOf("cancel")>0)return;if("mouseup"===t.type||"mouse"===t.pointerType)return void this.tapHandler.click(this.startP1,t);const e=this.pswp.options.doubleTapAction?300:0;this._tapTimer?(this._clearTapTimer(),r(this._lastStartP1,this.startP1)<25&&this.tapHandler.doubleTap(this.startP1,t)):(n(this._lastStartP1,this.startP1),this._tapTimer=setTimeout(()=>{this.tapHandler.tap(this.startP1,t),this._clearTapTimer()},e))}_clearTapTimer(){this._tapTimer&&(clearTimeout(this._tapTimer),this._tapTimer=null)}_getVelocity(t,i){const e=this.p1[t]-this._intervalP1[t];return Math.abs(e)>1&&i>5?e/i:0}_rafStopLoop(){this.raf&&(cancelAnimationFrame(this.raf),this.raf=null)}_preventPointerEventBehaviour(t,i){this.pswp.applyFilters("preventPointerEvent",!0,t,i)&&t.preventDefault()}_updatePoints(t,i){if(this._pointerEventEnabled){const e=t,s=this._ongoingPointers.findIndex(t=>t.id===e.pointerId);"up"===i&&s>-1?this._ongoingPointers.splice(s,1):"down"===i&&-1===s?this._ongoingPointers.push(this._convertEventPosToPoint(e,{x:0,y:0})):s>-1&&this._convertEventPosToPoint(e,this._ongoingPointers[s]),this._numActivePoints=this._ongoingPointers.length,this._numActivePoints>0&&n(this.p1,this._ongoingPointers[0]),this._numActivePoints>1&&n(this.p2,this._ongoingPointers[1])}else{const e=t;this._numActivePoints=0,e.type.indexOf("touch")>-1?e.touches&&e.touches.length>0&&(this._convertEventPosToPoint(e.touches[0],this.p1),this._numActivePoints++,e.touches.length>1&&(this._convertEventPosToPoint(e.touches[1],this.p2),this._numActivePoints++)):(this._convertEventPosToPoint(t,this.p1),"up"===i?this._numActivePoints=0:this._numActivePoints++)}}_updatePrevPoints(){n(this.prevP1,this.p1),n(this.prevP2,this.p2)}_updateStartPoints(){n(this.startP1,this.p1),n(this.startP2,this.p2),this._updatePrevPoints()}_calculateDragDirection(){if(this.pswp.mainScroll.isShifted())this.dragAxis="x";else{const t=Math.abs(this.p1.x-this.startP1.x)-Math.abs(this.p1.y-this.startP1.y);if(0!==t){const i=t>0?"x":"y";Math.abs(this.p1[i]-this.startP1[i])>=10&&(this.dragAxis=i)}}}_convertEventPosToPoint(t,i){return i.x=t.pageX-this.pswp.offset.x,i.y=t.pageY-this.pswp.offset.y,"pointerId"in t?i.id=t.pointerId:void 0!==t.identifier&&(i.id=t.identifier),i}_onClick(t){this.pswp.mainScroll.isShifted()&&(t.preventDefault(),t.stopPropagation())}}class A{constructor(t){this.pswp=t,this.x=0,this.slideWidth=0,this._currPositionIndex=0,this._prevPositionIndex=0,this._containerShiftIndex=-1,this.itemHolders=[]}resize(t){const{pswp:i}=this,e=Math.round(i.viewportSize.x+i.viewportSize.x*i.options.spacing),s=e!==this.slideWidth;s&&(this.slideWidth=e,this.moveTo(this.getCurrSlideX())),this.itemHolders.forEach((i,e)=>{s&&d(i.el,(e+this._containerShiftIndex)*this.slideWidth),t&&i.slide&&i.slide.resize()})}resetPosition(){this._currPositionIndex=0,this._prevPositionIndex=0,this.slideWidth=0,this._containerShiftIndex=-1}appendHolders(){this.itemHolders=[];for(let t=0;t<3;t++){const i=s("pswp__item","div",this.pswp.container);i.setAttribute("role","group"),i.setAttribute("aria-roledescription","slide"),i.setAttribute("aria-hidden","true"),i.style.display=1===t?"block":"none",this.itemHolders.push({el:i})}}canBeSwiped(){return this.pswp.getNumItems()>1}moveIndexBy(t,i,e){const{pswp:s}=this;let n=s.potentialIndex+t;const o=s.getNumItems();if(s.canLoop()){n=s.getLoopedIndex(n);const i=(t+o)%o;t=i<=o/2?i:i-o}else n<0?n=0:n>=o&&(n=o-1),t=n-s.potentialIndex;s.potentialIndex=n,this._currPositionIndex-=t,s.animations.stopMainScroll();const r=this.getCurrSlideX();if(i){s.animations.startSpring({isMainScroll:!0,start:this.x,end:r,velocity:e||0,naturalFrequency:30,dampingRatio:1,onUpdate:t=>{this.moveTo(t)},onComplete:()=>{this.updateCurrItem(),s.appendHeavy()}});let t=s.potentialIndex-s.currIndex;if(s.canLoop()){const i=(t+o)%o;t=i<=o/2?i:i-o}Math.abs(t)>1&&this.updateCurrItem()}else this.moveTo(r),this.updateCurrItem();return Boolean(t)}getCurrSlideX(){return this.slideWidth*this._currPositionIndex}isShifted(){return this.x!==this.getCurrSlideX()}updateCurrItem(){var t;const{pswp:i}=this,e=this._prevPositionIndex-this._currPositionIndex;if(!e)return;this._prevPositionIndex=this._currPositionIndex,i.currIndex=i.potentialIndex;let s,n=Math.abs(e);n>=3&&(this._containerShiftIndex+=e+(e>0?-3:3),n=3,this.itemHolders.forEach(t=>{var i;null===(i=t.slide)||void 0===i||i.destroy(),t.slide=void 0}));for(let t=0;t<n;t++)e>0?(s=this.itemHolders.shift(),s&&(this.itemHolders[2]=s,this._containerShiftIndex++,d(s.el,(this._containerShiftIndex+2)*this.slideWidth),i.setContent(s,i.currIndex-n+t+2))):(s=this.itemHolders.pop(),s&&(this.itemHolders.unshift(s),this._containerShiftIndex--,d(s.el,this._containerShiftIndex*this.slideWidth),i.setContent(s,i.currIndex+n-t-2)));Math.abs(this._containerShiftIndex)>50&&!this.isShifted()&&(this.resetPosition(),this.resize()),i.animations.stopAllPan(),this.itemHolders.forEach((t,i)=>{t.slide&&t.slide.setIsActive(1===i)}),i.currSlide=null===(t=this.itemHolders[1])||void 0===t?void 0:t.slide,i.contentLoader.updateLazy(e),i.currSlide&&i.currSlide.applyCurrentZoomPan(),i.dispatch("change")}moveTo(t,i){if(!this.pswp.canLoop()&&i){let i=(this.slideWidth*this._currPositionIndex-t)/this.slideWidth;i+=this.pswp.currIndex;const e=Math.round(t-this.x);(i<0&&e>0||i>=this.pswp.getNumItems()-1&&e<0)&&(t=this.x+.35*e)}this.x=t,this.pswp.container&&d(this.pswp.container,t),this.pswp.dispatch("moveMainScroll",{x:t,dragging:null!=i&&i})}}const O={Escape:27,z:90,ArrowLeft:37,ArrowUp:38,ArrowRight:39,ArrowDown:40,Tab:9},D=(t,i)=>i?t:O[t];class M{constructor(t){this.pswp=t,this._wasFocused=!1,t.on("bindEvents",()=>{t.options.trapFocus&&(t.options.initialPointerPos||this._focusRoot(),t.events.add(document,"focusin",this._onFocusIn.bind(this))),t.events.add(document,"keydown",this._onKeyDown.bind(this))});const i=document.activeElement;t.on("destroy",()=>{t.options.returnFocus&&i&&this._wasFocused&&i.focus()})}_focusRoot(){!this._wasFocused&&this.pswp.element&&(this.pswp.element.focus(),this._wasFocused=!0)}_onKeyDown(t){const{pswp:i}=this;if(i.dispatch("keydown",{originalEvent:t}).defaultPrevented)return;if(function(t){return"button"in t&&1===t.button||t.ctrlKey||t.metaKey||t.altKey||t.shiftKey}(t))return;let e,s,n=!1;const o="key"in t;switch(o?t.key:t.keyCode){case D("Escape",o):i.options.escKey&&(e="close");break;case D("z",o):e="toggleZoom";break;case D("ArrowLeft",o):s="x";break;case D("ArrowUp",o):s="y";break;case D("ArrowRight",o):s="x",n=!0;break;case D("ArrowDown",o):n=!0,s="y";break;case D("Tab",o):this._focusRoot()}if(s){t.preventDefault();const{currSlide:o}=i;i.options.arrowKeys&&"x"===s&&i.getNumItems()>1?e=n?"next":"prev":o&&o.currZoomLevel>o.zoomLevels.fit&&(o.pan[s]+=n?-80:80,o.panTo(o.pan.x,o.pan.y))}e&&(t.preventDefault(),i[e]())}_onFocusIn(t){const{template:i}=this.pswp;i&&document!==t.target&&i!==t.target&&!i.contains(t.target)&&i.focus()}}const Z="cubic-bezier(.4,0,.22,1)";class F{constructor(t){var i;this.props=t;const{target:e,onComplete:s,transform:n,onFinish:o=()=>{},duration:r=333,easing:a=Z}=t;this.onFinish=o;const h=n?"transform":"opacity",l=null!==(i=t[h])&&void 0!==i?i:"";this._target=e,this._onComplete=s,this._finished=!1,this._onTransitionEnd=this._onTransitionEnd.bind(this),this._helperTimeout=setTimeout(()=>{p(e,h,r,a),this._helperTimeout=setTimeout(()=>{e.addEventListener("transitionend",this._onTransitionEnd,!1),e.addEventListener("transitioncancel",this._onTransitionEnd,!1),this._helperTimeout=setTimeout(()=>{this._finalizeAnimation()},r+500),e.style[h]=l},30)},0)}_onTransitionEnd(t){t.target===this._target&&this._finalizeAnimation()}_finalizeAnimation(){this._finished||(this._finished=!0,this.onFinish(),this._onComplete&&this._onComplete())}destroy(){this._helperTimeout&&clearTimeout(this._helperTimeout),p(this._target),this._target.removeEventListener("transitionend",this._onTransitionEnd,!1),this._target.removeEventListener("transitioncancel",this._onTransitionEnd,!1),this._finished||this._finalizeAnimation()}}class W{constructor(t,i,e){this.velocity=1e3*t,this._dampingRatio=i||.75,this._naturalFrequency=e||12,this._dampedFrequency=this._naturalFrequency,this._dampingRatio<1&&(this._dampedFrequency*=Math.sqrt(1-this._dampingRatio*this._dampingRatio))}easeFrame(t,i){let e,s=0;i/=1e3;const n=Math.E**(-this._dampingRatio*this._naturalFrequency*i);if(1===this._dampingRatio)e=this.velocity+this._naturalFrequency*t,s=(t+e*i)*n,this.velocity=s*-this._naturalFrequency+e*n;else if(this._dampingRatio<1){e=1/this._dampedFrequency*(this._dampingRatio*this._naturalFrequency*t+this.velocity);const o=Math.cos(this._dampedFrequency*i),r=Math.sin(this._dampedFrequency*i);s=n*(t*o+e*r),this.velocity=s*-this._naturalFrequency*this._dampingRatio+n*(-this._dampedFrequency*t*r+this._dampedFrequency*e*o)}return s}}class R{constructor(t){this.props=t,this._raf=0;const{start:i,end:e,velocity:s,onUpdate:n,onComplete:o,onFinish:r=()=>{},dampingRatio:a,naturalFrequency:h}=t;this.onFinish=r;const l=new W(s,a,h);let d=Date.now(),p=i-e;const c=()=>{this._raf&&(p=l.easeFrame(p,Date.now()-d),Math.abs(p)<1&&Math.abs(l.velocity)<50?(n(e),o&&o(),this.onFinish()):(d=Date.now(),n(p+e),this._raf=requestAnimationFrame(c)))};this._raf=requestAnimationFrame(c)}destroy(){this._raf>=0&&cancelAnimationFrame(this._raf),this._raf=0}}class B{constructor(){this.activeAnimations=[]}startSpring(t){this._start(t,!0)}startTransition(t){this._start(t)}_start(t,i){const e=i?new R(t):new F(t);return this.activeAnimations.push(e),e.onFinish=()=>this.stop(e),e}stop(t){t.destroy();const i=this.activeAnimations.indexOf(t);i>-1&&this.activeAnimations.splice(i,1)}stopAll(){this.activeAnimations.forEach(t=>{t.destroy()}),this.activeAnimations=[]}stopAllPan(){this.activeAnimations=this.activeAnimations.filter(t=>!t.props.isPan||(t.destroy(),!1))}stopMainScroll(){this.activeAnimations=this.activeAnimations.filter(t=>!t.props.isMainScroll||(t.destroy(),!1))}isPanRunning(){return this.activeAnimations.some(t=>t.props.isPan)}}class k{constructor(t){this.pswp=t,t.events.add(t.element,"wheel",this._onWheel.bind(this))}_onWheel(t){t.preventDefault();const{currSlide:i}=this.pswp;let{deltaX:e,deltaY:s}=t;if(i&&!this.pswp.dispatch("wheel",{originalEvent:t}).defaultPrevented)if(t.ctrlKey||this.pswp.options.wheelToZoom){if(i.isZoomable()){let e=-s;1===t.deltaMode?e*=.05:e*=t.deltaMode?1:.002,e=2**e;const n=i.currZoomLevel*e;i.zoomTo(n,{x:t.clientX,y:t.clientY})}}else i.isPannable()&&(1===t.deltaMode&&(e*=18,s*=18),i.panTo(i.pan.x-e,i.pan.y-s))}}class H{constructor(t,i){var e;const n=i.name||i.className;let o=i.html;if(!1===t.options[n])return;"string"==typeof t.options[n+"SVG"]&&(o=t.options[n+"SVG"]),t.dispatch("uiElementCreate",{data:i});let r="";i.isButton?(r+="pswp__button ",r+=i.className||`pswp__button--${i.name}`):r+=i.className||`pswp__${i.name}`;let a=i.isButton?i.tagName||"button":i.tagName||"div";a=a.toLowerCase();const h=s(r,a);if(i.isButton){"button"===a&&(h.type="button");let{title:e}=i;const{ariaLabel:s}=i;"string"==typeof t.options[n+"Title"]&&(e=t.options[n+"Title"]),e&&(h.title=e);const o=s||e;o&&h.setAttribute("aria-label",o)}h.innerHTML=function(t){if("string"==typeof t)return t;if(!t||!t.isCustomSVG)return"";const i=t;let e='<svg aria-hidden="true" class="pswp__icn" viewBox="0 0 %d %d" width="%d" height="%d">';return e=e.split("%d").join(i.size||32),i.outlineID&&(e+='<use class="pswp__icn-shadow" xlink:href="#'+i.outlineID+'"/>'),e+=i.inner,e+="</svg>",e}(o),i.onInit&&i.onInit(h,t),i.onClick&&(h.onclick=e=>{"string"==typeof i.onClick?t[i.onClick]():"function"==typeof i.onClick&&i.onClick(e,h,t)});const l=i.appendTo||"bar";let d=t.element;"bar"===l?(t.topBar||(t.topBar=s("pswp__top-bar pswp__hide-on-close","div",t.scrollWrap)),d=t.topBar):(h.classList.add("pswp__hide-on-close"),"wrapper"===l&&(d=t.scrollWrap)),null===(e=d)||void 0===e||e.appendChild(t.applyFilters("uiElement",h,i))}}function N(t,i,e){t.classList.add("pswp__button--arrow"),t.setAttribute("aria-controls","pswp__items"),i.on("change",()=>{i.options.loop||(t.disabled=e?!(i.currIndex<i.getNumItems()-1):!(i.currIndex>0))})}const q={name:"arrowPrev",className:"pswp__button--arrow--prev",title:"Previous",order:10,isButton:!0,appendTo:"wrapper",html:{isCustomSVG:!0,size:60,inner:'<path d="M29 43l-3 3-16-16 16-16 3 3-13 13 13 13z" id="pswp__icn-arrow"/>',outlineID:"pswp__icn-arrow"},onClick:"prev",onInit:N},V={name:"arrowNext",className:"pswp__button--arrow--next",title:"Next",order:11,isButton:!0,appendTo:"wrapper",html:{isCustomSVG:!0,size:60,inner:'<use xlink:href="#pswp__icn-arrow"/>',outlineID:"pswp__icn-arrow"},onClick:"next",onInit:(t,i)=>{N(t,i,!0)}},U={name:"close",title:"Close",order:20,isButton:!0,html:{isCustomSVG:!0,inner:'<path d="M24 10l-2-2-6 6-6-6-2 2 6 6-6 6 2 2 6-6 6 6 2-2-6-6z" id="pswp__icn-close"/>',outlineID:"pswp__icn-close"},onClick:"close"},G={name:"zoom",title:"Zoom",order:10,isButton:!0,html:{isCustomSVG:!0,inner:'<path d="M17.426 19.926a6 6 0 1 1 1.5-1.5L23 22.5 21.5 24l-4.074-4.074z" id="pswp__icn-zoom"/><path fill="currentColor" class="pswp__zoom-icn-bar-h" d="M11 16v-2h6v2z"/><path fill="currentColor" class="pswp__zoom-icn-bar-v" d="M13 12h2v6h-2z"/>',outlineID:"pswp__icn-zoom"},onClick:"toggleZoom"},Y={name:"preloader",appendTo:"bar",order:7,html:{isCustomSVG:!0,inner:'<path fill-rule="evenodd" clip-rule="evenodd" d="M21.2 16a5.2 5.2 0 1 1-5.2-5.2V8a8 8 0 1 0 8 8h-2.8Z" id="pswp__icn-loading"/>',outlineID:"pswp__icn-loading"},onInit:(t,i)=>{let e,s=null;const n=i=>{var s;e!==i&&(e=i,s=i,t.classList.toggle("pswp__preloader--active",s))},o=()=>{var t;if(null===(t=i.currSlide)||void 0===t||!t.content.isLoading())return n(!1),void(s&&(clearTimeout(s),s=null));s||(s=setTimeout(()=>{var t;n(Boolean(null===(t=i.currSlide)||void 0===t?void 0:t.content.isLoading())),s=null},i.options.preloaderDelay))};i.on("change",o),i.on("loadComplete",t=>{i.currSlide===t.slide&&o()}),i.ui&&(i.ui.updatePreloaderVisibility=o)}},$={name:"counter",order:5,onInit:(t,i)=>{i.on("change",()=>{t.innerText=i.currIndex+1+i.options.indexIndicatorSep+i.getNumItems()})}};function K(t,i){t.classList.toggle("pswp--zoomed-in",i)}class j{constructor(t){this.pswp=t,this.isRegistered=!1,this.uiElementsData=[],this.items=[],this.updatePreloaderVisibility=()=>{},this._lastUpdatedZoomLevel=void 0}init(){const{pswp:t}=this;this.isRegistered=!1,this.uiElementsData=[U,q,V,G,Y,$],t.dispatch("uiRegister"),this.uiElementsData.sort((t,i)=>(t.order||0)-(i.order||0)),this.items=[],this.isRegistered=!0,this.uiElementsData.forEach(t=>{this.registerElement(t)}),t.on("change",()=>{var i;null===(i=t.element)||void 0===i||i.classList.toggle("pswp--one-slide",1===t.getNumItems())}),t.on("zoomPanUpdate",()=>this._onZoomPanUpdate())}registerElement(t){this.isRegistered?this.items.push(new H(this.pswp,t)):this.uiElementsData.push(t)}_onZoomPanUpdate(){const{template:t,currSlide:i,options:e}=this.pswp;if(this.pswp.opener.isClosing||!t||!i)return;let{currZoomLevel:s}=i;if(this.pswp.opener.isOpen||(s=i.zoomLevels.initial),s===this._lastUpdatedZoomLevel)return;this._lastUpdatedZoomLevel=s;const n=i.zoomLevels.initial-i.zoomLevels.secondary;if(Math.abs(n)<.01||!i.isZoomable())return K(t,!1),void t.classList.remove("pswp--zoom-allowed");t.classList.add("pswp--zoom-allowed"),K(t,(s===i.zoomLevels.initial?i.zoomLevels.secondary:i.zoomLevels.initial)<=s),"zoom"!==e.imageClickAction&&"zoom-or-close"!==e.imageClickAction||t.classList.add("pswp--click-to-zoom")}}class X{constructor(t,i){this.type=t,this.defaultPrevented=!1,i&&Object.assign(this,i)}preventDefault(){this.defaultPrevented=!0}}class Q{constructor(){this._listeners={},this._filters={},this.pswp=void 0,this.options=void 0}addFilter(t,i,e=100){var s,n,o;this._filters[t]||(this._filters[t]=[]),null===(s=this._filters[t])||void 0===s||s.push({fn:i,priority:e}),null===(n=this._filters[t])||void 0===n||n.sort((t,i)=>t.priority-i.priority),null===(o=this.pswp)||void 0===o||o.addFilter(t,i,e)}removeFilter(t,i){this._filters[t]&&(this._filters[t]=this._filters[t].filter(t=>t.fn!==i)),this.pswp&&this.pswp.removeFilter(t,i)}applyFilters(t,...i){var e;return null===(e=this._filters[t])||void 0===e||e.forEach(t=>{i[0]=t.fn.apply(this,i)}),i[0]}on(t,i){var e,s;this._listeners[t]||(this._listeners[t]=[]),null===(e=this._listeners[t])||void 0===e||e.push(i),null===(s=this.pswp)||void 0===s||s.on(t,i)}off(t,i){var e;this._listeners[t]&&(this._listeners[t]=this._listeners[t].filter(t=>i!==t)),null===(e=this.pswp)||void 0===e||e.off(t,i)}dispatch(t,i){var e;if(this.pswp)return this.pswp.dispatch(t,i);const s=new X(t,i);return null===(e=this._listeners[t])||void 0===e||e.forEach(t=>{t.call(this,s)}),s}}class J{constructor(t,i){if(this.element=s("pswp__img pswp__img--placeholder",t?"img":"div",i),t){const i=this.element;i.decoding="async",i.alt="",i.src=t,i.setAttribute("role","presentation")}this.element.setAttribute("aria-hidden","true")}setDisplayedSize(t,i){this.element&&("IMG"===this.element.tagName?(c(this.element,250,"auto"),this.element.style.transformOrigin="0 0",this.element.style.transform=l(0,0,t/250)):c(this.element,t,i))}destroy(){var t;null!==(t=this.element)&&void 0!==t&&t.parentNode&&this.element.remove(),this.element=null}}class tt{constructor(t,i,e){this.instance=i,this.data=t,this.index=e,this.element=void 0,this.placeholder=void 0,this.slide=void 0,this.displayedImageWidth=0,this.displayedImageHeight=0,this.width=Number(this.data.w)||Number(this.data.width)||0,this.height=Number(this.data.h)||Number(this.data.height)||0,this.isAttached=!1,this.hasSlide=!1,this.isDecoding=!1,this.state="idle",this.data.type?this.type=this.data.type:this.data.src?this.type="image":this.type="html",this.instance.dispatch("contentInit",{content:this})}removePlaceholder(){this.placeholder&&!this.keepPlaceholder()&&setTimeout(()=>{this.placeholder&&(this.placeholder.destroy(),this.placeholder=void 0)},1e3)}load(t,i){if(this.slide&&this.usePlaceholder())if(this.placeholder){const t=this.placeholder.element;t&&!t.parentElement&&this.slide.container.prepend(t)}else{const t=this.instance.applyFilters("placeholderSrc",!(!this.data.msrc||!this.slide.isFirstSlide)&&this.data.msrc,this);this.placeholder=new J(t,this.slide.container)}this.element&&!i||this.instance.dispatch("contentLoad",{content:this,isLazy:t}).defaultPrevented||(this.isImageContent()?(this.element=s("pswp__img","img"),this.displayedImageWidth&&this.loadImage(t)):(this.element=s("pswp__content","div"),this.element.innerHTML=this.data.html||""),i&&this.slide&&this.slide.updateContentSize(!0))}loadImage(t){var i,e;if(!this.isImageContent()||!this.element||this.instance.dispatch("contentLoadImage",{content:this,isLazy:t}).defaultPrevented)return;const s=this.element;this.updateSrcsetSizes(),this.data.srcset&&(s.srcset=this.data.srcset),s.src=null!==(i=this.data.src)&&void 0!==i?i:"",s.alt=null!==(e=this.data.alt)&&void 0!==e?e:"",this.state=u,s.complete?this.onLoaded():(s.onload=()=>{this.onLoaded()},s.onerror=()=>{this.onError()})}setSlide(t){this.slide=t,this.hasSlide=!0,this.instance=t.pswp}onLoaded(){this.state=m,this.slide&&this.element&&(this.instance.dispatch("loadComplete",{slide:this.slide,content:this}),this.slide.isActive&&this.slide.heavyAppended&&!this.element.parentNode&&(this.append(),this.slide.updateContentSize(!0)),this.state!==m&&this.state!==v||this.removePlaceholder())}onError(){this.state=v,this.slide&&(this.displayError(),this.instance.dispatch("loadComplete",{slide:this.slide,isError:!0,content:this}),this.instance.dispatch("loadError",{slide:this.slide,content:this}))}isLoading(){return this.instance.applyFilters("isContentLoading",this.state===u,this)}isError(){return this.state===v}isImageContent(){return"image"===this.type}setDisplayedSize(t,i){if(this.element&&(this.placeholder&&this.placeholder.setDisplayedSize(t,i),!this.instance.dispatch("contentResize",{content:this,width:t,height:i}).defaultPrevented&&(c(this.element,t,i),this.isImageContent()&&!this.isError()))){const e=!this.displayedImageWidth&&t;this.displayedImageWidth=t,this.displayedImageHeight=i,e?this.loadImage(!1):this.updateSrcsetSizes(),this.slide&&this.instance.dispatch("imageSizeChange",{slide:this.slide,width:t,height:i,content:this})}}isZoomable(){return this.instance.applyFilters("isContentZoomable",this.isImageContent()&&this.state!==v,this)}updateSrcsetSizes(){if(!this.isImageContent()||!this.element||!this.data.srcset)return;const t=this.element,i=this.instance.applyFilters("srcsetSizesWidth",this.displayedImageWidth,this);(!t.dataset.largestUsedSize||i>parseInt(t.dataset.largestUsedSize,10))&&(t.sizes=i+"px",t.dataset.largestUsedSize=String(i))}usePlaceholder(){return this.instance.applyFilters("useContentPlaceholder",this.isImageContent(),this)}lazyLoad(){this.instance.dispatch("contentLazyLoad",{content:this}).defaultPrevented||this.load(!0)}keepPlaceholder(){return this.instance.applyFilters("isKeepingPlaceholder",this.isLoading(),this)}destroy(){this.hasSlide=!1,this.slide=void 0,this.instance.dispatch("contentDestroy",{content:this}).defaultPrevented||(this.remove(),this.placeholder&&(this.placeholder.destroy(),this.placeholder=void 0),this.isImageContent()&&this.element&&(this.element.onload=null,this.element.onerror=null,this.element=void 0))}displayError(){if(this.slide){var t,i;let e=s("pswp__error-msg","div");e.innerText=null!==(t=null===(i=this.instance.options)||void 0===i?void 0:i.errorMsg)&&void 0!==t?t:"",e=this.instance.applyFilters("contentErrorElement",e,this),this.element=s("pswp__content pswp__error-msg-container","div"),this.element.appendChild(e),this.slide.container.innerText="",this.slide.container.appendChild(this.element),this.slide.updateContentSize(!0),this.removePlaceholder()}}append(){if(this.isAttached||!this.element)return;if(this.isAttached=!0,this.state===v)return void this.displayError();if(this.instance.dispatch("contentAppend",{content:this}).defaultPrevented)return;const t="decode"in this.element;this.isImageContent()?t&&this.slide&&(!this.slide.isActive||g())?(this.isDecoding=!0,this.element.decode().catch(()=>{}).finally(()=>{this.isDecoding=!1,this.appendImage()})):this.appendImage():this.slide&&!this.element.parentNode&&this.slide.container.appendChild(this.element)}activate(){!this.instance.dispatch("contentActivate",{content:this}).defaultPrevented&&this.slide&&(this.isImageContent()&&this.isDecoding&&!g()?this.appendImage():this.isError()&&this.load(!1,!0),this.slide.holderElement&&this.slide.holderElement.setAttribute("aria-hidden","false"))}deactivate(){this.instance.dispatch("contentDeactivate",{content:this}),this.slide&&this.slide.holderElement&&this.slide.holderElement.setAttribute("aria-hidden","true")}remove(){this.isAttached=!1,this.instance.dispatch("contentRemove",{content:this}).defaultPrevented||(this.element&&this.element.parentNode&&this.element.remove(),this.placeholder&&this.placeholder.element&&this.placeholder.element.remove())}appendImage(){this.isAttached&&(this.instance.dispatch("contentAppendImage",{content:this}).defaultPrevented||(this.slide&&this.element&&!this.element.parentNode&&this.slide.container.appendChild(this.element),this.state!==m&&this.state!==v||this.removePlaceholder()))}}function it(t,i,e){const s=i.createContentFromData(t,e);let n;const{options:o}=i;if(o){let r;n=new P(o,t,-1),r=i.pswp?i.pswp.viewportSize:_(o,i);const a=x(o,r,t,e);n.update(s.width,s.height,a)}return s.lazyLoad(),n&&s.setDisplayedSize(Math.ceil(s.width*n.initial),Math.ceil(s.height*n.initial)),s}class et{constructor(t){this.pswp=t,this.limit=Math.max(t.options.preload[0]+t.options.preload[1]+1,5),this._cachedItems=[]}updateLazy(t){const{pswp:i}=this;if(i.dispatch("lazyLoad").defaultPrevented)return;const{preload:e}=i.options,s=void 0===t||t>=0;let n;for(n=0;n<=e[1];n++)this.loadSlideByIndex(i.currIndex+(s?n:-n));for(n=1;n<=e[0];n++)this.loadSlideByIndex(i.currIndex+(s?-n:n))}loadSlideByIndex(t){const i=this.pswp.getLoopedIndex(t);let e=this.getContentByIndex(i);e||(e=function(t,i){const e=i.getItemData(t);if(!i.dispatch("lazyLoadSlide",{index:t,itemData:e}).defaultPrevented)return it(e,i,t)}(i,this.pswp),e&&this.addToCache(e))}getContentBySlide(t){let i=this.getContentByIndex(t.index);return i||(i=this.pswp.createContentFromData(t.data,t.index),this.addToCache(i)),i.setSlide(t),i}addToCache(t){if(this.removeByIndex(t.index),this._cachedItems.push(t),this._cachedItems.length>this.limit){const t=this._cachedItems.findIndex(t=>!t.isAttached&&!t.hasSlide);-1!==t&&this._cachedItems.splice(t,1)[0].destroy()}}removeByIndex(t){const i=this._cachedItems.findIndex(i=>i.index===t);-1!==i&&this._cachedItems.splice(i,1)}getContentByIndex(t){return this._cachedItems.find(i=>i.index===t)}destroy(){this._cachedItems.forEach(t=>t.destroy()),this._cachedItems=[]}}class st extends Q{getNumItems(){var t;let i=0;const e=null===(t=this.options)||void 0===t?void 0:t.dataSource;e&&"length"in e?i=e.length:e&&"gallery"in e&&(e.items||(e.items=this._getGalleryDOMElements(e.gallery)),e.items&&(i=e.items.length));const s=this.dispatch("numItems",{dataSource:e,numItems:i});return this.applyFilters("numItems",s.numItems,e)}createContentFromData(t,i){return new tt(t,this,i)}getItemData(t){var i;const e=null===(i=this.options)||void 0===i?void 0:i.dataSource;let s={};Array.isArray(e)?s=e[t]:e&&"gallery"in e&&(e.items||(e.items=this._getGalleryDOMElements(e.gallery)),s=e.items[t]);let n=s;n instanceof Element&&(n=this._domElementToItemData(n));const o=this.dispatch("itemData",{itemData:n||{},index:t});return this.applyFilters("itemData",o.itemData,t)}_getGalleryDOMElements(t){var i,e;return null!==(i=this.options)&&void 0!==i&&i.children||null!==(e=this.options)&&void 0!==e&&e.childSelector?function(t,i,e=document){let s=[];if(t instanceof Element)s=[t];else if(t instanceof NodeList||Array.isArray(t))s=Array.from(t);else{const n="string"==typeof t?t:i;n&&(s=Array.from(e.querySelectorAll(n)))}return s}(this.options.children,this.options.childSelector,t)||[]:[t]}_domElementToItemData(t){const i={element:t},e="A"===t.tagName?t:t.querySelector("a");if(e){i.src=e.dataset.pswpSrc||e.href,e.dataset.pswpSrcset&&(i.srcset=e.dataset.pswpSrcset),i.width=e.dataset.pswpWidth?parseInt(e.dataset.pswpWidth,10):0,i.height=e.dataset.pswpHeight?parseInt(e.dataset.pswpHeight,10):0,i.w=i.width,i.h=i.height,e.dataset.pswpType&&(i.type=e.dataset.pswpType);const n=t.querySelector("img");var s;n&&(i.msrc=n.currentSrc||n.src,i.alt=null!==(s=n.getAttribute("alt"))&&void 0!==s?s:""),(e.dataset.pswpCropped||e.dataset.cropped)&&(i.thumbCropped=!0)}return this.applyFilters("domItemData",i,t,e)}lazyLoadData(t,i){return it(t,this,i)}}const nt=.003;class ot{constructor(t){this.pswp=t,this.isClosed=!0,this.isOpen=!1,this.isClosing=!1,this.isOpening=!1,this._duration=void 0,this._useAnimation=!1,this._croppedZoom=!1,this._animateRootOpacity=!1,this._animateBgOpacity=!1,this._placeholder=void 0,this._opacityElement=void 0,this._cropContainer1=void 0,this._cropContainer2=void 0,this._thumbBounds=void 0,this._prepareOpen=this._prepareOpen.bind(this),t.on("firstZoomPan",this._prepareOpen)}open(){this._prepareOpen(),this._start()}close(){if(this.isClosed||this.isClosing||this.isOpening)return;const t=this.pswp.currSlide;this.isOpen=!1,this.isOpening=!1,this.isClosing=!0,this._duration=this.pswp.options.hideAnimationDuration,t&&t.currZoomLevel*t.width>=this.pswp.options.maxWidthToAnimate&&(this._duration=0),this._applyStartProps(),setTimeout(()=>{this._start()},this._croppedZoom?30:0)}_prepareOpen(){if(this.pswp.off("firstZoomPan",this._prepareOpen),!this.isOpening){const t=this.pswp.currSlide;this.isOpening=!0,this.isClosing=!1,this._duration=this.pswp.options.showAnimationDuration,t&&t.zoomLevels.initial*t.width>=this.pswp.options.maxWidthToAnimate&&(this._duration=0),this._applyStartProps()}}_applyStartProps(){const{pswp:t}=this,i=this.pswp.currSlide,{options:e}=t;var s,n;if("fade"===e.showHideAnimationType?(e.showHideOpacity=!0,this._thumbBounds=void 0):"none"===e.showHideAnimationType?(e.showHideOpacity=!1,this._duration=0,this._thumbBounds=void 0):this.isOpening&&t._initialThumbBounds?this._thumbBounds=t._initialThumbBounds:this._thumbBounds=this.pswp.getThumbBounds(),this._placeholder=null==i?void 0:i.getPlaceholderElement(),t.animations.stopAll(),this._useAnimation=Boolean(this._duration&&this._duration>50),this._animateZoom=Boolean(this._thumbBounds)&&(null==i?void 0:i.content.usePlaceholder())&&(!this.isClosing||!t.mainScroll.isShifted()),this._animateZoom?this._animateRootOpacity=null!==(s=e.showHideOpacity)&&void 0!==s&&s:(this._animateRootOpacity=!0,this.isOpening&&i&&(i.zoomAndPanToInitial(),i.applyCurrentZoomPan())),this._animateBgOpacity=!this._animateRootOpacity&&this.pswp.options.bgOpacity>nt,this._opacityElement=this._animateRootOpacity?t.element:t.bg,!this._useAnimation)return this._duration=0,this._animateZoom=!1,this._animateBgOpacity=!1,this._animateRootOpacity=!0,void(this.isOpening&&(t.element&&(t.element.style.opacity=String(nt)),t.applyBgOpacity(1)));this._animateZoom&&this._thumbBounds&&this._thumbBounds.innerRect?(this._croppedZoom=!0,this._cropContainer1=this.pswp.container,this._cropContainer2=null===(n=this.pswp.currSlide)||void 0===n?void 0:n.holderElement,t.container&&(t.container.style.overflow="hidden",t.container.style.width=t.viewportSize.x+"px")):this._croppedZoom=!1,this.isOpening?(this._animateRootOpacity?(t.element&&(t.element.style.opacity=String(nt)),t.applyBgOpacity(1)):(this._animateBgOpacity&&t.bg&&(t.bg.style.opacity=String(nt)),t.element&&(t.element.style.opacity="1")),this._animateZoom&&(this._setClosedStateZoomPan(),this._placeholder&&(this._placeholder.style.willChange="transform",this._placeholder.style.opacity=String(nt)))):this.isClosing&&(t.mainScroll.itemHolders[0]&&(t.mainScroll.itemHolders[0].el.style.display="none"),t.mainScroll.itemHolders[2]&&(t.mainScroll.itemHolders[2].el.style.display="none"),this._croppedZoom&&0!==t.mainScroll.x&&(t.mainScroll.resetPosition(),t.mainScroll.resize()))}_start(){this.isOpening&&this._useAnimation&&this._placeholder&&"IMG"===this._placeholder.tagName?new Promise(t=>{let i=!1,e=!0;var s;(s=this._placeholder,"decode"in s?s.decode().catch(()=>{}):s.complete?Promise.resolve(s):new Promise((t,i)=>{s.onload=()=>t(s),s.onerror=i})).finally(()=>{i=!0,e||t(!0)}),setTimeout(()=>{e=!1,i&&t(!0)},50),setTimeout(t,250)}).finally(()=>this._initiate()):this._initiate()}_initiate(){var t,i;null===(t=this.pswp.element)||void 0===t||t.style.setProperty("--pswp-transition-duration",this._duration+"ms"),this.pswp.dispatch(this.isOpening?"openingAnimationStart":"closingAnimationStart"),this.pswp.dispatch("initialZoom"+(this.isOpening?"In":"Out")),null===(i=this.pswp.element)||void 0===i||i.classList.toggle("pswp--ui-visible",this.isOpening),this.isOpening?(this._placeholder&&(this._placeholder.style.opacity="1"),this._animateToOpenState()):this.isClosing&&this._animateToClosedState(),this._useAnimation||this._onAnimationComplete()}_onAnimationComplete(){const{pswp:t}=this;if(this.isOpen=this.isOpening,this.isClosed=this.isClosing,this.isOpening=!1,this.isClosing=!1,t.dispatch(this.isOpen?"openingAnimationEnd":"closingAnimationEnd"),t.dispatch("initialZoom"+(this.isOpen?"InEnd":"OutEnd")),this.isClosed)t.destroy();else if(this.isOpen){var i;this._animateZoom&&t.container&&(t.container.style.overflow="visible",t.container.style.width="100%"),null===(i=t.currSlide)||void 0===i||i.applyCurrentZoomPan()}}_animateToOpenState(){const{pswp:t}=this;this._animateZoom&&(this._croppedZoom&&this._cropContainer1&&this._cropContainer2&&(this._animateTo(this._cropContainer1,"transform","translate3d(0,0,0)"),this._animateTo(this._cropContainer2,"transform","none")),t.currSlide&&(t.currSlide.zoomAndPanToInitial(),this._animateTo(t.currSlide.container,"transform",t.currSlide.getCurrentTransform()))),this._animateBgOpacity&&t.bg&&this._animateTo(t.bg,"opacity",String(t.options.bgOpacity)),this._animateRootOpacity&&t.element&&this._animateTo(t.element,"opacity","1")}_animateToClosedState(){const{pswp:t}=this;this._animateZoom&&this._setClosedStateZoomPan(!0),this._animateBgOpacity&&t.bgOpacity>.01&&t.bg&&this._animateTo(t.bg,"opacity","0"),this._animateRootOpacity&&t.element&&this._animateTo(t.element,"opacity","0")}_setClosedStateZoomPan(t){if(!this._thumbBounds)return;const{pswp:i}=this,{innerRect:e}=this._thumbBounds,{currSlide:s,viewportSize:o}=i;if(this._croppedZoom&&e&&this._cropContainer1&&this._cropContainer2){const i=-o.x+(this._thumbBounds.x-e.x)+e.w,s=-o.y+(this._thumbBounds.y-e.y)+e.h,n=o.x-e.w,r=o.y-e.h;t?(this._animateTo(this._cropContainer1,"transform",l(i,s)),this._animateTo(this._cropContainer2,"transform",l(n,r))):(d(this._cropContainer1,i,s),d(this._cropContainer2,n,r))}s&&(n(s.pan,e||this._thumbBounds),s.currZoomLevel=this._thumbBounds.w/s.width,t?this._animateTo(s.container,"transform",s.getCurrentTransform()):s.applyCurrentZoomPan())}_animateTo(t,i,e){if(!this._duration)return void(t.style[i]=e);const{animations:s}=this.pswp,n={duration:this._duration,easing:this.pswp.options.easing,onComplete:()=>{s.activeAnimations.length||this._onAnimationComplete()},target:t};n[i]=e,s.startTransition(n)}}const rt={allowPanToNext:!0,spacing:.1,loop:!0,pinchToClose:!0,closeOnVerticalDrag:!0,hideAnimationDuration:333,showAnimationDuration:333,zoomAnimationDuration:333,escKey:!0,arrowKeys:!0,trapFocus:!0,returnFocus:!0,maxWidthToAnimate:4e3,clickToCloseNonZoomable:!0,imageClickAction:"zoom-or-close",bgClickAction:"close",tapAction:"toggle-controls",doubleTapAction:"zoom",indexIndicatorSep:" / ",preloaderDelay:2e3,bgOpacity:.8,index:0,errorMsg:"The image cannot be loaded",preload:[1,2],easing:"cubic-bezier(.4,0,.22,1)"};class at extends st{constructor(t){super(),this.options=this._prepareOptions(t||{}),this.offset={x:0,y:0},this._prevViewportSize={x:0,y:0},this.viewportSize={x:0,y:0},this.bgOpacity=1,this.currIndex=0,this.potentialIndex=0,this.isOpen=!1,this.isDestroying=!1,this.hasMouse=!1,this._initialItemData={},this._initialThumbBounds=void 0,this.topBar=void 0,this.element=void 0,this.template=void 0,this.container=void 0,this.scrollWrap=void 0,this.currSlide=void 0,this.events=new y,this.animations=new B,this.mainScroll=new A(this),this.gestures=new E(this),this.opener=new ot(this),this.keyboard=new M(this),this.contentLoader=new et(this)}init(){if(this.isOpen||this.isDestroying)return!1;this.isOpen=!0,this.dispatch("init"),this.dispatch("beforeOpen"),this._createMainStructure();let t="pswp--open";return this.gestures.supportsTouch&&(t+=" pswp--touch"),this.options.mainClass&&(t+=" "+this.options.mainClass),this.element&&(this.element.className+=" "+t),this.currIndex=this.options.index||0,this.potentialIndex=this.currIndex,this.dispatch("firstUpdate"),this.scrollWheel=new k(this),(Number.isNaN(this.currIndex)||this.currIndex<0||this.currIndex>=this.getNumItems())&&(this.currIndex=0),this.gestures.supportsTouch||this.mouseDetected(),this.updateSize(),this.offset.y=window.pageYOffset,this._initialItemData=this.getItemData(this.currIndex),this.dispatch("gettingData",{index:this.currIndex,data:this._initialItemData,slide:void 0}),this._initialThumbBounds=this.getThumbBounds(),this.dispatch("initialLayout"),this.on("openingAnimationEnd",()=>{const{itemHolders:t}=this.mainScroll;t[0]&&(t[0].el.style.display="block",this.setContent(t[0],this.currIndex-1)),t[2]&&(t[2].el.style.display="block",this.setContent(t[2],this.currIndex+1)),this.appendHeavy(),this.contentLoader.updateLazy(),this.events.add(window,"resize",this._handlePageResize.bind(this)),this.events.add(window,"scroll",this._updatePageScrollOffset.bind(this)),this.dispatch("bindEvents")}),this.mainScroll.itemHolders[1]&&this.setContent(this.mainScroll.itemHolders[1],this.currIndex),this.dispatch("change"),this.opener.open(),this.dispatch("afterInit"),!0}getLoopedIndex(t){const i=this.getNumItems();return this.options.loop&&(t>i-1&&(t-=i),t<0&&(t+=i)),h(t,0,i-1)}appendHeavy(){this.mainScroll.itemHolders.forEach(t=>{var i;null===(i=t.slide)||void 0===i||i.appendHeavy()})}goTo(t){this.mainScroll.moveIndexBy(this.getLoopedIndex(t)-this.potentialIndex)}next(){this.goTo(this.potentialIndex+1)}prev(){this.goTo(this.potentialIndex-1)}zoomTo(...t){var i;null===(i=this.currSlide)||void 0===i||i.zoomTo(...t)}toggleZoom(){var t;null===(t=this.currSlide)||void 0===t||t.toggleZoom()}close(){this.opener.isOpen&&!this.isDestroying&&(this.isDestroying=!0,this.dispatch("close"),this.events.removeAll(),this.opener.close())}destroy(){var t;if(!this.isDestroying)return this.options.showHideAnimationType="none",void this.close();this.dispatch("destroy"),this._listeners={},this.scrollWrap&&(this.scrollWrap.ontouchmove=null,this.scrollWrap.ontouchend=null),null===(t=this.element)||void 0===t||t.remove(),this.mainScroll.itemHolders.forEach(t=>{var i;null===(i=t.slide)||void 0===i||i.destroy()}),this.contentLoader.destroy(),this.events.removeAll()}refreshSlideContent(t){this.contentLoader.removeByIndex(t),this.mainScroll.itemHolders.forEach((i,e)=>{var s,n;let o=(null!==(s=null===(n=this.currSlide)||void 0===n?void 0:n.index)&&void 0!==s?s:0)-1+e;var r;this.canLoop()&&(o=this.getLoopedIndex(o)),o===t&&(this.setContent(i,t,!0),1===e&&(this.currSlide=i.slide,null===(r=i.slide)||void 0===r||r.setIsActive(!0)))}),this.dispatch("change")}setContent(t,i,e){if(this.canLoop()&&(i=this.getLoopedIndex(i)),t.slide){if(t.slide.index===i&&!e)return;t.slide.destroy(),t.slide=void 0}if(!this.canLoop()&&(i<0||i>=this.getNumItems()))return;const s=this.getItemData(i);t.slide=new b(s,i,this),i===this.currIndex&&(this.currSlide=t.slide),t.slide.append(t.el)}getViewportCenterPoint(){return{x:this.viewportSize.x/2,y:this.viewportSize.y/2}}updateSize(t){if(this.isDestroying)return;const i=_(this.options,this);!t&&a(i,this._prevViewportSize)||(n(this._prevViewportSize,i),this.dispatch("beforeResize"),n(this.viewportSize,this._prevViewportSize),this._updatePageScrollOffset(),this.dispatch("viewportSize"),this.mainScroll.resize(this.opener.isOpen),!this.hasMouse&&window.matchMedia("(any-hover: hover)").matches&&this.mouseDetected(),this.dispatch("resize"))}applyBgOpacity(t){this.bgOpacity=Math.max(t,0),this.bg&&(this.bg.style.opacity=String(this.bgOpacity*this.options.bgOpacity))}mouseDetected(){var t;this.hasMouse||(this.hasMouse=!0,null===(t=this.element)||void 0===t||t.classList.add("pswp--has_mouse"))}_handlePageResize(){this.updateSize(),/iPhone|iPad|iPod/i.test(window.navigator.userAgent)&&setTimeout(()=>{this.updateSize()},500)}_updatePageScrollOffset(){this.setScrollOffset(0,window.pageYOffset)}setScrollOffset(t,i){this.offset.x=t,this.offset.y=i,this.dispatch("updateScrollOffset")}_createMainStructure(){this.element=s("pswp","div"),this.element.setAttribute("tabindex","-1"),this.element.setAttribute("role","dialog"),this.template=this.element,this.bg=s("pswp__bg","div",this.element),this.scrollWrap=s("pswp__scroll-wrap","section",this.element),this.container=s("pswp__container","div",this.scrollWrap),this.scrollWrap.setAttribute("aria-roledescription","carousel"),this.container.setAttribute("aria-live","off"),this.container.setAttribute("id","pswp__items"),this.mainScroll.appendHolders(),this.ui=new j(this),this.ui.init(),(this.options.appendToEl||document.body).appendChild(this.element)}getThumbBounds(){return function(t,i,e){const s=e.dispatch("thumbBounds",{index:t,itemData:i,instance:e});if(s.thumbBounds)return s.thumbBounds;const{element:n}=i;let o,r;if(n&&!1!==e.options.thumbSelector){const t=e.options.thumbSelector||"img";r=n.matches(t)?n:n.querySelector(t)}return r=e.applyFilters("thumbEl",r,i,t),r&&(o=i.thumbCropped?function(t,i,e){const s=t.getBoundingClientRect(),n=s.width/i,o=s.height/e,r=n>o?n:o,a=(s.width-i*r)/2,h=(s.height-e*r)/2,l={x:s.left+a,y:s.top+h,w:i*r};return l.innerRect={w:s.width,h:s.height,x:a,y:h},l}(r,i.width||i.w||0,i.height||i.h||0):function(t){const i=t.getBoundingClientRect();return{x:i.left,y:i.top,w:i.width}}(r)),e.applyFilters("thumbBounds",o,i,t)}(this.currIndex,this.currSlide?this.currSlide.data:this._initialItemData,this)}canLoop(){return this.options.loop&&this.getNumItems()>2}_prepareOptions(t){return window.matchMedia("(prefers-reduced-motion), (update: slow)").matches&&(t.showHideAnimationType="none",t.zoomAnimationDuration=0),{...rt,...t}}}function ht(t,i,e){const s=document.createElement(i);return t&&(s.className=t),e&&e.appendChild(s),s}function lt(t,i,e){t.style.width="number"==typeof i?`${i}px`:i,t.style.height="number"==typeof e?`${e}px`:e}const dt="loading",pt="loaded",ct="error";function ut(t,i,e=document){let s=[];if(t instanceof Element)s=[t];else if(t instanceof NodeList||Array.isArray(t))s=Array.from(t);else{const n="string"==typeof t?t:i;n&&(s=Array.from(e.querySelectorAll(n)))}return s}function mt(){return!(!navigator.vendor||!navigator.vendor.match(/apple/i))}class vt{constructor(t,i){this.type=t,this.defaultPrevented=!1,i&&Object.assign(this,i)}preventDefault(){this.defaultPrevented=!0}}class gt{constructor(){this._listeners={},this._filters={},this.pswp=void 0,this.options=void 0}addFilter(t,i,e=100){var s,n,o;this._filters[t]||(this._filters[t]=[]),null===(s=this._filters[t])||void 0===s||s.push({fn:i,priority:e}),null===(n=this._filters[t])||void 0===n||n.sort((t,i)=>t.priority-i.priority),null===(o=this.pswp)||void 0===o||o.addFilter(t,i,e)}removeFilter(t,i){this._filters[t]&&(this._filters[t]=this._filters[t].filter(t=>t.fn!==i)),this.pswp&&this.pswp.removeFilter(t,i)}applyFilters(t,...i){var e;return null===(e=this._filters[t])||void 0===e||e.forEach(t=>{i[0]=t.fn.apply(this,i)}),i[0]}on(t,i){var e,s;this._listeners[t]||(this._listeners[t]=[]),null===(e=this._listeners[t])||void 0===e||e.push(i),null===(s=this.pswp)||void 0===s||s.on(t,i)}off(t,i){var e;this._listeners[t]&&(this._listeners[t]=this._listeners[t].filter(t=>i!==t)),null===(e=this.pswp)||void 0===e||e.off(t,i)}dispatch(t,i){var e;if(this.pswp)return this.pswp.dispatch(t,i);const s=new vt(t,i);return null===(e=this._listeners[t])||void 0===e||e.forEach(t=>{t.call(this,s)}),s}}class ft{constructor(t,i){if(this.element=ht("pswp__img pswp__img--placeholder",t?"img":"div",i),t){const i=this.element;i.decoding="async",i.alt="",i.src=t,i.setAttribute("role","presentation")}this.element.setAttribute("aria-hidden","true")}setDisplayedSize(t,i){this.element&&("IMG"===this.element.tagName?(lt(this.element,250,"auto"),this.element.style.transformOrigin="0 0",this.element.style.transform=function(t,i,e){let s="translate3d(0px,0px,0)";return void 0!==e&&(s+=` scale3d(${e},${e},1)`),s}(0,0,t/250)):lt(this.element,t,i))}destroy(){var t;null!==(t=this.element)&&void 0!==t&&t.parentNode&&this.element.remove(),this.element=null}}class yt{constructor(t,i,e){this.instance=i,this.data=t,this.index=e,this.element=void 0,this.placeholder=void 0,this.slide=void 0,this.displayedImageWidth=0,this.displayedImageHeight=0,this.width=Number(this.data.w)||Number(this.data.width)||0,this.height=Number(this.data.h)||Number(this.data.height)||0,this.isAttached=!1,this.hasSlide=!1,this.isDecoding=!1,this.state="idle",this.data.type?this.type=this.data.type:this.data.src?this.type="image":this.type="html",this.instance.dispatch("contentInit",{content:this})}removePlaceholder(){this.placeholder&&!this.keepPlaceholder()&&setTimeout(()=>{this.placeholder&&(this.placeholder.destroy(),this.placeholder=void 0)},1e3)}load(t,i){if(this.slide&&this.usePlaceholder())if(this.placeholder){const t=this.placeholder.element;t&&!t.parentElement&&this.slide.container.prepend(t)}else{const t=this.instance.applyFilters("placeholderSrc",!(!this.data.msrc||!this.slide.isFirstSlide)&&this.data.msrc,this);this.placeholder=new ft(t,this.slide.container)}this.element&&!i||this.instance.dispatch("contentLoad",{content:this,isLazy:t}).defaultPrevented||(this.isImageContent()?(this.element=ht("pswp__img","img"),this.displayedImageWidth&&this.loadImage(t)):(this.element=ht("pswp__content","div"),this.element.innerHTML=this.data.html||""),i&&this.slide&&this.slide.updateContentSize(!0))}loadImage(t){var i,e;if(!this.isImageContent()||!this.element||this.instance.dispatch("contentLoadImage",{content:this,isLazy:t}).defaultPrevented)return;const s=this.element;this.updateSrcsetSizes(),this.data.srcset&&(s.srcset=this.data.srcset),s.src=null!==(i=this.data.src)&&void 0!==i?i:"",s.alt=null!==(e=this.data.alt)&&void 0!==e?e:"",this.state=dt,s.complete?this.onLoaded():(s.onload=()=>{this.onLoaded()},s.onerror=()=>{this.onError()})}setSlide(t){this.slide=t,this.hasSlide=!0,this.instance=t.pswp}onLoaded(){this.state=pt,this.slide&&this.element&&(this.instance.dispatch("loadComplete",{slide:this.slide,content:this}),this.slide.isActive&&this.slide.heavyAppended&&!this.element.parentNode&&(this.append(),this.slide.updateContentSize(!0)),this.state!==pt&&this.state!==ct||this.removePlaceholder())}onError(){this.state=ct,this.slide&&(this.displayError(),this.instance.dispatch("loadComplete",{slide:this.slide,isError:!0,content:this}),this.instance.dispatch("loadError",{slide:this.slide,content:this}))}isLoading(){return this.instance.applyFilters("isContentLoading",this.state===dt,this)}isError(){return this.state===ct}isImageContent(){return"image"===this.type}setDisplayedSize(t,i){if(this.element&&(this.placeholder&&this.placeholder.setDisplayedSize(t,i),!this.instance.dispatch("contentResize",{content:this,width:t,height:i}).defaultPrevented&&(lt(this.element,t,i),this.isImageContent()&&!this.isError()))){const e=!this.displayedImageWidth&&t;this.displayedImageWidth=t,this.displayedImageHeight=i,e?this.loadImage(!1):this.updateSrcsetSizes(),this.slide&&this.instance.dispatch("imageSizeChange",{slide:this.slide,width:t,height:i,content:this})}}isZoomable(){return this.instance.applyFilters("isContentZoomable",this.isImageContent()&&this.state!==ct,this)}updateSrcsetSizes(){if(!this.isImageContent()||!this.element||!this.data.srcset)return;const t=this.element,i=this.instance.applyFilters("srcsetSizesWidth",this.displayedImageWidth,this);(!t.dataset.largestUsedSize||i>parseInt(t.dataset.largestUsedSize,10))&&(t.sizes=i+"px",t.dataset.largestUsedSize=String(i))}usePlaceholder(){return this.instance.applyFilters("useContentPlaceholder",this.isImageContent(),this)}lazyLoad(){this.instance.dispatch("contentLazyLoad",{content:this}).defaultPrevented||this.load(!0)}keepPlaceholder(){return this.instance.applyFilters("isKeepingPlaceholder",this.isLoading(),this)}destroy(){this.hasSlide=!1,this.slide=void 0,this.instance.dispatch("contentDestroy",{content:this}).defaultPrevented||(this.remove(),this.placeholder&&(this.placeholder.destroy(),this.placeholder=void 0),this.isImageContent()&&this.element&&(this.element.onload=null,this.element.onerror=null,this.element=void 0))}displayError(){if(this.slide){var t,i;let e=ht("pswp__error-msg","div");e.innerText=null!==(t=null===(i=this.instance.options)||void 0===i?void 0:i.errorMsg)&&void 0!==t?t:"",e=this.instance.applyFilters("contentErrorElement",e,this),this.element=ht("pswp__content pswp__error-msg-container","div"),this.element.appendChild(e),this.slide.container.innerText="",this.slide.container.appendChild(this.element),this.slide.updateContentSize(!0),this.removePlaceholder()}}append(){if(this.isAttached||!this.element)return;if(this.isAttached=!0,this.state===ct)return void this.displayError();if(this.instance.dispatch("contentAppend",{content:this}).defaultPrevented)return;const t="decode"in this.element;this.isImageContent()?t&&this.slide&&(!this.slide.isActive||mt())?(this.isDecoding=!0,this.element.decode().catch(()=>{}).finally(()=>{this.isDecoding=!1,this.appendImage()})):this.appendImage():this.slide&&!this.element.parentNode&&this.slide.container.appendChild(this.element)}activate(){!this.instance.dispatch("contentActivate",{content:this}).defaultPrevented&&this.slide&&(this.isImageContent()&&this.isDecoding&&!mt()?this.appendImage():this.isError()&&this.load(!1,!0),this.slide.holderElement&&this.slide.holderElement.setAttribute("aria-hidden","false"))}deactivate(){this.instance.dispatch("contentDeactivate",{content:this}),this.slide&&this.slide.holderElement&&this.slide.holderElement.setAttribute("aria-hidden","true")}remove(){this.isAttached=!1,this.instance.dispatch("contentRemove",{content:this}).defaultPrevented||(this.element&&this.element.parentNode&&this.element.remove(),this.placeholder&&this.placeholder.element&&this.placeholder.element.remove())}appendImage(){this.isAttached&&(this.instance.dispatch("contentAppendImage",{content:this}).defaultPrevented||(this.slide&&this.element&&!this.element.parentNode&&this.slide.container.appendChild(this.element),this.state!==pt&&this.state!==ct||this.removePlaceholder()))}}function _t(t,i,e,s,n){let o=0;if(i.paddingFn)o=i.paddingFn(e,s,n)[t];else if(i.padding)o=i.padding[t];else{const e="padding"+t[0].toUpperCase()+t.slice(1);i[e]&&(o=i[e])}return Number(o)||0}class wt{constructor(t,i,e,s){this.pswp=s,this.options=t,this.itemData=i,this.index=e,this.panAreaSize=null,this.elementSize=null,this.fit=1,this.fill=1,this.vFill=1,this.initial=1,this.secondary=1,this.max=1,this.min=1}update(t,i,e){const s={x:t,y:i};this.elementSize=s,this.panAreaSize=e;const n=e.x/s.x,o=e.y/s.y;this.fit=Math.min(1,n<o?n:o),this.fill=Math.min(1,n>o?n:o),this.vFill=Math.min(1,o),this.initial=this._getInitial(),this.secondary=this._getSecondary(),this.max=Math.max(this.initial,this.secondary,this._getMax()),this.min=Math.min(this.fit,this.initial,this.secondary),this.pswp&&this.pswp.dispatch("zoomLevelsUpdate",{zoomLevels:this,slideData:this.itemData})}_parseZoomLevelOption(t){const i=t+"ZoomLevel",e=this.options[i];if(e)return"function"==typeof e?e(this):"fill"===e?this.fill:"fit"===e?this.fit:Number(e)}_getSecondary(){let t=this._parseZoomLevelOption("secondary");return t||(t=Math.min(1,3*this.fit),this.elementSize&&t*this.elementSize.x>4e3&&(t=4e3/this.elementSize.x),t)}_getInitial(){return this._parseZoomLevelOption("initial")||this.fit}_getMax(){return this._parseZoomLevelOption("max")||Math.max(1,4*this.fit)}}function xt(t,i,e){const s=i.createContentFromData(t,e);let n;const{options:o}=i;if(o){let r;n=new wt(o,t,-1),r=i.pswp?i.pswp.viewportSize:function(t,i){if(t.getViewportSizeFn){const e=t.getViewportSizeFn(t,i);if(e)return e}return{x:document.documentElement.clientWidth,y:window.innerHeight}}(o,i);const a=function(t,i,e,s){return{x:i.x-_t("left",t,i,e,s)-_t("right",t,i,e,s),y:i.y-_t("top",t,i,e,s)-_t("bottom",t,i,e,s)}}(o,r,t,e);n.update(s.width,s.height,a)}return s.lazyLoad(),n&&s.setDisplayedSize(Math.ceil(s.width*n.initial),Math.ceil(s.height*n.initial)),s}class St extends gt{getNumItems(){var t;let i=0;const e=null===(t=this.options)||void 0===t?void 0:t.dataSource;e&&"length"in e?i=e.length:e&&"gallery"in e&&(e.items||(e.items=this._getGalleryDOMElements(e.gallery)),e.items&&(i=e.items.length));const s=this.dispatch("numItems",{dataSource:e,numItems:i});return this.applyFilters("numItems",s.numItems,e)}createContentFromData(t,i){return new yt(t,this,i)}getItemData(t){var i;const e=null===(i=this.options)||void 0===i?void 0:i.dataSource;let s={};Array.isArray(e)?s=e[t]:e&&"gallery"in e&&(e.items||(e.items=this._getGalleryDOMElements(e.gallery)),s=e.items[t]);let n=s;n instanceof Element&&(n=this._domElementToItemData(n));const o=this.dispatch("itemData",{itemData:n||{},index:t});return this.applyFilters("itemData",o.itemData,t)}_getGalleryDOMElements(t){var i,e;return null!==(i=this.options)&&void 0!==i&&i.children||null!==(e=this.options)&&void 0!==e&&e.childSelector?ut(this.options.children,this.options.childSelector,t)||[]:[t]}_domElementToItemData(t){const i={element:t},e="A"===t.tagName?t:t.querySelector("a");if(e){i.src=e.dataset.pswpSrc||e.href,e.dataset.pswpSrcset&&(i.srcset=e.dataset.pswpSrcset),i.width=e.dataset.pswpWidth?parseInt(e.dataset.pswpWidth,10):0,i.height=e.dataset.pswpHeight?parseInt(e.dataset.pswpHeight,10):0,i.w=i.width,i.h=i.height,e.dataset.pswpType&&(i.type=e.dataset.pswpType);const n=t.querySelector("img");var s;n&&(i.msrc=n.currentSrc||n.src,i.alt=null!==(s=n.getAttribute("alt"))&&void 0!==s?s:""),(e.dataset.pswpCropped||e.dataset.cropped)&&(i.thumbCropped=!0)}return this.applyFilters("domItemData",i,t,e)}lazyLoadData(t,i){return xt(t,this,i)}}class Pt extends St{constructor(t){super(),this.options=t||{},this._uid=0,this.shouldOpen=!1,this._preloadedContent=void 0,this.onThumbnailsClick=this.onThumbnailsClick.bind(this)}init(){ut(this.options.gallery,this.options.gallerySelector).forEach(t=>{t.addEventListener("click",this.onThumbnailsClick,!1)})}onThumbnailsClick(t){if(function(t){return"button"in t&&1===t.button||t.ctrlKey||t.metaKey||t.altKey||t.shiftKey}(t)||window.pswp)return;let i={x:t.clientX,y:t.clientY};i.x||i.y||(i=null);let e=this.getClickedIndex(t);e=this.applyFilters("clickedIndex",e,t,this);const s={gallery:t.currentTarget};e>=0&&(t.preventDefault(),this.loadAndOpen(e,s,i))}getClickedIndex(t){if(this.options.getClickedIndexFn)return this.options.getClickedIndexFn.call(this,t);const i=t.target,e=ut(this.options.children,this.options.childSelector,t.currentTarget).findIndex(t=>t===i||t.contains(i));return-1!==e?e:this.options.children||this.options.childSelector?-1:0}loadAndOpen(t,i,e){if(window.pswp||!this.options)return!1;if(!i&&this.options.gallery&&this.options.children){const t=ut(this.options.gallery);t[0]&&(i={gallery:t[0]})}return this.options.index=t,this.options.initialPointerPos=e,this.shouldOpen=!0,this.preload(t,i),!0}preload(t,i){const{options:e}=this;i&&(e.dataSource=i);const s=[],n=typeof e.pswpModule;if("function"==typeof(o=e.pswpModule)&&o.prototype&&o.prototype.goTo)s.push(Promise.resolve(e.pswpModule));else{if("string"===n)throw new Error("pswpModule as string is no longer supported");if("function"!==n)throw new Error("pswpModule is not valid");s.push(e.pswpModule())}var o;"function"==typeof e.openPromise&&s.push(e.openPromise()),!1!==e.preloadFirstSlide&&t>=0&&(this._preloadedContent=function(t,i){const e=i.getItemData(t);if(!i.dispatch("lazyLoadSlide",{index:t,itemData:e}).defaultPrevented)return xt(e,i,t)}(t,this));const r=++this._uid;Promise.all(s).then(t=>{if(this.shouldOpen){const i=t[0];this._openPhotoswipe(i,r)}})}_openPhotoswipe(t,i){if(i!==this._uid&&this.shouldOpen)return;if(this.shouldOpen=!1,window.pswp)return;const e="object"==typeof t?new t.default(this.options):new t(this.options);this.pswp=e,window.pswp=e,Object.keys(this._listeners).forEach(t=>{var i;null===(i=this._listeners[t])||void 0===i||i.forEach(i=>{e.on(t,i)})}),Object.keys(this._filters).forEach(t=>{var i;null===(i=this._filters[t])||void 0===i||i.forEach(i=>{e.addFilter(t,i.fn,i.priority)})}),this._preloadedContent&&(e.contentLoader.addToCache(this._preloadedContent),this._preloadedContent=void 0),e.on("destroy",()=>{this.pswp=void 0,delete window.pswp}),e.init()}destroy(){var t;null===(t=this.pswp)||void 0===t||t.destroy(),this.shouldOpen=!1,this._listeners={},ut(this.options.gallery,this.options.gallerySelector).forEach(t=>{t.removeEventListener("click",this.onThumbnailsClick,!1)})}}function bt(t){const e=t.querySelector(".trvlr-gallery__grid"),s=t.querySelector(".trvlr-gallery__sizer");if(!e||!s)return null;let n=null;const o=()=>{const o=t.offsetWidth;if(o<=0)return!1;const r=(a=o,h=function(t){const i=Math.floor((t+15)/315);return Math.max(1,Math.min(4,i))}(o),h<=1?a:(a-15*(h-1))/h);var a,h,l;return l=`${r}px`,s.style.width=l,e.querySelectorAll(".trvlr-gallery__item").forEach(t=>{t.style.width=l}),n||(t.classList.add("is-masonry-ready"),n=new(i())(e,{itemSelector:".trvlr-gallery__item",columnWidth:".trvlr-gallery__sizer",gutter:15,percentPosition:!1,transitionDuration:0})),n.layout(),!0},r=function(){let t;return(...i)=>{clearTimeout(t),t=setTimeout(()=>(()=>{o()})(...i),80)}}();return e.querySelectorAll("img").forEach(t=>{t.complete||(t.addEventListener("load",r,{once:!0}),t.addEventListener("error",r,{once:!0}))}),"undefined"!=typeof ResizeObserver?new ResizeObserver(r).observe(t):window.addEventListener("resize",r),document.querySelectorAll('input[name="trvlr_sa1_tab"]').forEach(t=>{t.addEventListener("change",()=>{"trvlr_sa1_tab_gallery"===t.id&&t.checked&&requestAnimationFrame(()=>{o(),r()})})}),{layout:o,scheduleLayout:r}}function zt(t){!function(t){new Pt({gallery:t,children:"a.trvlr-gallery__link",pswpModule:at}).init()}(t);const i=()=>!(t.offsetWidth<=0||(t._trvlrMasonryController?t._trvlrMasonryController.layout():t._trvlrMasonryController=bt(t),0));if(!i()){if("undefined"!=typeof ResizeObserver){const e=new ResizeObserver(()=>{i()&&e.disconnect()});e.observe(t)}if("undefined"!=typeof IntersectionObserver){const e=new IntersectionObserver(t=>{t.forEach(t=>{t.isIntersecting&&i()&&e.disconnect()})},{threshold:0});e.observe(t)}document.querySelectorAll('input[name="trvlr_sa1_tab"]').forEach(t=>{t.addEventListener("change",()=>{"trvlr_sa1_tab_gallery"===t.id&&t.checked&&requestAnimationFrame(i)})})}}function It(){document.querySelectorAll(".trvlr-gallery--masonry").forEach(zt)}"loading"===document.readyState?document.addEventListener("DOMContentLoaded",It):It()})()})();
+/******/ (() => { // webpackBootstrap
+/******/ 	var __webpack_modules__ = ({
+
+/***/ "./node_modules/desandro-matches-selector/matches-selector.js":
+/*!********************************************************************!*\
+  !*** ./node_modules/desandro-matches-selector/matches-selector.js ***!
+  \********************************************************************/
+/***/ ((module, exports, __webpack_require__) => {
+
+var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
+ * matchesSelector v2.0.2
+ * matchesSelector( element, '.selector' )
+ * MIT license
+ */
+
+/*jshint browser: true, strict: true, undef: true, unused: true */
+
+( function( window, factory ) {
+  /*global define: false, module: false */
+  'use strict';
+  // universal module definition
+  if ( true ) {
+    // AMD
+    !(__WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+		__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+		(__WEBPACK_AMD_DEFINE_FACTORY__.call(exports, __webpack_require__, exports, module)) :
+		__WEBPACK_AMD_DEFINE_FACTORY__),
+		__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+  } else // removed by dead control flow
+{}
+
+}( window, function factory() {
+  'use strict';
+
+  var matchesMethod = ( function() {
+    var ElemProto = window.Element.prototype;
+    // check for the standard method name first
+    if ( ElemProto.matches ) {
+      return 'matches';
+    }
+    // check un-prefixed
+    if ( ElemProto.matchesSelector ) {
+      return 'matchesSelector';
+    }
+    // check vendor prefixes
+    var prefixes = [ 'webkit', 'moz', 'ms', 'o' ];
+
+    for ( var i=0; i < prefixes.length; i++ ) {
+      var prefix = prefixes[i];
+      var method = prefix + 'MatchesSelector';
+      if ( ElemProto[ method ] ) {
+        return method;
+      }
+    }
+  })();
+
+  return function matchesSelector( elem, selector ) {
+    return elem[ matchesMethod ]( selector );
+  };
+
+}));
+
+
+/***/ }),
+
+/***/ "./node_modules/ev-emitter/ev-emitter.js":
+/*!***********************************************!*\
+  !*** ./node_modules/ev-emitter/ev-emitter.js ***!
+  \***********************************************/
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
+ * EvEmitter v1.1.0
+ * Lil' event emitter
+ * MIT License
+ */
+
+/* jshint unused: true, undef: true, strict: true */
+
+( function( global, factory ) {
+  // universal module definition
+  /* jshint strict: false */ /* globals define, module, window */
+  if ( true ) {
+    // AMD - RequireJS
+    !(__WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+		__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+		(__WEBPACK_AMD_DEFINE_FACTORY__.call(exports, __webpack_require__, exports, module)) :
+		__WEBPACK_AMD_DEFINE_FACTORY__),
+		__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+  } else // removed by dead control flow
+{}
+
+}( typeof window != 'undefined' ? window : this, function() {
+
+"use strict";
+
+function EvEmitter() {}
+
+var proto = EvEmitter.prototype;
+
+proto.on = function( eventName, listener ) {
+  if ( !eventName || !listener ) {
+    return;
+  }
+  // set events hash
+  var events = this._events = this._events || {};
+  // set listeners array
+  var listeners = events[ eventName ] = events[ eventName ] || [];
+  // only add once
+  if ( listeners.indexOf( listener ) == -1 ) {
+    listeners.push( listener );
+  }
+
+  return this;
+};
+
+proto.once = function( eventName, listener ) {
+  if ( !eventName || !listener ) {
+    return;
+  }
+  // add event
+  this.on( eventName, listener );
+  // set once flag
+  // set onceEvents hash
+  var onceEvents = this._onceEvents = this._onceEvents || {};
+  // set onceListeners object
+  var onceListeners = onceEvents[ eventName ] = onceEvents[ eventName ] || {};
+  // set flag
+  onceListeners[ listener ] = true;
+
+  return this;
+};
+
+proto.off = function( eventName, listener ) {
+  var listeners = this._events && this._events[ eventName ];
+  if ( !listeners || !listeners.length ) {
+    return;
+  }
+  var index = listeners.indexOf( listener );
+  if ( index != -1 ) {
+    listeners.splice( index, 1 );
+  }
+
+  return this;
+};
+
+proto.emitEvent = function( eventName, args ) {
+  var listeners = this._events && this._events[ eventName ];
+  if ( !listeners || !listeners.length ) {
+    return;
+  }
+  // copy over to avoid interference if .off() in listener
+  listeners = listeners.slice(0);
+  args = args || [];
+  // once stuff
+  var onceListeners = this._onceEvents && this._onceEvents[ eventName ];
+
+  for ( var i=0; i < listeners.length; i++ ) {
+    var listener = listeners[i]
+    var isOnce = onceListeners && onceListeners[ listener ];
+    if ( isOnce ) {
+      // remove listener
+      // remove before trigger to prevent recursion
+      this.off( eventName, listener );
+      // unset once flag
+      delete onceListeners[ listener ];
+    }
+    // trigger listener
+    listener.apply( this, args );
+  }
+
+  return this;
+};
+
+proto.allOff = function() {
+  delete this._events;
+  delete this._onceEvents;
+};
+
+return EvEmitter;
+
+}));
+
+
+/***/ }),
+
+/***/ "./node_modules/fizzy-ui-utils/utils.js":
+/*!**********************************************!*\
+  !*** ./node_modules/fizzy-ui-utils/utils.js ***!
+  \**********************************************/
+/***/ ((module, exports, __webpack_require__) => {
+
+var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
+ * Fizzy UI utils v2.0.7
+ * MIT license
+ */
+
+/*jshint browser: true, undef: true, unused: true, strict: true */
+
+( function( window, factory ) {
+  // universal module definition
+  /*jshint strict: false */ /*globals define, module, require */
+
+  if ( true ) {
+    // AMD
+    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [
+      __webpack_require__(/*! desandro-matches-selector/matches-selector */ "./node_modules/desandro-matches-selector/matches-selector.js")
+    ], __WEBPACK_AMD_DEFINE_RESULT__ = (function( matchesSelector ) {
+      return factory( window, matchesSelector );
+    }).apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
+		__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+  } else // removed by dead control flow
+{}
+
+}( window, function factory( window, matchesSelector ) {
+
+'use strict';
+
+var utils = {};
+
+// ----- extend ----- //
+
+// extends objects
+utils.extend = function( a, b ) {
+  for ( var prop in b ) {
+    a[ prop ] = b[ prop ];
+  }
+  return a;
+};
+
+// ----- modulo ----- //
+
+utils.modulo = function( num, div ) {
+  return ( ( num % div ) + div ) % div;
+};
+
+// ----- makeArray ----- //
+
+var arraySlice = Array.prototype.slice;
+
+// turn element or nodeList into an array
+utils.makeArray = function( obj ) {
+  if ( Array.isArray( obj ) ) {
+    // use object if already an array
+    return obj;
+  }
+  // return empty array if undefined or null. #6
+  if ( obj === null || obj === undefined ) {
+    return [];
+  }
+
+  var isArrayLike = typeof obj == 'object' && typeof obj.length == 'number';
+  if ( isArrayLike ) {
+    // convert nodeList to array
+    return arraySlice.call( obj );
+  }
+
+  // array of single index
+  return [ obj ];
+};
+
+// ----- removeFrom ----- //
+
+utils.removeFrom = function( ary, obj ) {
+  var index = ary.indexOf( obj );
+  if ( index != -1 ) {
+    ary.splice( index, 1 );
+  }
+};
+
+// ----- getParent ----- //
+
+utils.getParent = function( elem, selector ) {
+  while ( elem.parentNode && elem != document.body ) {
+    elem = elem.parentNode;
+    if ( matchesSelector( elem, selector ) ) {
+      return elem;
+    }
+  }
+};
+
+// ----- getQueryElement ----- //
+
+// use element as selector string
+utils.getQueryElement = function( elem ) {
+  if ( typeof elem == 'string' ) {
+    return document.querySelector( elem );
+  }
+  return elem;
+};
+
+// ----- handleEvent ----- //
+
+// enable .ontype to trigger from .addEventListener( elem, 'type' )
+utils.handleEvent = function( event ) {
+  var method = 'on' + event.type;
+  if ( this[ method ] ) {
+    this[ method ]( event );
+  }
+};
+
+// ----- filterFindElements ----- //
+
+utils.filterFindElements = function( elems, selector ) {
+  // make array of elems
+  elems = utils.makeArray( elems );
+  var ffElems = [];
+
+  elems.forEach( function( elem ) {
+    // check that elem is an actual element
+    if ( !( elem instanceof HTMLElement ) ) {
+      return;
+    }
+    // add elem if no selector
+    if ( !selector ) {
+      ffElems.push( elem );
+      return;
+    }
+    // filter & find items if we have a selector
+    // filter
+    if ( matchesSelector( elem, selector ) ) {
+      ffElems.push( elem );
+    }
+    // find children
+    var childElems = elem.querySelectorAll( selector );
+    // concat childElems to filterFound array
+    for ( var i=0; i < childElems.length; i++ ) {
+      ffElems.push( childElems[i] );
+    }
+  });
+
+  return ffElems;
+};
+
+// ----- debounceMethod ----- //
+
+utils.debounceMethod = function( _class, methodName, threshold ) {
+  threshold = threshold || 100;
+  // original method
+  var method = _class.prototype[ methodName ];
+  var timeoutName = methodName + 'Timeout';
+
+  _class.prototype[ methodName ] = function() {
+    var timeout = this[ timeoutName ];
+    clearTimeout( timeout );
+
+    var args = arguments;
+    var _this = this;
+    this[ timeoutName ] = setTimeout( function() {
+      method.apply( _this, args );
+      delete _this[ timeoutName ];
+    }, threshold );
+  };
+};
+
+// ----- docReady ----- //
+
+utils.docReady = function( callback ) {
+  var readyState = document.readyState;
+  if ( readyState == 'complete' || readyState == 'interactive' ) {
+    // do async to allow for other scripts to run. metafizzy/flickity#441
+    setTimeout( callback );
+  } else {
+    document.addEventListener( 'DOMContentLoaded', callback );
+  }
+};
+
+// ----- htmlInit ----- //
+
+// http://jamesroberts.name/blog/2010/02/22/string-functions-for-javascript-trim-to-camel-case-to-dashed-and-to-underscore/
+utils.toDashed = function( str ) {
+  return str.replace( /(.)([A-Z])/g, function( match, $1, $2 ) {
+    return $1 + '-' + $2;
+  }).toLowerCase();
+};
+
+var console = window.console;
+/**
+ * allow user to initialize classes via [data-namespace] or .js-namespace class
+ * htmlInit( Widget, 'widgetName' )
+ * options are parsed from data-namespace-options
+ */
+utils.htmlInit = function( WidgetClass, namespace ) {
+  utils.docReady( function() {
+    var dashedNamespace = utils.toDashed( namespace );
+    var dataAttr = 'data-' + dashedNamespace;
+    var dataAttrElems = document.querySelectorAll( '[' + dataAttr + ']' );
+    var jsDashElems = document.querySelectorAll( '.js-' + dashedNamespace );
+    var elems = utils.makeArray( dataAttrElems )
+      .concat( utils.makeArray( jsDashElems ) );
+    var dataOptionsAttr = dataAttr + '-options';
+    var jQuery = window.jQuery;
+
+    elems.forEach( function( elem ) {
+      var attr = elem.getAttribute( dataAttr ) ||
+        elem.getAttribute( dataOptionsAttr );
+      var options;
+      try {
+        options = attr && JSON.parse( attr );
+      } catch ( error ) {
+        // log error, do not initialize
+        if ( console ) {
+          console.error( 'Error parsing ' + dataAttr + ' on ' + elem.className +
+          ': ' + error );
+        }
+        return;
+      }
+      // initialize
+      var instance = new WidgetClass( elem, options );
+      // make available via $().data('namespace')
+      if ( jQuery ) {
+        jQuery.data( elem, namespace, instance );
+      }
+    });
+
+  });
+};
+
+// -----  ----- //
+
+return utils;
+
+}));
+
+
+/***/ }),
+
+/***/ "./node_modules/get-size/get-size.js":
+/*!*******************************************!*\
+  !*** ./node_modules/get-size/get-size.js ***!
+  \*******************************************/
+/***/ ((module, exports, __webpack_require__) => {
+
+var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
+ * getSize v2.0.3
+ * measure size of elements
+ * MIT license
+ */
+
+/* jshint browser: true, strict: true, undef: true, unused: true */
+/* globals console: false */
+
+( function( window, factory ) {
+  /* jshint strict: false */ /* globals define, module */
+  if ( true ) {
+    // AMD
+    !(__WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+		__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+		(__WEBPACK_AMD_DEFINE_FACTORY__.call(exports, __webpack_require__, exports, module)) :
+		__WEBPACK_AMD_DEFINE_FACTORY__),
+		__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+  } else // removed by dead control flow
+{}
+
+})( window, function factory() {
+'use strict';
+
+// -------------------------- helpers -------------------------- //
+
+// get a number from a string, not a percentage
+function getStyleSize( value ) {
+  var num = parseFloat( value );
+  // not a percent like '100%', and a number
+  var isValid = value.indexOf('%') == -1 && !isNaN( num );
+  return isValid && num;
+}
+
+function noop() {}
+
+var logError = typeof console == 'undefined' ? noop :
+  function( message ) {
+    console.error( message );
+  };
+
+// -------------------------- measurements -------------------------- //
+
+var measurements = [
+  'paddingLeft',
+  'paddingRight',
+  'paddingTop',
+  'paddingBottom',
+  'marginLeft',
+  'marginRight',
+  'marginTop',
+  'marginBottom',
+  'borderLeftWidth',
+  'borderRightWidth',
+  'borderTopWidth',
+  'borderBottomWidth'
+];
+
+var measurementsLength = measurements.length;
+
+function getZeroSize() {
+  var size = {
+    width: 0,
+    height: 0,
+    innerWidth: 0,
+    innerHeight: 0,
+    outerWidth: 0,
+    outerHeight: 0
+  };
+  for ( var i=0; i < measurementsLength; i++ ) {
+    var measurement = measurements[i];
+    size[ measurement ] = 0;
+  }
+  return size;
+}
+
+// -------------------------- getStyle -------------------------- //
+
+/**
+ * getStyle, get style of element, check for Firefox bug
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=548397
+ */
+function getStyle( elem ) {
+  var style = getComputedStyle( elem );
+  if ( !style ) {
+    logError( 'Style returned ' + style +
+      '. Are you running this code in a hidden iframe on Firefox? ' +
+      'See https://bit.ly/getsizebug1' );
+  }
+  return style;
+}
+
+// -------------------------- setup -------------------------- //
+
+var isSetup = false;
+
+var isBoxSizeOuter;
+
+/**
+ * setup
+ * check isBoxSizerOuter
+ * do on first getSize() rather than on page load for Firefox bug
+ */
+function setup() {
+  // setup once
+  if ( isSetup ) {
+    return;
+  }
+  isSetup = true;
+
+  // -------------------------- box sizing -------------------------- //
+
+  /**
+   * Chrome & Safari measure the outer-width on style.width on border-box elems
+   * IE11 & Firefox<29 measures the inner-width
+   */
+  var div = document.createElement('div');
+  div.style.width = '200px';
+  div.style.padding = '1px 2px 3px 4px';
+  div.style.borderStyle = 'solid';
+  div.style.borderWidth = '1px 2px 3px 4px';
+  div.style.boxSizing = 'border-box';
+
+  var body = document.body || document.documentElement;
+  body.appendChild( div );
+  var style = getStyle( div );
+  // round value for browser zoom. desandro/masonry#928
+  isBoxSizeOuter = Math.round( getStyleSize( style.width ) ) == 200;
+  getSize.isBoxSizeOuter = isBoxSizeOuter;
+
+  body.removeChild( div );
+}
+
+// -------------------------- getSize -------------------------- //
+
+function getSize( elem ) {
+  setup();
+
+  // use querySeletor if elem is string
+  if ( typeof elem == 'string' ) {
+    elem = document.querySelector( elem );
+  }
+
+  // do not proceed on non-objects
+  if ( !elem || typeof elem != 'object' || !elem.nodeType ) {
+    return;
+  }
+
+  var style = getStyle( elem );
+
+  // if hidden, everything is 0
+  if ( style.display == 'none' ) {
+    return getZeroSize();
+  }
+
+  var size = {};
+  size.width = elem.offsetWidth;
+  size.height = elem.offsetHeight;
+
+  var isBorderBox = size.isBorderBox = style.boxSizing == 'border-box';
+
+  // get all measurements
+  for ( var i=0; i < measurementsLength; i++ ) {
+    var measurement = measurements[i];
+    var value = style[ measurement ];
+    var num = parseFloat( value );
+    // any 'auto', 'medium' value will be 0
+    size[ measurement ] = !isNaN( num ) ? num : 0;
+  }
+
+  var paddingWidth = size.paddingLeft + size.paddingRight;
+  var paddingHeight = size.paddingTop + size.paddingBottom;
+  var marginWidth = size.marginLeft + size.marginRight;
+  var marginHeight = size.marginTop + size.marginBottom;
+  var borderWidth = size.borderLeftWidth + size.borderRightWidth;
+  var borderHeight = size.borderTopWidth + size.borderBottomWidth;
+
+  var isBorderBoxSizeOuter = isBorderBox && isBoxSizeOuter;
+
+  // overwrite width and height if we can get it from style
+  var styleWidth = getStyleSize( style.width );
+  if ( styleWidth !== false ) {
+    size.width = styleWidth +
+      // add padding and border unless it's already including it
+      ( isBorderBoxSizeOuter ? 0 : paddingWidth + borderWidth );
+  }
+
+  var styleHeight = getStyleSize( style.height );
+  if ( styleHeight !== false ) {
+    size.height = styleHeight +
+      // add padding and border unless it's already including it
+      ( isBorderBoxSizeOuter ? 0 : paddingHeight + borderHeight );
+  }
+
+  size.innerWidth = size.width - ( paddingWidth + borderWidth );
+  size.innerHeight = size.height - ( paddingHeight + borderHeight );
+
+  size.outerWidth = size.width + marginWidth;
+  size.outerHeight = size.height + marginHeight;
+
+  return size;
+}
+
+return getSize;
+
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/masonry-layout/masonry.js":
+/*!************************************************!*\
+  !*** ./node_modules/masonry-layout/masonry.js ***!
+  \************************************************/
+/***/ ((module, exports, __webpack_require__) => {
+
+var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
+ * Masonry v4.2.2
+ * Cascading grid layout library
+ * https://masonry.desandro.com
+ * MIT License
+ * by David DeSandro
+ */
+
+( function( window, factory ) {
+  // universal module definition
+  /* jshint strict: false */ /*globals define, module, require */
+  if ( true ) {
+    // AMD
+    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [
+        __webpack_require__(/*! outlayer/outlayer */ "./node_modules/outlayer/outlayer.js"),
+        __webpack_require__(/*! get-size/get-size */ "./node_modules/get-size/get-size.js")
+      ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+		__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+		(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
+		__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+  } else // removed by dead control flow
+{}
+
+}( window, function factory( Outlayer, getSize ) {
+
+'use strict';
+
+// -------------------------- masonryDefinition -------------------------- //
+
+  // create an Outlayer layout class
+  var Masonry = Outlayer.create('masonry');
+  // isFitWidth -> fitWidth
+  Masonry.compatOptions.fitWidth = 'isFitWidth';
+
+  var proto = Masonry.prototype;
+
+  proto._resetLayout = function() {
+    this.getSize();
+    this._getMeasurement( 'columnWidth', 'outerWidth' );
+    this._getMeasurement( 'gutter', 'outerWidth' );
+    this.measureColumns();
+
+    // reset column Y
+    this.colYs = [];
+    for ( var i=0; i < this.cols; i++ ) {
+      this.colYs.push( 0 );
+    }
+
+    this.maxY = 0;
+    this.horizontalColIndex = 0;
+  };
+
+  proto.measureColumns = function() {
+    this.getContainerWidth();
+    // if columnWidth is 0, default to outerWidth of first item
+    if ( !this.columnWidth ) {
+      var firstItem = this.items[0];
+      var firstItemElem = firstItem && firstItem.element;
+      // columnWidth fall back to item of first element
+      this.columnWidth = firstItemElem && getSize( firstItemElem ).outerWidth ||
+        // if first elem has no width, default to size of container
+        this.containerWidth;
+    }
+
+    var columnWidth = this.columnWidth += this.gutter;
+
+    // calculate columns
+    var containerWidth = this.containerWidth + this.gutter;
+    var cols = containerWidth / columnWidth;
+    // fix rounding errors, typically with gutters
+    var excess = columnWidth - containerWidth % columnWidth;
+    // if overshoot is less than a pixel, round up, otherwise floor it
+    var mathMethod = excess && excess < 1 ? 'round' : 'floor';
+    cols = Math[ mathMethod ]( cols );
+    this.cols = Math.max( cols, 1 );
+  };
+
+  proto.getContainerWidth = function() {
+    // container is parent if fit width
+    var isFitWidth = this._getOption('fitWidth');
+    var container = isFitWidth ? this.element.parentNode : this.element;
+    // check that this.size and size are there
+    // IE8 triggers resize on body size change, so they might not be
+    var size = getSize( container );
+    this.containerWidth = size && size.innerWidth;
+  };
+
+  proto._getItemLayoutPosition = function( item ) {
+    item.getSize();
+    // how many columns does this brick span
+    var remainder = item.size.outerWidth % this.columnWidth;
+    var mathMethod = remainder && remainder < 1 ? 'round' : 'ceil';
+    // round if off by 1 pixel, otherwise use ceil
+    var colSpan = Math[ mathMethod ]( item.size.outerWidth / this.columnWidth );
+    colSpan = Math.min( colSpan, this.cols );
+    // use horizontal or top column position
+    var colPosMethod = this.options.horizontalOrder ?
+      '_getHorizontalColPosition' : '_getTopColPosition';
+    var colPosition = this[ colPosMethod ]( colSpan, item );
+    // position the brick
+    var position = {
+      x: this.columnWidth * colPosition.col,
+      y: colPosition.y
+    };
+    // apply setHeight to necessary columns
+    var setHeight = colPosition.y + item.size.outerHeight;
+    var setMax = colSpan + colPosition.col;
+    for ( var i = colPosition.col; i < setMax; i++ ) {
+      this.colYs[i] = setHeight;
+    }
+
+    return position;
+  };
+
+  proto._getTopColPosition = function( colSpan ) {
+    var colGroup = this._getTopColGroup( colSpan );
+    // get the minimum Y value from the columns
+    var minimumY = Math.min.apply( Math, colGroup );
+
+    return {
+      col: colGroup.indexOf( minimumY ),
+      y: minimumY,
+    };
+  };
+
+  /**
+   * @param {Number} colSpan - number of columns the element spans
+   * @returns {Array} colGroup
+   */
+  proto._getTopColGroup = function( colSpan ) {
+    if ( colSpan < 2 ) {
+      // if brick spans only one column, use all the column Ys
+      return this.colYs;
+    }
+
+    var colGroup = [];
+    // how many different places could this brick fit horizontally
+    var groupCount = this.cols + 1 - colSpan;
+    // for each group potential horizontal position
+    for ( var i = 0; i < groupCount; i++ ) {
+      colGroup[i] = this._getColGroupY( i, colSpan );
+    }
+    return colGroup;
+  };
+
+  proto._getColGroupY = function( col, colSpan ) {
+    if ( colSpan < 2 ) {
+      return this.colYs[ col ];
+    }
+    // make an array of colY values for that one group
+    var groupColYs = this.colYs.slice( col, col + colSpan );
+    // and get the max value of the array
+    return Math.max.apply( Math, groupColYs );
+  };
+
+  // get column position based on horizontal index. #873
+  proto._getHorizontalColPosition = function( colSpan, item ) {
+    var col = this.horizontalColIndex % this.cols;
+    var isOver = colSpan > 1 && col + colSpan > this.cols;
+    // shift to next row if item can't fit on current row
+    col = isOver ? 0 : col;
+    // don't let zero-size items take up space
+    var hasSize = item.size.outerWidth && item.size.outerHeight;
+    this.horizontalColIndex = hasSize ? col + colSpan : this.horizontalColIndex;
+
+    return {
+      col: col,
+      y: this._getColGroupY( col, colSpan ),
+    };
+  };
+
+  proto._manageStamp = function( stamp ) {
+    var stampSize = getSize( stamp );
+    var offset = this._getElementOffset( stamp );
+    // get the columns that this stamp affects
+    var isOriginLeft = this._getOption('originLeft');
+    var firstX = isOriginLeft ? offset.left : offset.right;
+    var lastX = firstX + stampSize.outerWidth;
+    var firstCol = Math.floor( firstX / this.columnWidth );
+    firstCol = Math.max( 0, firstCol );
+    var lastCol = Math.floor( lastX / this.columnWidth );
+    // lastCol should not go over if multiple of columnWidth #425
+    lastCol -= lastX % this.columnWidth ? 0 : 1;
+    lastCol = Math.min( this.cols - 1, lastCol );
+    // set colYs to bottom of the stamp
+
+    var isOriginTop = this._getOption('originTop');
+    var stampMaxY = ( isOriginTop ? offset.top : offset.bottom ) +
+      stampSize.outerHeight;
+    for ( var i = firstCol; i <= lastCol; i++ ) {
+      this.colYs[i] = Math.max( stampMaxY, this.colYs[i] );
+    }
+  };
+
+  proto._getContainerSize = function() {
+    this.maxY = Math.max.apply( Math, this.colYs );
+    var size = {
+      height: this.maxY
+    };
+
+    if ( this._getOption('fitWidth') ) {
+      size.width = this._getContainerFitWidth();
+    }
+
+    return size;
+  };
+
+  proto._getContainerFitWidth = function() {
+    var unusedCols = 0;
+    // count unused columns
+    var i = this.cols;
+    while ( --i ) {
+      if ( this.colYs[i] !== 0 ) {
+        break;
+      }
+      unusedCols++;
+    }
+    // fit container to columns that have been used
+    return ( this.cols - unusedCols ) * this.columnWidth - this.gutter;
+  };
+
+  proto.needsResizeLayout = function() {
+    var previousWidth = this.containerWidth;
+    this.getContainerWidth();
+    return previousWidth != this.containerWidth;
+  };
+
+  return Masonry;
+
+}));
+
+
+/***/ }),
+
+/***/ "./node_modules/outlayer/item.js":
+/*!***************************************!*\
+  !*** ./node_modules/outlayer/item.js ***!
+  \***************************************/
+/***/ ((module, exports, __webpack_require__) => {
+
+var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
+ * Outlayer Item
+ */
+
+( function( window, factory ) {
+  // universal module definition
+  /* jshint strict: false */ /* globals define, module, require */
+  if ( true ) {
+    // AMD - RequireJS
+    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [
+        __webpack_require__(/*! ev-emitter/ev-emitter */ "./node_modules/ev-emitter/ev-emitter.js"),
+        __webpack_require__(/*! get-size/get-size */ "./node_modules/get-size/get-size.js")
+      ], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+		__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+		(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
+		__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+  } else // removed by dead control flow
+{}
+
+}( window, function factory( EvEmitter, getSize ) {
+'use strict';
+
+// ----- helpers ----- //
+
+function isEmptyObj( obj ) {
+  for ( var prop in obj ) {
+    return false;
+  }
+  prop = null;
+  return true;
+}
+
+// -------------------------- CSS3 support -------------------------- //
+
+
+var docElemStyle = document.documentElement.style;
+
+var transitionProperty = typeof docElemStyle.transition == 'string' ?
+  'transition' : 'WebkitTransition';
+var transformProperty = typeof docElemStyle.transform == 'string' ?
+  'transform' : 'WebkitTransform';
+
+var transitionEndEvent = {
+  WebkitTransition: 'webkitTransitionEnd',
+  transition: 'transitionend'
+}[ transitionProperty ];
+
+// cache all vendor properties that could have vendor prefix
+var vendorProperties = {
+  transform: transformProperty,
+  transition: transitionProperty,
+  transitionDuration: transitionProperty + 'Duration',
+  transitionProperty: transitionProperty + 'Property',
+  transitionDelay: transitionProperty + 'Delay'
+};
+
+// -------------------------- Item -------------------------- //
+
+function Item( element, layout ) {
+  if ( !element ) {
+    return;
+  }
+
+  this.element = element;
+  // parent layout class, i.e. Masonry, Isotope, or Packery
+  this.layout = layout;
+  this.position = {
+    x: 0,
+    y: 0
+  };
+
+  this._create();
+}
+
+// inherit EvEmitter
+var proto = Item.prototype = Object.create( EvEmitter.prototype );
+proto.constructor = Item;
+
+proto._create = function() {
+  // transition objects
+  this._transn = {
+    ingProperties: {},
+    clean: {},
+    onEnd: {}
+  };
+
+  this.css({
+    position: 'absolute'
+  });
+};
+
+// trigger specified handler for event type
+proto.handleEvent = function( event ) {
+  var method = 'on' + event.type;
+  if ( this[ method ] ) {
+    this[ method ]( event );
+  }
+};
+
+proto.getSize = function() {
+  this.size = getSize( this.element );
+};
+
+/**
+ * apply CSS styles to element
+ * @param {Object} style
+ */
+proto.css = function( style ) {
+  var elemStyle = this.element.style;
+
+  for ( var prop in style ) {
+    // use vendor property if available
+    var supportedProp = vendorProperties[ prop ] || prop;
+    elemStyle[ supportedProp ] = style[ prop ];
+  }
+};
+
+ // measure position, and sets it
+proto.getPosition = function() {
+  var style = getComputedStyle( this.element );
+  var isOriginLeft = this.layout._getOption('originLeft');
+  var isOriginTop = this.layout._getOption('originTop');
+  var xValue = style[ isOriginLeft ? 'left' : 'right' ];
+  var yValue = style[ isOriginTop ? 'top' : 'bottom' ];
+  var x = parseFloat( xValue );
+  var y = parseFloat( yValue );
+  // convert percent to pixels
+  var layoutSize = this.layout.size;
+  if ( xValue.indexOf('%') != -1 ) {
+    x = ( x / 100 ) * layoutSize.width;
+  }
+  if ( yValue.indexOf('%') != -1 ) {
+    y = ( y / 100 ) * layoutSize.height;
+  }
+  // clean up 'auto' or other non-integer values
+  x = isNaN( x ) ? 0 : x;
+  y = isNaN( y ) ? 0 : y;
+  // remove padding from measurement
+  x -= isOriginLeft ? layoutSize.paddingLeft : layoutSize.paddingRight;
+  y -= isOriginTop ? layoutSize.paddingTop : layoutSize.paddingBottom;
+
+  this.position.x = x;
+  this.position.y = y;
+};
+
+// set settled position, apply padding
+proto.layoutPosition = function() {
+  var layoutSize = this.layout.size;
+  var style = {};
+  var isOriginLeft = this.layout._getOption('originLeft');
+  var isOriginTop = this.layout._getOption('originTop');
+
+  // x
+  var xPadding = isOriginLeft ? 'paddingLeft' : 'paddingRight';
+  var xProperty = isOriginLeft ? 'left' : 'right';
+  var xResetProperty = isOriginLeft ? 'right' : 'left';
+
+  var x = this.position.x + layoutSize[ xPadding ];
+  // set in percentage or pixels
+  style[ xProperty ] = this.getXValue( x );
+  // reset other property
+  style[ xResetProperty ] = '';
+
+  // y
+  var yPadding = isOriginTop ? 'paddingTop' : 'paddingBottom';
+  var yProperty = isOriginTop ? 'top' : 'bottom';
+  var yResetProperty = isOriginTop ? 'bottom' : 'top';
+
+  var y = this.position.y + layoutSize[ yPadding ];
+  // set in percentage or pixels
+  style[ yProperty ] = this.getYValue( y );
+  // reset other property
+  style[ yResetProperty ] = '';
+
+  this.css( style );
+  this.emitEvent( 'layout', [ this ] );
+};
+
+proto.getXValue = function( x ) {
+  var isHorizontal = this.layout._getOption('horizontal');
+  return this.layout.options.percentPosition && !isHorizontal ?
+    ( ( x / this.layout.size.width ) * 100 ) + '%' : x + 'px';
+};
+
+proto.getYValue = function( y ) {
+  var isHorizontal = this.layout._getOption('horizontal');
+  return this.layout.options.percentPosition && isHorizontal ?
+    ( ( y / this.layout.size.height ) * 100 ) + '%' : y + 'px';
+};
+
+proto._transitionTo = function( x, y ) {
+  this.getPosition();
+  // get current x & y from top/left
+  var curX = this.position.x;
+  var curY = this.position.y;
+
+  var didNotMove = x == this.position.x && y == this.position.y;
+
+  // save end position
+  this.setPosition( x, y );
+
+  // if did not move and not transitioning, just go to layout
+  if ( didNotMove && !this.isTransitioning ) {
+    this.layoutPosition();
+    return;
+  }
+
+  var transX = x - curX;
+  var transY = y - curY;
+  var transitionStyle = {};
+  transitionStyle.transform = this.getTranslate( transX, transY );
+
+  this.transition({
+    to: transitionStyle,
+    onTransitionEnd: {
+      transform: this.layoutPosition
+    },
+    isCleaning: true
+  });
+};
+
+proto.getTranslate = function( x, y ) {
+  // flip cooridinates if origin on right or bottom
+  var isOriginLeft = this.layout._getOption('originLeft');
+  var isOriginTop = this.layout._getOption('originTop');
+  x = isOriginLeft ? x : -x;
+  y = isOriginTop ? y : -y;
+  return 'translate3d(' + x + 'px, ' + y + 'px, 0)';
+};
+
+// non transition + transform support
+proto.goTo = function( x, y ) {
+  this.setPosition( x, y );
+  this.layoutPosition();
+};
+
+proto.moveTo = proto._transitionTo;
+
+proto.setPosition = function( x, y ) {
+  this.position.x = parseFloat( x );
+  this.position.y = parseFloat( y );
+};
+
+// ----- transition ----- //
+
+/**
+ * @param {Object} style - CSS
+ * @param {Function} onTransitionEnd
+ */
+
+// non transition, just trigger callback
+proto._nonTransition = function( args ) {
+  this.css( args.to );
+  if ( args.isCleaning ) {
+    this._removeStyles( args.to );
+  }
+  for ( var prop in args.onTransitionEnd ) {
+    args.onTransitionEnd[ prop ].call( this );
+  }
+};
+
+/**
+ * proper transition
+ * @param {Object} args - arguments
+ *   @param {Object} to - style to transition to
+ *   @param {Object} from - style to start transition from
+ *   @param {Boolean} isCleaning - removes transition styles after transition
+ *   @param {Function} onTransitionEnd - callback
+ */
+proto.transition = function( args ) {
+  // redirect to nonTransition if no transition duration
+  if ( !parseFloat( this.layout.options.transitionDuration ) ) {
+    this._nonTransition( args );
+    return;
+  }
+
+  var _transition = this._transn;
+  // keep track of onTransitionEnd callback by css property
+  for ( var prop in args.onTransitionEnd ) {
+    _transition.onEnd[ prop ] = args.onTransitionEnd[ prop ];
+  }
+  // keep track of properties that are transitioning
+  for ( prop in args.to ) {
+    _transition.ingProperties[ prop ] = true;
+    // keep track of properties to clean up when transition is done
+    if ( args.isCleaning ) {
+      _transition.clean[ prop ] = true;
+    }
+  }
+
+  // set from styles
+  if ( args.from ) {
+    this.css( args.from );
+    // force redraw. http://blog.alexmaccaw.com/css-transitions
+    var h = this.element.offsetHeight;
+    // hack for JSHint to hush about unused var
+    h = null;
+  }
+  // enable transition
+  this.enableTransition( args.to );
+  // set styles that are transitioning
+  this.css( args.to );
+
+  this.isTransitioning = true;
+
+};
+
+// dash before all cap letters, including first for
+// WebkitTransform => -webkit-transform
+function toDashedAll( str ) {
+  return str.replace( /([A-Z])/g, function( $1 ) {
+    return '-' + $1.toLowerCase();
+  });
+}
+
+var transitionProps = 'opacity,' + toDashedAll( transformProperty );
+
+proto.enableTransition = function(/* style */) {
+  // HACK changing transitionProperty during a transition
+  // will cause transition to jump
+  if ( this.isTransitioning ) {
+    return;
+  }
+
+  // make `transition: foo, bar, baz` from style object
+  // HACK un-comment this when enableTransition can work
+  // while a transition is happening
+  // var transitionValues = [];
+  // for ( var prop in style ) {
+  //   // dash-ify camelCased properties like WebkitTransition
+  //   prop = vendorProperties[ prop ] || prop;
+  //   transitionValues.push( toDashedAll( prop ) );
+  // }
+  // munge number to millisecond, to match stagger
+  var duration = this.layout.options.transitionDuration;
+  duration = typeof duration == 'number' ? duration + 'ms' : duration;
+  // enable transition styles
+  this.css({
+    transitionProperty: transitionProps,
+    transitionDuration: duration,
+    transitionDelay: this.staggerDelay || 0
+  });
+  // listen for transition end event
+  this.element.addEventListener( transitionEndEvent, this, false );
+};
+
+// ----- events ----- //
+
+proto.onwebkitTransitionEnd = function( event ) {
+  this.ontransitionend( event );
+};
+
+proto.onotransitionend = function( event ) {
+  this.ontransitionend( event );
+};
+
+// properties that I munge to make my life easier
+var dashedVendorProperties = {
+  '-webkit-transform': 'transform'
+};
+
+proto.ontransitionend = function( event ) {
+  // disregard bubbled events from children
+  if ( event.target !== this.element ) {
+    return;
+  }
+  var _transition = this._transn;
+  // get property name of transitioned property, convert to prefix-free
+  var propertyName = dashedVendorProperties[ event.propertyName ] || event.propertyName;
+
+  // remove property that has completed transitioning
+  delete _transition.ingProperties[ propertyName ];
+  // check if any properties are still transitioning
+  if ( isEmptyObj( _transition.ingProperties ) ) {
+    // all properties have completed transitioning
+    this.disableTransition();
+  }
+  // clean style
+  if ( propertyName in _transition.clean ) {
+    // clean up style
+    this.element.style[ event.propertyName ] = '';
+    delete _transition.clean[ propertyName ];
+  }
+  // trigger onTransitionEnd callback
+  if ( propertyName in _transition.onEnd ) {
+    var onTransitionEnd = _transition.onEnd[ propertyName ];
+    onTransitionEnd.call( this );
+    delete _transition.onEnd[ propertyName ];
+  }
+
+  this.emitEvent( 'transitionEnd', [ this ] );
+};
+
+proto.disableTransition = function() {
+  this.removeTransitionStyles();
+  this.element.removeEventListener( transitionEndEvent, this, false );
+  this.isTransitioning = false;
+};
+
+/**
+ * removes style property from element
+ * @param {Object} style
+**/
+proto._removeStyles = function( style ) {
+  // clean up transition styles
+  var cleanStyle = {};
+  for ( var prop in style ) {
+    cleanStyle[ prop ] = '';
+  }
+  this.css( cleanStyle );
+};
+
+var cleanTransitionStyle = {
+  transitionProperty: '',
+  transitionDuration: '',
+  transitionDelay: ''
+};
+
+proto.removeTransitionStyles = function() {
+  // remove transition
+  this.css( cleanTransitionStyle );
+};
+
+// ----- stagger ----- //
+
+proto.stagger = function( delay ) {
+  delay = isNaN( delay ) ? 0 : delay;
+  this.staggerDelay = delay + 'ms';
+};
+
+// ----- show/hide/remove ----- //
+
+// remove element from DOM
+proto.removeElem = function() {
+  this.element.parentNode.removeChild( this.element );
+  // remove display: none
+  this.css({ display: '' });
+  this.emitEvent( 'remove', [ this ] );
+};
+
+proto.remove = function() {
+  // just remove element if no transition support or no transition
+  if ( !transitionProperty || !parseFloat( this.layout.options.transitionDuration ) ) {
+    this.removeElem();
+    return;
+  }
+
+  // start transition
+  this.once( 'transitionEnd', function() {
+    this.removeElem();
+  });
+  this.hide();
+};
+
+proto.reveal = function() {
+  delete this.isHidden;
+  // remove display: none
+  this.css({ display: '' });
+
+  var options = this.layout.options;
+
+  var onTransitionEnd = {};
+  var transitionEndProperty = this.getHideRevealTransitionEndProperty('visibleStyle');
+  onTransitionEnd[ transitionEndProperty ] = this.onRevealTransitionEnd;
+
+  this.transition({
+    from: options.hiddenStyle,
+    to: options.visibleStyle,
+    isCleaning: true,
+    onTransitionEnd: onTransitionEnd
+  });
+};
+
+proto.onRevealTransitionEnd = function() {
+  // check if still visible
+  // during transition, item may have been hidden
+  if ( !this.isHidden ) {
+    this.emitEvent('reveal');
+  }
+};
+
+/**
+ * get style property use for hide/reveal transition end
+ * @param {String} styleProperty - hiddenStyle/visibleStyle
+ * @returns {String}
+ */
+proto.getHideRevealTransitionEndProperty = function( styleProperty ) {
+  var optionStyle = this.layout.options[ styleProperty ];
+  // use opacity
+  if ( optionStyle.opacity ) {
+    return 'opacity';
+  }
+  // get first property
+  for ( var prop in optionStyle ) {
+    return prop;
+  }
+};
+
+proto.hide = function() {
+  // set flag
+  this.isHidden = true;
+  // remove display: none
+  this.css({ display: '' });
+
+  var options = this.layout.options;
+
+  var onTransitionEnd = {};
+  var transitionEndProperty = this.getHideRevealTransitionEndProperty('hiddenStyle');
+  onTransitionEnd[ transitionEndProperty ] = this.onHideTransitionEnd;
+
+  this.transition({
+    from: options.visibleStyle,
+    to: options.hiddenStyle,
+    // keep hidden stuff hidden
+    isCleaning: true,
+    onTransitionEnd: onTransitionEnd
+  });
+};
+
+proto.onHideTransitionEnd = function() {
+  // check if still hidden
+  // during transition, item may have been un-hidden
+  if ( this.isHidden ) {
+    this.css({ display: 'none' });
+    this.emitEvent('hide');
+  }
+};
+
+proto.destroy = function() {
+  this.css({
+    position: '',
+    left: '',
+    right: '',
+    top: '',
+    bottom: '',
+    transition: '',
+    transform: ''
+  });
+};
+
+return Item;
+
+}));
+
+
+/***/ }),
+
+/***/ "./node_modules/outlayer/outlayer.js":
+/*!*******************************************!*\
+  !*** ./node_modules/outlayer/outlayer.js ***!
+  \*******************************************/
+/***/ ((module, exports, __webpack_require__) => {
+
+var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
+ * Outlayer v2.1.1
+ * the brains and guts of a layout library
+ * MIT license
+ */
+
+( function( window, factory ) {
+  'use strict';
+  // universal module definition
+  /* jshint strict: false */ /* globals define, module, require */
+  if ( true ) {
+    // AMD - RequireJS
+    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [
+        __webpack_require__(/*! ev-emitter/ev-emitter */ "./node_modules/ev-emitter/ev-emitter.js"),
+        __webpack_require__(/*! get-size/get-size */ "./node_modules/get-size/get-size.js"),
+        __webpack_require__(/*! fizzy-ui-utils/utils */ "./node_modules/fizzy-ui-utils/utils.js"),
+        __webpack_require__(/*! ./item */ "./node_modules/outlayer/item.js")
+      ], __WEBPACK_AMD_DEFINE_RESULT__ = (function( EvEmitter, getSize, utils, Item ) {
+        return factory( window, EvEmitter, getSize, utils, Item);
+      }).apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
+		__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+  } else // removed by dead control flow
+{}
+
+}( window, function factory( window, EvEmitter, getSize, utils, Item ) {
+'use strict';
+
+// ----- vars ----- //
+
+var console = window.console;
+var jQuery = window.jQuery;
+var noop = function() {};
+
+// -------------------------- Outlayer -------------------------- //
+
+// globally unique identifiers
+var GUID = 0;
+// internal store of all Outlayer intances
+var instances = {};
+
+
+/**
+ * @param {Element, String} element
+ * @param {Object} options
+ * @constructor
+ */
+function Outlayer( element, options ) {
+  var queryElement = utils.getQueryElement( element );
+  if ( !queryElement ) {
+    if ( console ) {
+      console.error( 'Bad element for ' + this.constructor.namespace +
+        ': ' + ( queryElement || element ) );
+    }
+    return;
+  }
+  this.element = queryElement;
+  // add jQuery
+  if ( jQuery ) {
+    this.$element = jQuery( this.element );
+  }
+
+  // options
+  this.options = utils.extend( {}, this.constructor.defaults );
+  this.option( options );
+
+  // add id for Outlayer.getFromElement
+  var id = ++GUID;
+  this.element.outlayerGUID = id; // expando
+  instances[ id ] = this; // associate via id
+
+  // kick it off
+  this._create();
+
+  var isInitLayout = this._getOption('initLayout');
+  if ( isInitLayout ) {
+    this.layout();
+  }
+}
+
+// settings are for internal use only
+Outlayer.namespace = 'outlayer';
+Outlayer.Item = Item;
+
+// default options
+Outlayer.defaults = {
+  containerStyle: {
+    position: 'relative'
+  },
+  initLayout: true,
+  originLeft: true,
+  originTop: true,
+  resize: true,
+  resizeContainer: true,
+  // item options
+  transitionDuration: '0.4s',
+  hiddenStyle: {
+    opacity: 0,
+    transform: 'scale(0.001)'
+  },
+  visibleStyle: {
+    opacity: 1,
+    transform: 'scale(1)'
+  }
+};
+
+var proto = Outlayer.prototype;
+// inherit EvEmitter
+utils.extend( proto, EvEmitter.prototype );
+
+/**
+ * set options
+ * @param {Object} opts
+ */
+proto.option = function( opts ) {
+  utils.extend( this.options, opts );
+};
+
+/**
+ * get backwards compatible option value, check old name
+ */
+proto._getOption = function( option ) {
+  var oldOption = this.constructor.compatOptions[ option ];
+  return oldOption && this.options[ oldOption ] !== undefined ?
+    this.options[ oldOption ] : this.options[ option ];
+};
+
+Outlayer.compatOptions = {
+  // currentName: oldName
+  initLayout: 'isInitLayout',
+  horizontal: 'isHorizontal',
+  layoutInstant: 'isLayoutInstant',
+  originLeft: 'isOriginLeft',
+  originTop: 'isOriginTop',
+  resize: 'isResizeBound',
+  resizeContainer: 'isResizingContainer'
+};
+
+proto._create = function() {
+  // get items from children
+  this.reloadItems();
+  // elements that affect layout, but are not laid out
+  this.stamps = [];
+  this.stamp( this.options.stamp );
+  // set container style
+  utils.extend( this.element.style, this.options.containerStyle );
+
+  // bind resize method
+  var canBindResize = this._getOption('resize');
+  if ( canBindResize ) {
+    this.bindResize();
+  }
+};
+
+// goes through all children again and gets bricks in proper order
+proto.reloadItems = function() {
+  // collection of item elements
+  this.items = this._itemize( this.element.children );
+};
+
+
+/**
+ * turn elements into Outlayer.Items to be used in layout
+ * @param {Array or NodeList or HTMLElement} elems
+ * @returns {Array} items - collection of new Outlayer Items
+ */
+proto._itemize = function( elems ) {
+
+  var itemElems = this._filterFindItemElements( elems );
+  var Item = this.constructor.Item;
+
+  // create new Outlayer Items for collection
+  var items = [];
+  for ( var i=0; i < itemElems.length; i++ ) {
+    var elem = itemElems[i];
+    var item = new Item( elem, this );
+    items.push( item );
+  }
+
+  return items;
+};
+
+/**
+ * get item elements to be used in layout
+ * @param {Array or NodeList or HTMLElement} elems
+ * @returns {Array} items - item elements
+ */
+proto._filterFindItemElements = function( elems ) {
+  return utils.filterFindElements( elems, this.options.itemSelector );
+};
+
+/**
+ * getter method for getting item elements
+ * @returns {Array} elems - collection of item elements
+ */
+proto.getItemElements = function() {
+  return this.items.map( function( item ) {
+    return item.element;
+  });
+};
+
+// ----- init & layout ----- //
+
+/**
+ * lays out all items
+ */
+proto.layout = function() {
+  this._resetLayout();
+  this._manageStamps();
+
+  // don't animate first layout
+  var layoutInstant = this._getOption('layoutInstant');
+  var isInstant = layoutInstant !== undefined ?
+    layoutInstant : !this._isLayoutInited;
+  this.layoutItems( this.items, isInstant );
+
+  // flag for initalized
+  this._isLayoutInited = true;
+};
+
+// _init is alias for layout
+proto._init = proto.layout;
+
+/**
+ * logic before any new layout
+ */
+proto._resetLayout = function() {
+  this.getSize();
+};
+
+
+proto.getSize = function() {
+  this.size = getSize( this.element );
+};
+
+/**
+ * get measurement from option, for columnWidth, rowHeight, gutter
+ * if option is String -> get element from selector string, & get size of element
+ * if option is Element -> get size of element
+ * else use option as a number
+ *
+ * @param {String} measurement
+ * @param {String} size - width or height
+ * @private
+ */
+proto._getMeasurement = function( measurement, size ) {
+  var option = this.options[ measurement ];
+  var elem;
+  if ( !option ) {
+    // default to 0
+    this[ measurement ] = 0;
+  } else {
+    // use option as an element
+    if ( typeof option == 'string' ) {
+      elem = this.element.querySelector( option );
+    } else if ( option instanceof HTMLElement ) {
+      elem = option;
+    }
+    // use size of element, if element
+    this[ measurement ] = elem ? getSize( elem )[ size ] : option;
+  }
+};
+
+/**
+ * layout a collection of item elements
+ * @api public
+ */
+proto.layoutItems = function( items, isInstant ) {
+  items = this._getItemsForLayout( items );
+
+  this._layoutItems( items, isInstant );
+
+  this._postLayout();
+};
+
+/**
+ * get the items to be laid out
+ * you may want to skip over some items
+ * @param {Array} items
+ * @returns {Array} items
+ */
+proto._getItemsForLayout = function( items ) {
+  return items.filter( function( item ) {
+    return !item.isIgnored;
+  });
+};
+
+/**
+ * layout items
+ * @param {Array} items
+ * @param {Boolean} isInstant
+ */
+proto._layoutItems = function( items, isInstant ) {
+  this._emitCompleteOnItems( 'layout', items );
+
+  if ( !items || !items.length ) {
+    // no items, emit event with empty array
+    return;
+  }
+
+  var queue = [];
+
+  items.forEach( function( item ) {
+    // get x/y object from method
+    var position = this._getItemLayoutPosition( item );
+    // enqueue
+    position.item = item;
+    position.isInstant = isInstant || item.isLayoutInstant;
+    queue.push( position );
+  }, this );
+
+  this._processLayoutQueue( queue );
+};
+
+/**
+ * get item layout position
+ * @param {Outlayer.Item} item
+ * @returns {Object} x and y position
+ */
+proto._getItemLayoutPosition = function( /* item */ ) {
+  return {
+    x: 0,
+    y: 0
+  };
+};
+
+/**
+ * iterate over array and position each item
+ * Reason being - separating this logic prevents 'layout invalidation'
+ * thx @paul_irish
+ * @param {Array} queue
+ */
+proto._processLayoutQueue = function( queue ) {
+  this.updateStagger();
+  queue.forEach( function( obj, i ) {
+    this._positionItem( obj.item, obj.x, obj.y, obj.isInstant, i );
+  }, this );
+};
+
+// set stagger from option in milliseconds number
+proto.updateStagger = function() {
+  var stagger = this.options.stagger;
+  if ( stagger === null || stagger === undefined ) {
+    this.stagger = 0;
+    return;
+  }
+  this.stagger = getMilliseconds( stagger );
+  return this.stagger;
+};
+
+/**
+ * Sets position of item in DOM
+ * @param {Outlayer.Item} item
+ * @param {Number} x - horizontal position
+ * @param {Number} y - vertical position
+ * @param {Boolean} isInstant - disables transitions
+ */
+proto._positionItem = function( item, x, y, isInstant, i ) {
+  if ( isInstant ) {
+    // if not transition, just set CSS
+    item.goTo( x, y );
+  } else {
+    item.stagger( i * this.stagger );
+    item.moveTo( x, y );
+  }
+};
+
+/**
+ * Any logic you want to do after each layout,
+ * i.e. size the container
+ */
+proto._postLayout = function() {
+  this.resizeContainer();
+};
+
+proto.resizeContainer = function() {
+  var isResizingContainer = this._getOption('resizeContainer');
+  if ( !isResizingContainer ) {
+    return;
+  }
+  var size = this._getContainerSize();
+  if ( size ) {
+    this._setContainerMeasure( size.width, true );
+    this._setContainerMeasure( size.height, false );
+  }
+};
+
+/**
+ * Sets width or height of container if returned
+ * @returns {Object} size
+ *   @param {Number} width
+ *   @param {Number} height
+ */
+proto._getContainerSize = noop;
+
+/**
+ * @param {Number} measure - size of width or height
+ * @param {Boolean} isWidth
+ */
+proto._setContainerMeasure = function( measure, isWidth ) {
+  if ( measure === undefined ) {
+    return;
+  }
+
+  var elemSize = this.size;
+  // add padding and border width if border box
+  if ( elemSize.isBorderBox ) {
+    measure += isWidth ? elemSize.paddingLeft + elemSize.paddingRight +
+      elemSize.borderLeftWidth + elemSize.borderRightWidth :
+      elemSize.paddingBottom + elemSize.paddingTop +
+      elemSize.borderTopWidth + elemSize.borderBottomWidth;
+  }
+
+  measure = Math.max( measure, 0 );
+  this.element.style[ isWidth ? 'width' : 'height' ] = measure + 'px';
+};
+
+/**
+ * emit eventComplete on a collection of items events
+ * @param {String} eventName
+ * @param {Array} items - Outlayer.Items
+ */
+proto._emitCompleteOnItems = function( eventName, items ) {
+  var _this = this;
+  function onComplete() {
+    _this.dispatchEvent( eventName + 'Complete', null, [ items ] );
+  }
+
+  var count = items.length;
+  if ( !items || !count ) {
+    onComplete();
+    return;
+  }
+
+  var doneCount = 0;
+  function tick() {
+    doneCount++;
+    if ( doneCount == count ) {
+      onComplete();
+    }
+  }
+
+  // bind callback
+  items.forEach( function( item ) {
+    item.once( eventName, tick );
+  });
+};
+
+/**
+ * emits events via EvEmitter and jQuery events
+ * @param {String} type - name of event
+ * @param {Event} event - original event
+ * @param {Array} args - extra arguments
+ */
+proto.dispatchEvent = function( type, event, args ) {
+  // add original event to arguments
+  var emitArgs = event ? [ event ].concat( args ) : args;
+  this.emitEvent( type, emitArgs );
+
+  if ( jQuery ) {
+    // set this.$element
+    this.$element = this.$element || jQuery( this.element );
+    if ( event ) {
+      // create jQuery event
+      var $event = jQuery.Event( event );
+      $event.type = type;
+      this.$element.trigger( $event, args );
+    } else {
+      // just trigger with type if no event available
+      this.$element.trigger( type, args );
+    }
+  }
+};
+
+// -------------------------- ignore & stamps -------------------------- //
+
+
+/**
+ * keep item in collection, but do not lay it out
+ * ignored items do not get skipped in layout
+ * @param {Element} elem
+ */
+proto.ignore = function( elem ) {
+  var item = this.getItem( elem );
+  if ( item ) {
+    item.isIgnored = true;
+  }
+};
+
+/**
+ * return item to layout collection
+ * @param {Element} elem
+ */
+proto.unignore = function( elem ) {
+  var item = this.getItem( elem );
+  if ( item ) {
+    delete item.isIgnored;
+  }
+};
+
+/**
+ * adds elements to stamps
+ * @param {NodeList, Array, Element, or String} elems
+ */
+proto.stamp = function( elems ) {
+  elems = this._find( elems );
+  if ( !elems ) {
+    return;
+  }
+
+  this.stamps = this.stamps.concat( elems );
+  // ignore
+  elems.forEach( this.ignore, this );
+};
+
+/**
+ * removes elements to stamps
+ * @param {NodeList, Array, or Element} elems
+ */
+proto.unstamp = function( elems ) {
+  elems = this._find( elems );
+  if ( !elems ){
+    return;
+  }
+
+  elems.forEach( function( elem ) {
+    // filter out removed stamp elements
+    utils.removeFrom( this.stamps, elem );
+    this.unignore( elem );
+  }, this );
+};
+
+/**
+ * finds child elements
+ * @param {NodeList, Array, Element, or String} elems
+ * @returns {Array} elems
+ */
+proto._find = function( elems ) {
+  if ( !elems ) {
+    return;
+  }
+  // if string, use argument as selector string
+  if ( typeof elems == 'string' ) {
+    elems = this.element.querySelectorAll( elems );
+  }
+  elems = utils.makeArray( elems );
+  return elems;
+};
+
+proto._manageStamps = function() {
+  if ( !this.stamps || !this.stamps.length ) {
+    return;
+  }
+
+  this._getBoundingRect();
+
+  this.stamps.forEach( this._manageStamp, this );
+};
+
+// update boundingLeft / Top
+proto._getBoundingRect = function() {
+  // get bounding rect for container element
+  var boundingRect = this.element.getBoundingClientRect();
+  var size = this.size;
+  this._boundingRect = {
+    left: boundingRect.left + size.paddingLeft + size.borderLeftWidth,
+    top: boundingRect.top + size.paddingTop + size.borderTopWidth,
+    right: boundingRect.right - ( size.paddingRight + size.borderRightWidth ),
+    bottom: boundingRect.bottom - ( size.paddingBottom + size.borderBottomWidth )
+  };
+};
+
+/**
+ * @param {Element} stamp
+**/
+proto._manageStamp = noop;
+
+/**
+ * get x/y position of element relative to container element
+ * @param {Element} elem
+ * @returns {Object} offset - has left, top, right, bottom
+ */
+proto._getElementOffset = function( elem ) {
+  var boundingRect = elem.getBoundingClientRect();
+  var thisRect = this._boundingRect;
+  var size = getSize( elem );
+  var offset = {
+    left: boundingRect.left - thisRect.left - size.marginLeft,
+    top: boundingRect.top - thisRect.top - size.marginTop,
+    right: thisRect.right - boundingRect.right - size.marginRight,
+    bottom: thisRect.bottom - boundingRect.bottom - size.marginBottom
+  };
+  return offset;
+};
+
+// -------------------------- resize -------------------------- //
+
+// enable event handlers for listeners
+// i.e. resize -> onresize
+proto.handleEvent = utils.handleEvent;
+
+/**
+ * Bind layout to window resizing
+ */
+proto.bindResize = function() {
+  window.addEventListener( 'resize', this );
+  this.isResizeBound = true;
+};
+
+/**
+ * Unbind layout to window resizing
+ */
+proto.unbindResize = function() {
+  window.removeEventListener( 'resize', this );
+  this.isResizeBound = false;
+};
+
+proto.onresize = function() {
+  this.resize();
+};
+
+utils.debounceMethod( Outlayer, 'onresize', 100 );
+
+proto.resize = function() {
+  // don't trigger if size did not change
+  // or if resize was unbound. See #9
+  if ( !this.isResizeBound || !this.needsResizeLayout() ) {
+    return;
+  }
+
+  this.layout();
+};
+
+/**
+ * check if layout is needed post layout
+ * @returns Boolean
+ */
+proto.needsResizeLayout = function() {
+  var size = getSize( this.element );
+  // check that this.size and size are there
+  // IE8 triggers resize on body size change, so they might not be
+  var hasSizes = this.size && size;
+  return hasSizes && size.innerWidth !== this.size.innerWidth;
+};
+
+// -------------------------- methods -------------------------- //
+
+/**
+ * add items to Outlayer instance
+ * @param {Array or NodeList or Element} elems
+ * @returns {Array} items - Outlayer.Items
+**/
+proto.addItems = function( elems ) {
+  var items = this._itemize( elems );
+  // add items to collection
+  if ( items.length ) {
+    this.items = this.items.concat( items );
+  }
+  return items;
+};
+
+/**
+ * Layout newly-appended item elements
+ * @param {Array or NodeList or Element} elems
+ */
+proto.appended = function( elems ) {
+  var items = this.addItems( elems );
+  if ( !items.length ) {
+    return;
+  }
+  // layout and reveal just the new items
+  this.layoutItems( items, true );
+  this.reveal( items );
+};
+
+/**
+ * Layout prepended elements
+ * @param {Array or NodeList or Element} elems
+ */
+proto.prepended = function( elems ) {
+  var items = this._itemize( elems );
+  if ( !items.length ) {
+    return;
+  }
+  // add items to beginning of collection
+  var previousItems = this.items.slice(0);
+  this.items = items.concat( previousItems );
+  // start new layout
+  this._resetLayout();
+  this._manageStamps();
+  // layout new stuff without transition
+  this.layoutItems( items, true );
+  this.reveal( items );
+  // layout previous items
+  this.layoutItems( previousItems );
+};
+
+/**
+ * reveal a collection of items
+ * @param {Array of Outlayer.Items} items
+ */
+proto.reveal = function( items ) {
+  this._emitCompleteOnItems( 'reveal', items );
+  if ( !items || !items.length ) {
+    return;
+  }
+  var stagger = this.updateStagger();
+  items.forEach( function( item, i ) {
+    item.stagger( i * stagger );
+    item.reveal();
+  });
+};
+
+/**
+ * hide a collection of items
+ * @param {Array of Outlayer.Items} items
+ */
+proto.hide = function( items ) {
+  this._emitCompleteOnItems( 'hide', items );
+  if ( !items || !items.length ) {
+    return;
+  }
+  var stagger = this.updateStagger();
+  items.forEach( function( item, i ) {
+    item.stagger( i * stagger );
+    item.hide();
+  });
+};
+
+/**
+ * reveal item elements
+ * @param {Array}, {Element}, {NodeList} items
+ */
+proto.revealItemElements = function( elems ) {
+  var items = this.getItems( elems );
+  this.reveal( items );
+};
+
+/**
+ * hide item elements
+ * @param {Array}, {Element}, {NodeList} items
+ */
+proto.hideItemElements = function( elems ) {
+  var items = this.getItems( elems );
+  this.hide( items );
+};
+
+/**
+ * get Outlayer.Item, given an Element
+ * @param {Element} elem
+ * @param {Function} callback
+ * @returns {Outlayer.Item} item
+ */
+proto.getItem = function( elem ) {
+  // loop through items to get the one that matches
+  for ( var i=0; i < this.items.length; i++ ) {
+    var item = this.items[i];
+    if ( item.element == elem ) {
+      // return item
+      return item;
+    }
+  }
+};
+
+/**
+ * get collection of Outlayer.Items, given Elements
+ * @param {Array} elems
+ * @returns {Array} items - Outlayer.Items
+ */
+proto.getItems = function( elems ) {
+  elems = utils.makeArray( elems );
+  var items = [];
+  elems.forEach( function( elem ) {
+    var item = this.getItem( elem );
+    if ( item ) {
+      items.push( item );
+    }
+  }, this );
+
+  return items;
+};
+
+/**
+ * remove element(s) from instance and DOM
+ * @param {Array or NodeList or Element} elems
+ */
+proto.remove = function( elems ) {
+  var removeItems = this.getItems( elems );
+
+  this._emitCompleteOnItems( 'remove', removeItems );
+
+  // bail if no items to remove
+  if ( !removeItems || !removeItems.length ) {
+    return;
+  }
+
+  removeItems.forEach( function( item ) {
+    item.remove();
+    // remove item from collection
+    utils.removeFrom( this.items, item );
+  }, this );
+};
+
+// ----- destroy ----- //
+
+// remove and disable Outlayer instance
+proto.destroy = function() {
+  // clean up dynamic styles
+  var style = this.element.style;
+  style.height = '';
+  style.position = '';
+  style.width = '';
+  // destroy items
+  this.items.forEach( function( item ) {
+    item.destroy();
+  });
+
+  this.unbindResize();
+
+  var id = this.element.outlayerGUID;
+  delete instances[ id ]; // remove reference to instance by id
+  delete this.element.outlayerGUID;
+  // remove data for jQuery
+  if ( jQuery ) {
+    jQuery.removeData( this.element, this.constructor.namespace );
+  }
+
+};
+
+// -------------------------- data -------------------------- //
+
+/**
+ * get Outlayer instance from element
+ * @param {Element} elem
+ * @returns {Outlayer}
+ */
+Outlayer.data = function( elem ) {
+  elem = utils.getQueryElement( elem );
+  var id = elem && elem.outlayerGUID;
+  return id && instances[ id ];
+};
+
+
+// -------------------------- create Outlayer class -------------------------- //
+
+/**
+ * create a layout class
+ * @param {String} namespace
+ */
+Outlayer.create = function( namespace, options ) {
+  // sub-class Outlayer
+  var Layout = subclass( Outlayer );
+  // apply new options and compatOptions
+  Layout.defaults = utils.extend( {}, Outlayer.defaults );
+  utils.extend( Layout.defaults, options );
+  Layout.compatOptions = utils.extend( {}, Outlayer.compatOptions  );
+
+  Layout.namespace = namespace;
+
+  Layout.data = Outlayer.data;
+
+  // sub-class Item
+  Layout.Item = subclass( Item );
+
+  // -------------------------- declarative -------------------------- //
+
+  utils.htmlInit( Layout, namespace );
+
+  // -------------------------- jQuery bridge -------------------------- //
+
+  // make into jQuery plugin
+  if ( jQuery && jQuery.bridget ) {
+    jQuery.bridget( namespace, Layout );
+  }
+
+  return Layout;
+};
+
+function subclass( Parent ) {
+  function SubClass() {
+    Parent.apply( this, arguments );
+  }
+
+  SubClass.prototype = Object.create( Parent.prototype );
+  SubClass.prototype.constructor = SubClass;
+
+  return SubClass;
+}
+
+// ----- helpers ----- //
+
+// how many milliseconds are in each unit
+var msUnits = {
+  ms: 1,
+  s: 1000
+};
+
+// munge time-like parameter into millisecond number
+// '0.4s' -> 40
+function getMilliseconds( time ) {
+  if ( typeof time == 'number' ) {
+    return time;
+  }
+  var matches = time.match( /(^\d*\.?\d*)(\w*)/ );
+  var num = matches && matches[1];
+  var unit = matches && matches[2];
+  if ( !num.length ) {
+    return 0;
+  }
+  num = parseFloat( num );
+  var mult = msUnits[ unit ] || 1;
+  return num * mult;
+}
+
+// ----- fin ----- //
+
+// back in global
+Outlayer.Item = Item;
+
+return Outlayer;
+
+}));
+
+
+/***/ }),
+
+/***/ "./node_modules/photoswipe/dist/photoswipe-lightbox.esm.js":
+/*!*****************************************************************!*\
+  !*** ./node_modules/photoswipe/dist/photoswipe-lightbox.esm.js ***!
+  \*****************************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ PhotoSwipeLightbox)
+/* harmony export */ });
+/*!
+  * PhotoSwipe Lightbox 5.4.4 - https://photoswipe.com
+  * (c) 2024 Dmytro Semenov
+  */
+/** @typedef {import('../photoswipe.js').Point} Point */
+
+/**
+ * @template {keyof HTMLElementTagNameMap} T
+ * @param {string} className
+ * @param {T} tagName
+ * @param {Node} [appendToEl]
+ * @returns {HTMLElementTagNameMap[T]}
+ */
+function createElement(className, tagName, appendToEl) {
+  const el = document.createElement(tagName);
+
+  if (className) {
+    el.className = className;
+  }
+
+  if (appendToEl) {
+    appendToEl.appendChild(el);
+  }
+
+  return el;
+}
+/**
+ * Get transform string
+ *
+ * @param {number} x
+ * @param {number} [y]
+ * @param {number} [scale]
+ * @returns {string}
+ */
+
+function toTransformString(x, y, scale) {
+  let propValue = `translate3d(${x}px,${y || 0}px,0)`;
+
+  if (scale !== undefined) {
+    propValue += ` scale3d(${scale},${scale},1)`;
+  }
+
+  return propValue;
+}
+/**
+ * Apply width and height CSS properties to element
+ *
+ * @param {HTMLElement} el
+ * @param {string | number} w
+ * @param {string | number} h
+ */
+
+function setWidthHeight(el, w, h) {
+  el.style.width = typeof w === 'number' ? `${w}px` : w;
+  el.style.height = typeof h === 'number' ? `${h}px` : h;
+}
+/** @typedef {LOAD_STATE[keyof LOAD_STATE]} LoadState */
+
+/** @type {{ IDLE: 'idle'; LOADING: 'loading'; LOADED: 'loaded'; ERROR: 'error' }} */
+
+const LOAD_STATE = {
+  IDLE: 'idle',
+  LOADING: 'loading',
+  LOADED: 'loaded',
+  ERROR: 'error'
+};
+/**
+ * Check if click or keydown event was dispatched
+ * with a special key or via mouse wheel.
+ *
+ * @param {MouseEvent | KeyboardEvent} e
+ * @returns {boolean}
+ */
+
+function specialKeyUsed(e) {
+  return 'button' in e && e.button === 1 || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey;
+}
+/**
+ * Parse `gallery` or `children` options.
+ *
+ * @param {import('../photoswipe.js').ElementProvider} [option]
+ * @param {string} [legacySelector]
+ * @param {HTMLElement | Document} [parent]
+ * @returns HTMLElement[]
+ */
+
+function getElementsFromOption(option, legacySelector, parent = document) {
+  /** @type {HTMLElement[]} */
+  let elements = [];
+
+  if (option instanceof Element) {
+    elements = [option];
+  } else if (option instanceof NodeList || Array.isArray(option)) {
+    elements = Array.from(option);
+  } else {
+    const selector = typeof option === 'string' ? option : legacySelector;
+
+    if (selector) {
+      elements = Array.from(parent.querySelectorAll(selector));
+    }
+  }
+
+  return elements;
+}
+/**
+ * Check if variable is PhotoSwipe class
+ *
+ * @param {any} fn
+ * @returns {boolean}
+ */
+
+function isPswpClass(fn) {
+  return typeof fn === 'function' && fn.prototype && fn.prototype.goTo;
+}
+/**
+ * Check if browser is Safari
+ *
+ * @returns {boolean}
+ */
+
+function isSafari() {
+  return !!(navigator.vendor && navigator.vendor.match(/apple/i));
+}
+
+/** @typedef {import('../lightbox/lightbox.js').default} PhotoSwipeLightbox */
+
+/** @typedef {import('../photoswipe.js').default} PhotoSwipe */
+
+/** @typedef {import('../photoswipe.js').PhotoSwipeOptions} PhotoSwipeOptions */
+
+/** @typedef {import('../photoswipe.js').DataSource} DataSource */
+
+/** @typedef {import('../ui/ui-element.js').UIElementData} UIElementData */
+
+/** @typedef {import('../slide/content.js').default} ContentDefault */
+
+/** @typedef {import('../slide/slide.js').default} Slide */
+
+/** @typedef {import('../slide/slide.js').SlideData} SlideData */
+
+/** @typedef {import('../slide/zoom-level.js').default} ZoomLevel */
+
+/** @typedef {import('../slide/get-thumb-bounds.js').Bounds} Bounds */
+
+/**
+ * Allow adding an arbitrary props to the Content
+ * https://photoswipe.com/custom-content/#using-webp-image-format
+ * @typedef {ContentDefault & Record<string, any>} Content
+ */
+
+/** @typedef {{ x?: number; y?: number }} Point */
+
+/**
+ * @typedef {Object} PhotoSwipeEventsMap https://photoswipe.com/events/
+ *
+ *
+ * https://photoswipe.com/adding-ui-elements/
+ *
+ * @prop {undefined} uiRegister
+ * @prop {{ data: UIElementData }} uiElementCreate
+ *
+ *
+ * https://photoswipe.com/events/#initialization-events
+ *
+ * @prop {undefined} beforeOpen
+ * @prop {undefined} firstUpdate
+ * @prop {undefined} initialLayout
+ * @prop {undefined} change
+ * @prop {undefined} afterInit
+ * @prop {undefined} bindEvents
+ *
+ *
+ * https://photoswipe.com/events/#opening-or-closing-transition-events
+ *
+ * @prop {undefined} openingAnimationStart
+ * @prop {undefined} openingAnimationEnd
+ * @prop {undefined} closingAnimationStart
+ * @prop {undefined} closingAnimationEnd
+ *
+ *
+ * https://photoswipe.com/events/#closing-events
+ *
+ * @prop {undefined} close
+ * @prop {undefined} destroy
+ *
+ *
+ * https://photoswipe.com/events/#pointer-and-gesture-events
+ *
+ * @prop {{ originalEvent: PointerEvent }} pointerDown
+ * @prop {{ originalEvent: PointerEvent }} pointerMove
+ * @prop {{ originalEvent: PointerEvent }} pointerUp
+ * @prop {{ bgOpacity: number }} pinchClose can be default prevented
+ * @prop {{ panY: number }} verticalDrag can be default prevented
+ *
+ *
+ * https://photoswipe.com/events/#slide-content-events
+ *
+ * @prop {{ content: Content }} contentInit
+ * @prop {{ content: Content; isLazy: boolean }} contentLoad can be default prevented
+ * @prop {{ content: Content; isLazy: boolean }} contentLoadImage can be default prevented
+ * @prop {{ content: Content; slide: Slide; isError?: boolean }} loadComplete
+ * @prop {{ content: Content; slide: Slide }} loadError
+ * @prop {{ content: Content; width: number; height: number }} contentResize can be default prevented
+ * @prop {{ content: Content; width: number; height: number; slide: Slide }} imageSizeChange
+ * @prop {{ content: Content }} contentLazyLoad can be default prevented
+ * @prop {{ content: Content }} contentAppend can be default prevented
+ * @prop {{ content: Content }} contentActivate can be default prevented
+ * @prop {{ content: Content }} contentDeactivate can be default prevented
+ * @prop {{ content: Content }} contentRemove can be default prevented
+ * @prop {{ content: Content }} contentDestroy can be default prevented
+ *
+ *
+ * undocumented
+ *
+ * @prop {{ point: Point; originalEvent: PointerEvent }} imageClickAction can be default prevented
+ * @prop {{ point: Point; originalEvent: PointerEvent }} bgClickAction can be default prevented
+ * @prop {{ point: Point; originalEvent: PointerEvent }} tapAction can be default prevented
+ * @prop {{ point: Point; originalEvent: PointerEvent }} doubleTapAction can be default prevented
+ *
+ * @prop {{ originalEvent: KeyboardEvent }} keydown can be default prevented
+ * @prop {{ x: number; dragging: boolean }} moveMainScroll
+ * @prop {{ slide: Slide }} firstZoomPan
+ * @prop {{ slide: Slide | undefined, data: SlideData, index: number }} gettingData
+ * @prop {undefined} beforeResize
+ * @prop {undefined} resize
+ * @prop {undefined} viewportSize
+ * @prop {undefined} updateScrollOffset
+ * @prop {{ slide: Slide }} slideInit
+ * @prop {{ slide: Slide }} afterSetContent
+ * @prop {{ slide: Slide }} slideLoad
+ * @prop {{ slide: Slide }} appendHeavy can be default prevented
+ * @prop {{ slide: Slide }} appendHeavyContent
+ * @prop {{ slide: Slide }} slideActivate
+ * @prop {{ slide: Slide }} slideDeactivate
+ * @prop {{ slide: Slide }} slideDestroy
+ * @prop {{ destZoomLevel: number, centerPoint: Point | undefined, transitionDuration: number | false | undefined }} beforeZoomTo
+ * @prop {{ slide: Slide }} zoomPanUpdate
+ * @prop {{ slide: Slide }} initialZoomPan
+ * @prop {{ slide: Slide }} calcSlideSize
+ * @prop {undefined} resolutionChanged
+ * @prop {{ originalEvent: WheelEvent }} wheel can be default prevented
+ * @prop {{ content: Content }} contentAppendImage can be default prevented
+ * @prop {{ index: number; itemData: SlideData }} lazyLoadSlide can be default prevented
+ * @prop {undefined} lazyLoad
+ * @prop {{ slide: Slide }} calcBounds
+ * @prop {{ zoomLevels: ZoomLevel, slideData: SlideData }} zoomLevelsUpdate
+ *
+ *
+ * legacy
+ *
+ * @prop {undefined} init
+ * @prop {undefined} initialZoomIn
+ * @prop {undefined} initialZoomOut
+ * @prop {undefined} initialZoomInEnd
+ * @prop {undefined} initialZoomOutEnd
+ * @prop {{ dataSource: DataSource | undefined, numItems: number }} numItems
+ * @prop {{ itemData: SlideData; index: number }} itemData
+ * @prop {{ index: number, itemData: SlideData, instance: PhotoSwipe }} thumbBounds
+ */
+
+/**
+ * @typedef {Object} PhotoSwipeFiltersMap https://photoswipe.com/filters/
+ *
+ * @prop {(numItems: number, dataSource: DataSource | undefined) => number} numItems
+ * Modify the total amount of slides. Example on Data sources page.
+ * https://photoswipe.com/filters/#numitems
+ *
+ * @prop {(itemData: SlideData, index: number) => SlideData} itemData
+ * Modify slide item data. Example on Data sources page.
+ * https://photoswipe.com/filters/#itemdata
+ *
+ * @prop {(itemData: SlideData, element: HTMLElement, linkEl: HTMLAnchorElement) => SlideData} domItemData
+ * Modify item data when it's parsed from DOM element. Example on Data sources page.
+ * https://photoswipe.com/filters/#domitemdata
+ *
+ * @prop {(clickedIndex: number, e: MouseEvent, instance: PhotoSwipeLightbox) => number} clickedIndex
+ * Modify clicked gallery item index.
+ * https://photoswipe.com/filters/#clickedindex
+ *
+ * @prop {(placeholderSrc: string | false, content: Content) => string | false} placeholderSrc
+ * Modify placeholder image source.
+ * https://photoswipe.com/filters/#placeholdersrc
+ *
+ * @prop {(isContentLoading: boolean, content: Content) => boolean} isContentLoading
+ * Modify if the content is currently loading.
+ * https://photoswipe.com/filters/#iscontentloading
+ *
+ * @prop {(isContentZoomable: boolean, content: Content) => boolean} isContentZoomable
+ * Modify if the content can be zoomed.
+ * https://photoswipe.com/filters/#iscontentzoomable
+ *
+ * @prop {(useContentPlaceholder: boolean, content: Content) => boolean} useContentPlaceholder
+ * Modify if the placeholder should be used for the content.
+ * https://photoswipe.com/filters/#usecontentplaceholder
+ *
+ * @prop {(isKeepingPlaceholder: boolean, content: Content) => boolean} isKeepingPlaceholder
+ * Modify if the placeholder should be kept after the content is loaded.
+ * https://photoswipe.com/filters/#iskeepingplaceholder
+ *
+ *
+ * @prop {(contentErrorElement: HTMLElement, content: Content) => HTMLElement} contentErrorElement
+ * Modify an element when the content has error state (for example, if image cannot be loaded).
+ * https://photoswipe.com/filters/#contenterrorelement
+ *
+ * @prop {(element: HTMLElement, data: UIElementData) => HTMLElement} uiElement
+ * Modify a UI element that's being created.
+ * https://photoswipe.com/filters/#uielement
+ *
+ * @prop {(thumbnail: HTMLElement | null | undefined, itemData: SlideData, index: number) => HTMLElement} thumbEl
+ * Modify the thumbnail element from which opening zoom animation starts or ends.
+ * https://photoswipe.com/filters/#thumbel
+ *
+ * @prop {(thumbBounds: Bounds | undefined, itemData: SlideData, index: number) => Bounds} thumbBounds
+ * Modify the thumbnail bounds from which opening zoom animation starts or ends.
+ * https://photoswipe.com/filters/#thumbbounds
+ *
+ * @prop {(srcsetSizesWidth: number, content: Content) => number} srcsetSizesWidth
+ *
+ * @prop {(preventPointerEvent: boolean, event: PointerEvent, pointerType: string) => boolean} preventPointerEvent
+ *
+ */
+
+/**
+ * @template {keyof PhotoSwipeFiltersMap} T
+ * @typedef {{ fn: PhotoSwipeFiltersMap[T], priority: number }} Filter
+ */
+
+/**
+ * @template {keyof PhotoSwipeEventsMap} T
+ * @typedef {PhotoSwipeEventsMap[T] extends undefined ? PhotoSwipeEvent<T> : PhotoSwipeEvent<T> & PhotoSwipeEventsMap[T]} AugmentedEvent
+ */
+
+/**
+ * @template {keyof PhotoSwipeEventsMap} T
+ * @typedef {(event: AugmentedEvent<T>) => void} EventCallback
+ */
+
+/**
+ * Base PhotoSwipe event object
+ *
+ * @template {keyof PhotoSwipeEventsMap} T
+ */
+class PhotoSwipeEvent {
+  /**
+   * @param {T} type
+   * @param {PhotoSwipeEventsMap[T]} [details]
+   */
+  constructor(type, details) {
+    this.type = type;
+    this.defaultPrevented = false;
+
+    if (details) {
+      Object.assign(this, details);
+    }
+  }
+
+  preventDefault() {
+    this.defaultPrevented = true;
+  }
+
+}
+/**
+ * PhotoSwipe base class that can listen and dispatch for events.
+ * Shared by PhotoSwipe Core and PhotoSwipe Lightbox, extended by base.js
+ */
+
+
+class Eventable {
+  constructor() {
+    /**
+     * @type {{ [T in keyof PhotoSwipeEventsMap]?: ((event: AugmentedEvent<T>) => void)[] }}
+     */
+    this._listeners = {};
+    /**
+     * @type {{ [T in keyof PhotoSwipeFiltersMap]?: Filter<T>[] }}
+     */
+
+    this._filters = {};
+    /** @type {PhotoSwipe | undefined} */
+
+    this.pswp = undefined;
+    /** @type {PhotoSwipeOptions | undefined} */
+
+    this.options = undefined;
+  }
+  /**
+   * @template {keyof PhotoSwipeFiltersMap} T
+   * @param {T} name
+   * @param {PhotoSwipeFiltersMap[T]} fn
+   * @param {number} priority
+   */
+
+
+  addFilter(name, fn, priority = 100) {
+    var _this$_filters$name, _this$_filters$name2, _this$pswp;
+
+    if (!this._filters[name]) {
+      this._filters[name] = [];
+    }
+
+    (_this$_filters$name = this._filters[name]) === null || _this$_filters$name === void 0 || _this$_filters$name.push({
+      fn,
+      priority
+    });
+    (_this$_filters$name2 = this._filters[name]) === null || _this$_filters$name2 === void 0 || _this$_filters$name2.sort((f1, f2) => f1.priority - f2.priority);
+    (_this$pswp = this.pswp) === null || _this$pswp === void 0 || _this$pswp.addFilter(name, fn, priority);
+  }
+  /**
+   * @template {keyof PhotoSwipeFiltersMap} T
+   * @param {T} name
+   * @param {PhotoSwipeFiltersMap[T]} fn
+   */
+
+
+  removeFilter(name, fn) {
+    if (this._filters[name]) {
+      // @ts-expect-error
+      this._filters[name] = this._filters[name].filter(filter => filter.fn !== fn);
+    }
+
+    if (this.pswp) {
+      this.pswp.removeFilter(name, fn);
+    }
+  }
+  /**
+   * @template {keyof PhotoSwipeFiltersMap} T
+   * @param {T} name
+   * @param {Parameters<PhotoSwipeFiltersMap[T]>} args
+   * @returns {Parameters<PhotoSwipeFiltersMap[T]>[0]}
+   */
+
+
+  applyFilters(name, ...args) {
+    var _this$_filters$name3;
+
+    (_this$_filters$name3 = this._filters[name]) === null || _this$_filters$name3 === void 0 || _this$_filters$name3.forEach(filter => {
+      // @ts-expect-error
+      args[0] = filter.fn.apply(this, args);
+    });
+    return args[0];
+  }
+  /**
+   * @template {keyof PhotoSwipeEventsMap} T
+   * @param {T} name
+   * @param {EventCallback<T>} fn
+   */
+
+
+  on(name, fn) {
+    var _this$_listeners$name, _this$pswp2;
+
+    if (!this._listeners[name]) {
+      this._listeners[name] = [];
+    }
+
+    (_this$_listeners$name = this._listeners[name]) === null || _this$_listeners$name === void 0 || _this$_listeners$name.push(fn); // When binding events to lightbox,
+    // also bind events to PhotoSwipe Core,
+    // if it's open.
+
+    (_this$pswp2 = this.pswp) === null || _this$pswp2 === void 0 || _this$pswp2.on(name, fn);
+  }
+  /**
+   * @template {keyof PhotoSwipeEventsMap} T
+   * @param {T} name
+   * @param {EventCallback<T>} fn
+   */
+
+
+  off(name, fn) {
+    var _this$pswp3;
+
+    if (this._listeners[name]) {
+      // @ts-expect-error
+      this._listeners[name] = this._listeners[name].filter(listener => fn !== listener);
+    }
+
+    (_this$pswp3 = this.pswp) === null || _this$pswp3 === void 0 || _this$pswp3.off(name, fn);
+  }
+  /**
+   * @template {keyof PhotoSwipeEventsMap} T
+   * @param {T} name
+   * @param {PhotoSwipeEventsMap[T]} [details]
+   * @returns {AugmentedEvent<T>}
+   */
+
+
+  dispatch(name, details) {
+    var _this$_listeners$name2;
+
+    if (this.pswp) {
+      return this.pswp.dispatch(name, details);
+    }
+
+    const event =
+    /** @type {AugmentedEvent<T>} */
+    new PhotoSwipeEvent(name, details);
+    (_this$_listeners$name2 = this._listeners[name]) === null || _this$_listeners$name2 === void 0 || _this$_listeners$name2.forEach(listener => {
+      listener.call(this, event);
+    });
+    return event;
+  }
+
+}
+
+class Placeholder {
+  /**
+   * @param {string | false} imageSrc
+   * @param {HTMLElement} container
+   */
+  constructor(imageSrc, container) {
+    // Create placeholder
+    // (stretched thumbnail or simple div behind the main image)
+
+    /** @type {HTMLImageElement | HTMLDivElement | null} */
+    this.element = createElement('pswp__img pswp__img--placeholder', imageSrc ? 'img' : 'div', container);
+
+    if (imageSrc) {
+      const imgEl =
+      /** @type {HTMLImageElement} */
+      this.element;
+      imgEl.decoding = 'async';
+      imgEl.alt = '';
+      imgEl.src = imageSrc;
+      imgEl.setAttribute('role', 'presentation');
+    }
+
+    this.element.setAttribute('aria-hidden', 'true');
+  }
+  /**
+   * @param {number} width
+   * @param {number} height
+   */
+
+
+  setDisplayedSize(width, height) {
+    if (!this.element) {
+      return;
+    }
+
+    if (this.element.tagName === 'IMG') {
+      // Use transform scale() to modify img placeholder size
+      // (instead of changing width/height directly).
+      // This helps with performance, specifically in iOS15 Safari.
+      setWidthHeight(this.element, 250, 'auto');
+      this.element.style.transformOrigin = '0 0';
+      this.element.style.transform = toTransformString(0, 0, width / 250);
+    } else {
+      setWidthHeight(this.element, width, height);
+    }
+  }
+
+  destroy() {
+    var _this$element;
+
+    if ((_this$element = this.element) !== null && _this$element !== void 0 && _this$element.parentNode) {
+      this.element.remove();
+    }
+
+    this.element = null;
+  }
+
+}
+
+/** @typedef {import('./slide.js').default} Slide */
+
+/** @typedef {import('./slide.js').SlideData} SlideData */
+
+/** @typedef {import('../core/base.js').default} PhotoSwipeBase */
+
+/** @typedef {import('../util/util.js').LoadState} LoadState */
+
+class Content {
+  /**
+   * @param {SlideData} itemData Slide data
+   * @param {PhotoSwipeBase} instance PhotoSwipe or PhotoSwipeLightbox instance
+   * @param {number} index
+   */
+  constructor(itemData, instance, index) {
+    this.instance = instance;
+    this.data = itemData;
+    this.index = index;
+    /** @type {HTMLImageElement | HTMLDivElement | undefined} */
+
+    this.element = undefined;
+    /** @type {Placeholder | undefined} */
+
+    this.placeholder = undefined;
+    /** @type {Slide | undefined} */
+
+    this.slide = undefined;
+    this.displayedImageWidth = 0;
+    this.displayedImageHeight = 0;
+    this.width = Number(this.data.w) || Number(this.data.width) || 0;
+    this.height = Number(this.data.h) || Number(this.data.height) || 0;
+    this.isAttached = false;
+    this.hasSlide = false;
+    this.isDecoding = false;
+    /** @type {LoadState} */
+
+    this.state = LOAD_STATE.IDLE;
+
+    if (this.data.type) {
+      this.type = this.data.type;
+    } else if (this.data.src) {
+      this.type = 'image';
+    } else {
+      this.type = 'html';
+    }
+
+    this.instance.dispatch('contentInit', {
+      content: this
+    });
+  }
+
+  removePlaceholder() {
+    if (this.placeholder && !this.keepPlaceholder()) {
+      // With delay, as image might be loaded, but not rendered
+      setTimeout(() => {
+        if (this.placeholder) {
+          this.placeholder.destroy();
+          this.placeholder = undefined;
+        }
+      }, 1000);
+    }
+  }
+  /**
+   * Preload content
+   *
+   * @param {boolean} isLazy
+   * @param {boolean} [reload]
+   */
+
+
+  load(isLazy, reload) {
+    if (this.slide && this.usePlaceholder()) {
+      if (!this.placeholder) {
+        const placeholderSrc = this.instance.applyFilters('placeholderSrc', // use  image-based placeholder only for the first slide,
+        // as rendering (even small stretched thumbnail) is an expensive operation
+        this.data.msrc && this.slide.isFirstSlide ? this.data.msrc : false, this);
+        this.placeholder = new Placeholder(placeholderSrc, this.slide.container);
+      } else {
+        const placeholderEl = this.placeholder.element; // Add placeholder to DOM if it was already created
+
+        if (placeholderEl && !placeholderEl.parentElement) {
+          this.slide.container.prepend(placeholderEl);
+        }
+      }
+    }
+
+    if (this.element && !reload) {
+      return;
+    }
+
+    if (this.instance.dispatch('contentLoad', {
+      content: this,
+      isLazy
+    }).defaultPrevented) {
+      return;
+    }
+
+    if (this.isImageContent()) {
+      this.element = createElement('pswp__img', 'img'); // Start loading only after width is defined, as sizes might depend on it.
+      // Due to Safari feature, we must define sizes before srcset.
+
+      if (this.displayedImageWidth) {
+        this.loadImage(isLazy);
+      }
+    } else {
+      this.element = createElement('pswp__content', 'div');
+      this.element.innerHTML = this.data.html || '';
+    }
+
+    if (reload && this.slide) {
+      this.slide.updateContentSize(true);
+    }
+  }
+  /**
+   * Preload image
+   *
+   * @param {boolean} isLazy
+   */
+
+
+  loadImage(isLazy) {
+    var _this$data$src, _this$data$alt;
+
+    if (!this.isImageContent() || !this.element || this.instance.dispatch('contentLoadImage', {
+      content: this,
+      isLazy
+    }).defaultPrevented) {
+      return;
+    }
+
+    const imageElement =
+    /** @type HTMLImageElement */
+    this.element;
+    this.updateSrcsetSizes();
+
+    if (this.data.srcset) {
+      imageElement.srcset = this.data.srcset;
+    }
+
+    imageElement.src = (_this$data$src = this.data.src) !== null && _this$data$src !== void 0 ? _this$data$src : '';
+    imageElement.alt = (_this$data$alt = this.data.alt) !== null && _this$data$alt !== void 0 ? _this$data$alt : '';
+    this.state = LOAD_STATE.LOADING;
+
+    if (imageElement.complete) {
+      this.onLoaded();
+    } else {
+      imageElement.onload = () => {
+        this.onLoaded();
+      };
+
+      imageElement.onerror = () => {
+        this.onError();
+      };
+    }
+  }
+  /**
+   * Assign slide to content
+   *
+   * @param {Slide} slide
+   */
+
+
+  setSlide(slide) {
+    this.slide = slide;
+    this.hasSlide = true;
+    this.instance = slide.pswp; // todo: do we need to unset slide?
+  }
+  /**
+   * Content load success handler
+   */
+
+
+  onLoaded() {
+    this.state = LOAD_STATE.LOADED;
+
+    if (this.slide && this.element) {
+      this.instance.dispatch('loadComplete', {
+        slide: this.slide,
+        content: this
+      }); // if content is reloaded
+
+      if (this.slide.isActive && this.slide.heavyAppended && !this.element.parentNode) {
+        this.append();
+        this.slide.updateContentSize(true);
+      }
+
+      if (this.state === LOAD_STATE.LOADED || this.state === LOAD_STATE.ERROR) {
+        this.removePlaceholder();
+      }
+    }
+  }
+  /**
+   * Content load error handler
+   */
+
+
+  onError() {
+    this.state = LOAD_STATE.ERROR;
+
+    if (this.slide) {
+      this.displayError();
+      this.instance.dispatch('loadComplete', {
+        slide: this.slide,
+        isError: true,
+        content: this
+      });
+      this.instance.dispatch('loadError', {
+        slide: this.slide,
+        content: this
+      });
+    }
+  }
+  /**
+   * @returns {Boolean} If the content is currently loading
+   */
+
+
+  isLoading() {
+    return this.instance.applyFilters('isContentLoading', this.state === LOAD_STATE.LOADING, this);
+  }
+  /**
+   * @returns {Boolean} If the content is in error state
+   */
+
+
+  isError() {
+    return this.state === LOAD_STATE.ERROR;
+  }
+  /**
+   * @returns {boolean} If the content is image
+   */
+
+
+  isImageContent() {
+    return this.type === 'image';
+  }
+  /**
+   * Update content size
+   *
+   * @param {Number} width
+   * @param {Number} height
+   */
+
+
+  setDisplayedSize(width, height) {
+    if (!this.element) {
+      return;
+    }
+
+    if (this.placeholder) {
+      this.placeholder.setDisplayedSize(width, height);
+    }
+
+    if (this.instance.dispatch('contentResize', {
+      content: this,
+      width,
+      height
+    }).defaultPrevented) {
+      return;
+    }
+
+    setWidthHeight(this.element, width, height);
+
+    if (this.isImageContent() && !this.isError()) {
+      const isInitialSizeUpdate = !this.displayedImageWidth && width;
+      this.displayedImageWidth = width;
+      this.displayedImageHeight = height;
+
+      if (isInitialSizeUpdate) {
+        this.loadImage(false);
+      } else {
+        this.updateSrcsetSizes();
+      }
+
+      if (this.slide) {
+        this.instance.dispatch('imageSizeChange', {
+          slide: this.slide,
+          width,
+          height,
+          content: this
+        });
+      }
+    }
+  }
+  /**
+   * @returns {boolean} If the content can be zoomed
+   */
+
+
+  isZoomable() {
+    return this.instance.applyFilters('isContentZoomable', this.isImageContent() && this.state !== LOAD_STATE.ERROR, this);
+  }
+  /**
+   * Update image srcset sizes attribute based on width and height
+   */
+
+
+  updateSrcsetSizes() {
+    // Handle srcset sizes attribute.
+    //
+    // Never lower quality, if it was increased previously.
+    // Chrome does this automatically, Firefox and Safari do not,
+    // so we store largest used size in dataset.
+    if (!this.isImageContent() || !this.element || !this.data.srcset) {
+      return;
+    }
+
+    const image =
+    /** @type HTMLImageElement */
+    this.element;
+    const sizesWidth = this.instance.applyFilters('srcsetSizesWidth', this.displayedImageWidth, this);
+
+    if (!image.dataset.largestUsedSize || sizesWidth > parseInt(image.dataset.largestUsedSize, 10)) {
+      image.sizes = sizesWidth + 'px';
+      image.dataset.largestUsedSize = String(sizesWidth);
+    }
+  }
+  /**
+   * @returns {boolean} If content should use a placeholder (from msrc by default)
+   */
+
+
+  usePlaceholder() {
+    return this.instance.applyFilters('useContentPlaceholder', this.isImageContent(), this);
+  }
+  /**
+   * Preload content with lazy-loading param
+   */
+
+
+  lazyLoad() {
+    if (this.instance.dispatch('contentLazyLoad', {
+      content: this
+    }).defaultPrevented) {
+      return;
+    }
+
+    this.load(true);
+  }
+  /**
+   * @returns {boolean} If placeholder should be kept after content is loaded
+   */
+
+
+  keepPlaceholder() {
+    return this.instance.applyFilters('isKeepingPlaceholder', this.isLoading(), this);
+  }
+  /**
+   * Destroy the content
+   */
+
+
+  destroy() {
+    this.hasSlide = false;
+    this.slide = undefined;
+
+    if (this.instance.dispatch('contentDestroy', {
+      content: this
+    }).defaultPrevented) {
+      return;
+    }
+
+    this.remove();
+
+    if (this.placeholder) {
+      this.placeholder.destroy();
+      this.placeholder = undefined;
+    }
+
+    if (this.isImageContent() && this.element) {
+      this.element.onload = null;
+      this.element.onerror = null;
+      this.element = undefined;
+    }
+  }
+  /**
+   * Display error message
+   */
+
+
+  displayError() {
+    if (this.slide) {
+      var _this$instance$option, _this$instance$option2;
+
+      let errorMsgEl = createElement('pswp__error-msg', 'div');
+      errorMsgEl.innerText = (_this$instance$option = (_this$instance$option2 = this.instance.options) === null || _this$instance$option2 === void 0 ? void 0 : _this$instance$option2.errorMsg) !== null && _this$instance$option !== void 0 ? _this$instance$option : '';
+      errorMsgEl =
+      /** @type {HTMLDivElement} */
+      this.instance.applyFilters('contentErrorElement', errorMsgEl, this);
+      this.element = createElement('pswp__content pswp__error-msg-container', 'div');
+      this.element.appendChild(errorMsgEl);
+      this.slide.container.innerText = '';
+      this.slide.container.appendChild(this.element);
+      this.slide.updateContentSize(true);
+      this.removePlaceholder();
+    }
+  }
+  /**
+   * Append the content
+   */
+
+
+  append() {
+    if (this.isAttached || !this.element) {
+      return;
+    }
+
+    this.isAttached = true;
+
+    if (this.state === LOAD_STATE.ERROR) {
+      this.displayError();
+      return;
+    }
+
+    if (this.instance.dispatch('contentAppend', {
+      content: this
+    }).defaultPrevented) {
+      return;
+    }
+
+    const supportsDecode = ('decode' in this.element);
+
+    if (this.isImageContent()) {
+      // Use decode() on nearby slides
+      //
+      // Nearby slide images are in DOM and not hidden via display:none.
+      // However, they are placed offscreen (to the left and right side).
+      //
+      // Some browsers do not composite the image until it's actually visible,
+      // using decode() helps.
+      //
+      // You might ask "why dont you just decode() and then append all images",
+      // that's because I want to show image before it's fully loaded,
+      // as browser can render parts of image while it is loading.
+      // We do not do this in Safari due to partial loading bug.
+      if (supportsDecode && this.slide && (!this.slide.isActive || isSafari())) {
+        this.isDecoding = true; // purposefully using finally instead of then,
+        // as if srcset sizes changes dynamically - it may cause decode error
+
+        /** @type {HTMLImageElement} */
+
+        this.element.decode().catch(() => {}).finally(() => {
+          this.isDecoding = false;
+          this.appendImage();
+        });
+      } else {
+        this.appendImage();
+      }
+    } else if (this.slide && !this.element.parentNode) {
+      this.slide.container.appendChild(this.element);
+    }
+  }
+  /**
+   * Activate the slide,
+   * active slide is generally the current one,
+   * meaning the user can see it.
+   */
+
+
+  activate() {
+    if (this.instance.dispatch('contentActivate', {
+      content: this
+    }).defaultPrevented || !this.slide) {
+      return;
+    }
+
+    if (this.isImageContent() && this.isDecoding && !isSafari()) {
+      // add image to slide when it becomes active,
+      // even if it's not finished decoding
+      this.appendImage();
+    } else if (this.isError()) {
+      this.load(false, true); // try to reload
+    }
+
+    if (this.slide.holderElement) {
+      this.slide.holderElement.setAttribute('aria-hidden', 'false');
+    }
+  }
+  /**
+   * Deactivate the content
+   */
+
+
+  deactivate() {
+    this.instance.dispatch('contentDeactivate', {
+      content: this
+    });
+
+    if (this.slide && this.slide.holderElement) {
+      this.slide.holderElement.setAttribute('aria-hidden', 'true');
+    }
+  }
+  /**
+   * Remove the content from DOM
+   */
+
+
+  remove() {
+    this.isAttached = false;
+
+    if (this.instance.dispatch('contentRemove', {
+      content: this
+    }).defaultPrevented) {
+      return;
+    }
+
+    if (this.element && this.element.parentNode) {
+      this.element.remove();
+    }
+
+    if (this.placeholder && this.placeholder.element) {
+      this.placeholder.element.remove();
+    }
+  }
+  /**
+   * Append the image content to slide container
+   */
+
+
+  appendImage() {
+    if (!this.isAttached) {
+      return;
+    }
+
+    if (this.instance.dispatch('contentAppendImage', {
+      content: this
+    }).defaultPrevented) {
+      return;
+    } // ensure that element exists and is not already appended
+
+
+    if (this.slide && this.element && !this.element.parentNode) {
+      this.slide.container.appendChild(this.element);
+    }
+
+    if (this.state === LOAD_STATE.LOADED || this.state === LOAD_STATE.ERROR) {
+      this.removePlaceholder();
+    }
+  }
+
+}
+
+/** @typedef {import('../photoswipe.js').PhotoSwipeOptions} PhotoSwipeOptions */
+
+/** @typedef {import('../core/base.js').default} PhotoSwipeBase */
+
+/** @typedef {import('../photoswipe.js').Point} Point */
+
+/** @typedef {import('../slide/slide.js').SlideData} SlideData */
+
+/**
+ * @param {PhotoSwipeOptions} options
+ * @param {PhotoSwipeBase} pswp
+ * @returns {Point}
+ */
+function getViewportSize(options, pswp) {
+  if (options.getViewportSizeFn) {
+    const newViewportSize = options.getViewportSizeFn(options, pswp);
+
+    if (newViewportSize) {
+      return newViewportSize;
+    }
+  }
+
+  return {
+    x: document.documentElement.clientWidth,
+    // TODO: height on mobile is very incosistent due to toolbar
+    // find a way to improve this
+    //
+    // document.documentElement.clientHeight - doesn't seem to work well
+    y: window.innerHeight
+  };
+}
+/**
+ * Parses padding option.
+ * Supported formats:
+ *
+ * // Object
+ * padding: {
+ *  top: 0,
+ *  bottom: 0,
+ *  left: 0,
+ *  right: 0
+ * }
+ *
+ * // A function that returns the object
+ * paddingFn: (viewportSize, itemData, index) => {
+ *  return {
+ *    top: 0,
+ *    bottom: 0,
+ *    left: 0,
+ *    right: 0
+ *  };
+ * }
+ *
+ * // Legacy variant
+ * paddingLeft: 0,
+ * paddingRight: 0,
+ * paddingTop: 0,
+ * paddingBottom: 0,
+ *
+ * @param {'left' | 'top' | 'bottom' | 'right'} prop
+ * @param {PhotoSwipeOptions} options PhotoSwipe options
+ * @param {Point} viewportSize PhotoSwipe viewport size, for example: { x:800, y:600 }
+ * @param {SlideData} itemData Data about the slide
+ * @param {number} index Slide index
+ * @returns {number}
+ */
+
+function parsePaddingOption(prop, options, viewportSize, itemData, index) {
+  let paddingValue = 0;
+
+  if (options.paddingFn) {
+    paddingValue = options.paddingFn(viewportSize, itemData, index)[prop];
+  } else if (options.padding) {
+    paddingValue = options.padding[prop];
+  } else {
+    const legacyPropName = 'padding' + prop[0].toUpperCase() + prop.slice(1); // @ts-expect-error
+
+    if (options[legacyPropName]) {
+      // @ts-expect-error
+      paddingValue = options[legacyPropName];
+    }
+  }
+
+  return Number(paddingValue) || 0;
+}
+/**
+ * @param {PhotoSwipeOptions} options
+ * @param {Point} viewportSize
+ * @param {SlideData} itemData
+ * @param {number} index
+ * @returns {Point}
+ */
+
+function getPanAreaSize(options, viewportSize, itemData, index) {
+  return {
+    x: viewportSize.x - parsePaddingOption('left', options, viewportSize, itemData, index) - parsePaddingOption('right', options, viewportSize, itemData, index),
+    y: viewportSize.y - parsePaddingOption('top', options, viewportSize, itemData, index) - parsePaddingOption('bottom', options, viewportSize, itemData, index)
+  };
+}
+
+const MAX_IMAGE_WIDTH = 4000;
+/** @typedef {import('../photoswipe.js').default} PhotoSwipe */
+
+/** @typedef {import('../photoswipe.js').PhotoSwipeOptions} PhotoSwipeOptions */
+
+/** @typedef {import('../photoswipe.js').Point} Point */
+
+/** @typedef {import('../slide/slide.js').SlideData} SlideData */
+
+/** @typedef {'fit' | 'fill' | number | ((zoomLevelObject: ZoomLevel) => number)} ZoomLevelOption */
+
+/**
+ * Calculates zoom levels for specific slide.
+ * Depends on viewport size and image size.
+ */
+
+class ZoomLevel {
+  /**
+   * @param {PhotoSwipeOptions} options PhotoSwipe options
+   * @param {SlideData} itemData Slide data
+   * @param {number} index Slide index
+   * @param {PhotoSwipe} [pswp] PhotoSwipe instance, can be undefined if not initialized yet
+   */
+  constructor(options, itemData, index, pswp) {
+    this.pswp = pswp;
+    this.options = options;
+    this.itemData = itemData;
+    this.index = index;
+    /** @type { Point | null } */
+
+    this.panAreaSize = null;
+    /** @type { Point | null } */
+
+    this.elementSize = null;
+    this.fit = 1;
+    this.fill = 1;
+    this.vFill = 1;
+    this.initial = 1;
+    this.secondary = 1;
+    this.max = 1;
+    this.min = 1;
+  }
+  /**
+   * Calculate initial, secondary and maximum zoom level for the specified slide.
+   *
+   * It should be called when either image or viewport size changes.
+   *
+   * @param {number} maxWidth
+   * @param {number} maxHeight
+   * @param {Point} panAreaSize
+   */
+
+
+  update(maxWidth, maxHeight, panAreaSize) {
+    /** @type {Point} */
+    const elementSize = {
+      x: maxWidth,
+      y: maxHeight
+    };
+    this.elementSize = elementSize;
+    this.panAreaSize = panAreaSize;
+    const hRatio = panAreaSize.x / elementSize.x;
+    const vRatio = panAreaSize.y / elementSize.y;
+    this.fit = Math.min(1, hRatio < vRatio ? hRatio : vRatio);
+    this.fill = Math.min(1, hRatio > vRatio ? hRatio : vRatio); // zoom.vFill defines zoom level of the image
+    // when it has 100% of viewport vertical space (height)
+
+    this.vFill = Math.min(1, vRatio);
+    this.initial = this._getInitial();
+    this.secondary = this._getSecondary();
+    this.max = Math.max(this.initial, this.secondary, this._getMax());
+    this.min = Math.min(this.fit, this.initial, this.secondary);
+
+    if (this.pswp) {
+      this.pswp.dispatch('zoomLevelsUpdate', {
+        zoomLevels: this,
+        slideData: this.itemData
+      });
+    }
+  }
+  /**
+   * Parses user-defined zoom option.
+   *
+   * @private
+   * @param {'initial' | 'secondary' | 'max'} optionPrefix Zoom level option prefix (initial, secondary, max)
+   * @returns { number | undefined }
+   */
+
+
+  _parseZoomLevelOption(optionPrefix) {
+    const optionName =
+    /** @type {'initialZoomLevel' | 'secondaryZoomLevel' | 'maxZoomLevel'} */
+    optionPrefix + 'ZoomLevel';
+    const optionValue = this.options[optionName];
+
+    if (!optionValue) {
+      return;
+    }
+
+    if (typeof optionValue === 'function') {
+      return optionValue(this);
+    }
+
+    if (optionValue === 'fill') {
+      return this.fill;
+    }
+
+    if (optionValue === 'fit') {
+      return this.fit;
+    }
+
+    return Number(optionValue);
+  }
+  /**
+   * Get zoom level to which image will be zoomed after double-tap gesture,
+   * or when user clicks on zoom icon,
+   * or mouse-click on image itself.
+   * If you return 1 image will be zoomed to its original size.
+   *
+   * @private
+   * @return {number}
+   */
+
+
+  _getSecondary() {
+    let currZoomLevel = this._parseZoomLevelOption('secondary');
+
+    if (currZoomLevel) {
+      return currZoomLevel;
+    } // 3x of "fit" state, but not larger than original
+
+
+    currZoomLevel = Math.min(1, this.fit * 3);
+
+    if (this.elementSize && currZoomLevel * this.elementSize.x > MAX_IMAGE_WIDTH) {
+      currZoomLevel = MAX_IMAGE_WIDTH / this.elementSize.x;
+    }
+
+    return currZoomLevel;
+  }
+  /**
+   * Get initial image zoom level.
+   *
+   * @private
+   * @return {number}
+   */
+
+
+  _getInitial() {
+    return this._parseZoomLevelOption('initial') || this.fit;
+  }
+  /**
+   * Maximum zoom level when user zooms
+   * via zoom/pinch gesture,
+   * via cmd/ctrl-wheel or via trackpad.
+   *
+   * @private
+   * @return {number}
+   */
+
+
+  _getMax() {
+    // max zoom level is x4 from "fit state",
+    // used for zoom gesture and ctrl/trackpad zoom
+    return this._parseZoomLevelOption('max') || Math.max(1, this.fit * 4);
+  }
+
+}
+
+/**
+ * Lazy-load an image
+ * This function is used both by Lightbox and PhotoSwipe core,
+ * thus it can be called before dialog is opened.
+ *
+ * @param {SlideData} itemData Data about the slide
+ * @param {PhotoSwipeBase} instance PhotoSwipe or PhotoSwipeLightbox instance
+ * @param {number} index
+ * @returns {Content} Image that is being decoded or false.
+ */
+
+function lazyLoadData(itemData, instance, index) {
+  const content = instance.createContentFromData(itemData, index);
+  /** @type {ZoomLevel | undefined} */
+
+  let zoomLevel;
+  const {
+    options
+  } = instance; // We need to know dimensions of the image to preload it,
+  // as it might use srcset, and we need to define sizes
+
+  if (options) {
+    zoomLevel = new ZoomLevel(options, itemData, -1);
+    let viewportSize;
+
+    if (instance.pswp) {
+      viewportSize = instance.pswp.viewportSize;
+    } else {
+      viewportSize = getViewportSize(options, instance);
+    }
+
+    const panAreaSize = getPanAreaSize(options, viewportSize, itemData, index);
+    zoomLevel.update(content.width, content.height, panAreaSize);
+  }
+
+  content.lazyLoad();
+
+  if (zoomLevel) {
+    content.setDisplayedSize(Math.ceil(content.width * zoomLevel.initial), Math.ceil(content.height * zoomLevel.initial));
+  }
+
+  return content;
+}
+/**
+ * Lazy-loads specific slide.
+ * This function is used both by Lightbox and PhotoSwipe core,
+ * thus it can be called before dialog is opened.
+ *
+ * By default, it loads image based on viewport size and initial zoom level.
+ *
+ * @param {number} index Slide index
+ * @param {PhotoSwipeBase} instance PhotoSwipe or PhotoSwipeLightbox eventable instance
+ * @returns {Content | undefined}
+ */
+
+function lazyLoadSlide(index, instance) {
+  const itemData = instance.getItemData(index);
+
+  if (instance.dispatch('lazyLoadSlide', {
+    index,
+    itemData
+  }).defaultPrevented) {
+    return;
+  }
+
+  return lazyLoadData(itemData, instance, index);
+}
+
+/** @typedef {import("../photoswipe.js").default} PhotoSwipe */
+
+/** @typedef {import("../slide/slide.js").SlideData} SlideData */
+
+/**
+ * PhotoSwipe base class that can retrieve data about every slide.
+ * Shared by PhotoSwipe Core and PhotoSwipe Lightbox
+ */
+
+class PhotoSwipeBase extends Eventable {
+  /**
+   * Get total number of slides
+   *
+   * @returns {number}
+   */
+  getNumItems() {
+    var _this$options;
+
+    let numItems = 0;
+    const dataSource = (_this$options = this.options) === null || _this$options === void 0 ? void 0 : _this$options.dataSource;
+
+    if (dataSource && 'length' in dataSource) {
+      // may be an array or just object with length property
+      numItems = dataSource.length;
+    } else if (dataSource && 'gallery' in dataSource) {
+      // query DOM elements
+      if (!dataSource.items) {
+        dataSource.items = this._getGalleryDOMElements(dataSource.gallery);
+      }
+
+      if (dataSource.items) {
+        numItems = dataSource.items.length;
+      }
+    } // legacy event, before filters were introduced
+
+
+    const event = this.dispatch('numItems', {
+      dataSource,
+      numItems
+    });
+    return this.applyFilters('numItems', event.numItems, dataSource);
+  }
+  /**
+   * @param {SlideData} slideData
+   * @param {number} index
+   * @returns {Content}
+   */
+
+
+  createContentFromData(slideData, index) {
+    return new Content(slideData, this, index);
+  }
+  /**
+   * Get item data by index.
+   *
+   * "item data" should contain normalized information that PhotoSwipe needs to generate a slide.
+   * For example, it may contain properties like
+   * `src`, `srcset`, `w`, `h`, which will be used to generate a slide with image.
+   *
+   * @param {number} index
+   * @returns {SlideData}
+   */
+
+
+  getItemData(index) {
+    var _this$options2;
+
+    const dataSource = (_this$options2 = this.options) === null || _this$options2 === void 0 ? void 0 : _this$options2.dataSource;
+    /** @type {SlideData | HTMLElement} */
+
+    let dataSourceItem = {};
+
+    if (Array.isArray(dataSource)) {
+      // Datasource is an array of elements
+      dataSourceItem = dataSource[index];
+    } else if (dataSource && 'gallery' in dataSource) {
+      // dataSource has gallery property,
+      // thus it was created by Lightbox, based on
+      // gallery and children options
+      // query DOM elements
+      if (!dataSource.items) {
+        dataSource.items = this._getGalleryDOMElements(dataSource.gallery);
+      }
+
+      dataSourceItem = dataSource.items[index];
+    }
+
+    let itemData = dataSourceItem;
+
+    if (itemData instanceof Element) {
+      itemData = this._domElementToItemData(itemData);
+    } // Dispatching the itemData event,
+    // it's a legacy verion before filters were introduced
+
+
+    const event = this.dispatch('itemData', {
+      itemData: itemData || {},
+      index
+    });
+    return this.applyFilters('itemData', event.itemData, index);
+  }
+  /**
+   * Get array of gallery DOM elements,
+   * based on childSelector and gallery element.
+   *
+   * @param {HTMLElement} galleryElement
+   * @returns {HTMLElement[]}
+   */
+
+
+  _getGalleryDOMElements(galleryElement) {
+    var _this$options3, _this$options4;
+
+    if ((_this$options3 = this.options) !== null && _this$options3 !== void 0 && _this$options3.children || (_this$options4 = this.options) !== null && _this$options4 !== void 0 && _this$options4.childSelector) {
+      return getElementsFromOption(this.options.children, this.options.childSelector, galleryElement) || [];
+    }
+
+    return [galleryElement];
+  }
+  /**
+   * Converts DOM element to item data object.
+   *
+   * @param {HTMLElement} element DOM element
+   * @returns {SlideData}
+   */
+
+
+  _domElementToItemData(element) {
+    /** @type {SlideData} */
+    const itemData = {
+      element
+    };
+    const linkEl =
+    /** @type {HTMLAnchorElement} */
+    element.tagName === 'A' ? element : element.querySelector('a');
+
+    if (linkEl) {
+      // src comes from data-pswp-src attribute,
+      // if it's empty link href is used
+      itemData.src = linkEl.dataset.pswpSrc || linkEl.href;
+
+      if (linkEl.dataset.pswpSrcset) {
+        itemData.srcset = linkEl.dataset.pswpSrcset;
+      }
+
+      itemData.width = linkEl.dataset.pswpWidth ? parseInt(linkEl.dataset.pswpWidth, 10) : 0;
+      itemData.height = linkEl.dataset.pswpHeight ? parseInt(linkEl.dataset.pswpHeight, 10) : 0; // support legacy w & h properties
+
+      itemData.w = itemData.width;
+      itemData.h = itemData.height;
+
+      if (linkEl.dataset.pswpType) {
+        itemData.type = linkEl.dataset.pswpType;
+      }
+
+      const thumbnailEl = element.querySelector('img');
+
+      if (thumbnailEl) {
+        var _thumbnailEl$getAttri;
+
+        // msrc is URL to placeholder image that's displayed before large image is loaded
+        // by default it's displayed only for the first slide
+        itemData.msrc = thumbnailEl.currentSrc || thumbnailEl.src;
+        itemData.alt = (_thumbnailEl$getAttri = thumbnailEl.getAttribute('alt')) !== null && _thumbnailEl$getAttri !== void 0 ? _thumbnailEl$getAttri : '';
+      }
+
+      if (linkEl.dataset.pswpCropped || linkEl.dataset.cropped) {
+        itemData.thumbCropped = true;
+      }
+    }
+
+    return this.applyFilters('domItemData', itemData, element, linkEl);
+  }
+  /**
+   * Lazy-load by slide data
+   *
+   * @param {SlideData} itemData Data about the slide
+   * @param {number} index
+   * @returns {Content} Image that is being decoded or false.
+   */
+
+
+  lazyLoadData(itemData, index) {
+    return lazyLoadData(itemData, this, index);
+  }
+
+}
+
+/**
+ * @template T
+ * @typedef {import('../types.js').Type<T>} Type<T>
+ */
+
+/** @typedef {import('../photoswipe.js').default} PhotoSwipe */
+
+/** @typedef {import('../photoswipe.js').PhotoSwipeOptions} PhotoSwipeOptions */
+
+/** @typedef {import('../photoswipe.js').DataSource} DataSource */
+
+/** @typedef {import('../photoswipe.js').Point} Point */
+
+/** @typedef {import('../slide/content.js').default} Content */
+
+/** @typedef {import('../core/eventable.js').PhotoSwipeEventsMap} PhotoSwipeEventsMap */
+
+/** @typedef {import('../core/eventable.js').PhotoSwipeFiltersMap} PhotoSwipeFiltersMap */
+
+/**
+ * @template {keyof PhotoSwipeEventsMap} T
+ * @typedef {import('../core/eventable.js').EventCallback<T>} EventCallback<T>
+ */
+
+/**
+ * PhotoSwipe Lightbox
+ *
+ * - If user has unsupported browser it falls back to default browser action (just opens URL)
+ * - Binds click event to links that should open PhotoSwipe
+ * - parses DOM strcture for PhotoSwipe (retrieves large image URLs and sizes)
+ * - Initializes PhotoSwipe
+ *
+ *
+ * Loader options use the same object as PhotoSwipe, and supports such options:
+ *
+ * gallery - Element | Element[] | NodeList | string selector for the gallery element
+ * children - Element | Element[] | NodeList | string selector for the gallery children
+ *
+ */
+
+class PhotoSwipeLightbox extends PhotoSwipeBase {
+  /**
+   * @param {PhotoSwipeOptions} [options]
+   */
+  constructor(options) {
+    super();
+    /** @type {PhotoSwipeOptions} */
+
+    this.options = options || {};
+    this._uid = 0;
+    this.shouldOpen = false;
+    /**
+     * @private
+     * @type {Content | undefined}
+     */
+
+    this._preloadedContent = undefined;
+    this.onThumbnailsClick = this.onThumbnailsClick.bind(this);
+  }
+  /**
+   * Initialize lightbox, should be called only once.
+   * It's not included in the main constructor, so you may bind events before it.
+   */
+
+
+  init() {
+    // Bind click events to each gallery
+    getElementsFromOption(this.options.gallery, this.options.gallerySelector).forEach(galleryElement => {
+      galleryElement.addEventListener('click', this.onThumbnailsClick, false);
+    });
+  }
+  /**
+   * @param {MouseEvent} e
+   */
+
+
+  onThumbnailsClick(e) {
+    // Exit and allow default browser action if:
+    if (specialKeyUsed(e) // ... if clicked with a special key (ctrl/cmd...)
+    || window.pswp) {
+      // ... if PhotoSwipe is already open
+      return;
+    } // If both clientX and clientY are 0 or not defined,
+    // the event is likely triggered by keyboard,
+    // so we do not pass the initialPoint
+    //
+    // Note that some screen readers emulate the mouse position,
+    // so it's not the ideal way to detect them.
+    //
+
+    /** @type {Point | null} */
+
+
+    let initialPoint = {
+      x: e.clientX,
+      y: e.clientY
+    };
+
+    if (!initialPoint.x && !initialPoint.y) {
+      initialPoint = null;
+    }
+
+    let clickedIndex = this.getClickedIndex(e);
+    clickedIndex = this.applyFilters('clickedIndex', clickedIndex, e, this);
+    /** @type {DataSource} */
+
+    const dataSource = {
+      gallery:
+      /** @type {HTMLElement} */
+      e.currentTarget
+    };
+
+    if (clickedIndex >= 0) {
+      e.preventDefault();
+      this.loadAndOpen(clickedIndex, dataSource, initialPoint);
+    }
+  }
+  /**
+   * Get index of gallery item that was clicked.
+   *
+   * @param {MouseEvent} e click event
+   * @returns {number}
+   */
+
+
+  getClickedIndex(e) {
+    // legacy option
+    if (this.options.getClickedIndexFn) {
+      return this.options.getClickedIndexFn.call(this, e);
+    }
+
+    const clickedTarget =
+    /** @type {HTMLElement} */
+    e.target;
+    const childElements = getElementsFromOption(this.options.children, this.options.childSelector,
+    /** @type {HTMLElement} */
+    e.currentTarget);
+    const clickedChildIndex = childElements.findIndex(child => child === clickedTarget || child.contains(clickedTarget));
+
+    if (clickedChildIndex !== -1) {
+      return clickedChildIndex;
+    } else if (this.options.children || this.options.childSelector) {
+      // click wasn't on a child element
+      return -1;
+    } // There is only one item (which is the gallery)
+
+
+    return 0;
+  }
+  /**
+   * Load and open PhotoSwipe
+   *
+   * @param {number} index
+   * @param {DataSource} [dataSource]
+   * @param {Point | null} [initialPoint]
+   * @returns {boolean}
+   */
+
+
+  loadAndOpen(index, dataSource, initialPoint) {
+    // Check if the gallery is already open
+    if (window.pswp || !this.options) {
+      return false;
+    } // Use the first gallery element if dataSource is not provided
+
+
+    if (!dataSource && this.options.gallery && this.options.children) {
+      const galleryElements = getElementsFromOption(this.options.gallery);
+
+      if (galleryElements[0]) {
+        dataSource = {
+          gallery: galleryElements[0]
+        };
+      }
+    } // set initial index
+
+
+    this.options.index = index; // define options for PhotoSwipe constructor
+
+    this.options.initialPointerPos = initialPoint;
+    this.shouldOpen = true;
+    this.preload(index, dataSource);
+    return true;
+  }
+  /**
+   * Load the main module and the slide content by index
+   *
+   * @param {number} index
+   * @param {DataSource} [dataSource]
+   */
+
+
+  preload(index, dataSource) {
+    const {
+      options
+    } = this;
+
+    if (dataSource) {
+      options.dataSource = dataSource;
+    } // Add the main module
+
+    /** @type {Promise<Type<PhotoSwipe>>[]} */
+
+
+    const promiseArray = [];
+    const pswpModuleType = typeof options.pswpModule;
+
+    if (isPswpClass(options.pswpModule)) {
+      promiseArray.push(Promise.resolve(
+      /** @type {Type<PhotoSwipe>} */
+      options.pswpModule));
+    } else if (pswpModuleType === 'string') {
+      throw new Error('pswpModule as string is no longer supported');
+    } else if (pswpModuleType === 'function') {
+      promiseArray.push(
+      /** @type {() => Promise<Type<PhotoSwipe>>} */
+      options.pswpModule());
+    } else {
+      throw new Error('pswpModule is not valid');
+    } // Add custom-defined promise, if any
+
+
+    if (typeof options.openPromise === 'function') {
+      // allow developers to perform some task before opening
+      promiseArray.push(options.openPromise());
+    }
+
+    if (options.preloadFirstSlide !== false && index >= 0) {
+      this._preloadedContent = lazyLoadSlide(index, this);
+    } // Wait till all promises resolve and open PhotoSwipe
+
+
+    const uid = ++this._uid;
+    Promise.all(promiseArray).then(iterableModules => {
+      if (this.shouldOpen) {
+        const mainModule = iterableModules[0];
+
+        this._openPhotoswipe(mainModule, uid);
+      }
+    });
+  }
+  /**
+   * @private
+   * @param {Type<PhotoSwipe> | { default: Type<PhotoSwipe> }} module
+   * @param {number} uid
+   */
+
+
+  _openPhotoswipe(module, uid) {
+    // Cancel opening if UID doesn't match the current one
+    // (if user clicked on another gallery item before current was loaded).
+    //
+    // Or if shouldOpen flag is set to false
+    // (developer may modify it via public API)
+    if (uid !== this._uid && this.shouldOpen) {
+      return;
+    }
+
+    this.shouldOpen = false; // PhotoSwipe is already open
+
+    if (window.pswp) {
+      return;
+    }
+    /**
+     * Pass data to PhotoSwipe and open init
+     *
+     * @type {PhotoSwipe}
+     */
+
+
+    const pswp = typeof module === 'object' ? new module.default(this.options) // eslint-disable-line
+    : new module(this.options); // eslint-disable-line
+
+    this.pswp = pswp;
+    window.pswp = pswp; // map listeners from Lightbox to PhotoSwipe Core
+
+    /** @type {(keyof PhotoSwipeEventsMap)[]} */
+
+    Object.keys(this._listeners).forEach(name => {
+      var _this$_listeners$name;
+
+      (_this$_listeners$name = this._listeners[name]) === null || _this$_listeners$name === void 0 || _this$_listeners$name.forEach(fn => {
+        pswp.on(name,
+        /** @type {EventCallback<typeof name>} */
+        fn);
+      });
+    }); // same with filters
+
+    /** @type {(keyof PhotoSwipeFiltersMap)[]} */
+
+    Object.keys(this._filters).forEach(name => {
+      var _this$_filters$name;
+
+      (_this$_filters$name = this._filters[name]) === null || _this$_filters$name === void 0 || _this$_filters$name.forEach(filter => {
+        pswp.addFilter(name, filter.fn, filter.priority);
+      });
+    });
+
+    if (this._preloadedContent) {
+      pswp.contentLoader.addToCache(this._preloadedContent);
+      this._preloadedContent = undefined;
+    }
+
+    pswp.on('destroy', () => {
+      // clean up public variables
+      this.pswp = undefined;
+      delete window.pswp;
+    });
+    pswp.init();
+  }
+  /**
+   * Unbinds all events, closes PhotoSwipe if it's open.
+   */
+
+
+  destroy() {
+    var _this$pswp;
+
+    (_this$pswp = this.pswp) === null || _this$pswp === void 0 || _this$pswp.destroy();
+    this.shouldOpen = false;
+    this._listeners = {};
+    getElementsFromOption(this.options.gallery, this.options.gallerySelector).forEach(galleryElement => {
+      galleryElement.removeEventListener('click', this.onThumbnailsClick, false);
+    });
+  }
+
+}
+
+
+//# sourceMappingURL=photoswipe-lightbox.esm.js.map
+
+
+/***/ }),
+
+/***/ "./node_modules/photoswipe/dist/photoswipe.css":
+/*!*****************************************************!*\
+  !*** ./node_modules/photoswipe/dist/photoswipe.css ***!
+  \*****************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+// extracted by mini-css-extract-plugin
+
+
+/***/ }),
+
+/***/ "./node_modules/photoswipe/dist/photoswipe.esm.js":
+/*!********************************************************!*\
+  !*** ./node_modules/photoswipe/dist/photoswipe.esm.js ***!
+  \********************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ PhotoSwipe)
+/* harmony export */ });
+/*!
+  * PhotoSwipe 5.4.4 - https://photoswipe.com
+  * (c) 2024 Dmytro Semenov
+  */
+/** @typedef {import('../photoswipe.js').Point} Point */
+
+/**
+ * @template {keyof HTMLElementTagNameMap} T
+ * @param {string} className
+ * @param {T} tagName
+ * @param {Node} [appendToEl]
+ * @returns {HTMLElementTagNameMap[T]}
+ */
+function createElement(className, tagName, appendToEl) {
+  const el = document.createElement(tagName);
+
+  if (className) {
+    el.className = className;
+  }
+
+  if (appendToEl) {
+    appendToEl.appendChild(el);
+  }
+
+  return el;
+}
+/**
+ * @param {Point} p1
+ * @param {Point} p2
+ * @returns {Point}
+ */
+
+function equalizePoints(p1, p2) {
+  p1.x = p2.x;
+  p1.y = p2.y;
+
+  if (p2.id !== undefined) {
+    p1.id = p2.id;
+  }
+
+  return p1;
+}
+/**
+ * @param {Point} p
+ */
+
+function roundPoint(p) {
+  p.x = Math.round(p.x);
+  p.y = Math.round(p.y);
+}
+/**
+ * Returns distance between two points.
+ *
+ * @param {Point} p1
+ * @param {Point} p2
+ * @returns {number}
+ */
+
+function getDistanceBetween(p1, p2) {
+  const x = Math.abs(p1.x - p2.x);
+  const y = Math.abs(p1.y - p2.y);
+  return Math.sqrt(x * x + y * y);
+}
+/**
+ * Whether X and Y positions of points are equal
+ *
+ * @param {Point} p1
+ * @param {Point} p2
+ * @returns {boolean}
+ */
+
+function pointsEqual(p1, p2) {
+  return p1.x === p2.x && p1.y === p2.y;
+}
+/**
+ * The float result between the min and max values.
+ *
+ * @param {number} val
+ * @param {number} min
+ * @param {number} max
+ * @returns {number}
+ */
+
+function clamp(val, min, max) {
+  return Math.min(Math.max(val, min), max);
+}
+/**
+ * Get transform string
+ *
+ * @param {number} x
+ * @param {number} [y]
+ * @param {number} [scale]
+ * @returns {string}
+ */
+
+function toTransformString(x, y, scale) {
+  let propValue = `translate3d(${x}px,${y || 0}px,0)`;
+
+  if (scale !== undefined) {
+    propValue += ` scale3d(${scale},${scale},1)`;
+  }
+
+  return propValue;
+}
+/**
+ * Apply transform:translate(x, y) scale(scale) to element
+ *
+ * @param {HTMLElement} el
+ * @param {number} x
+ * @param {number} [y]
+ * @param {number} [scale]
+ */
+
+function setTransform(el, x, y, scale) {
+  el.style.transform = toTransformString(x, y, scale);
+}
+const defaultCSSEasing = 'cubic-bezier(.4,0,.22,1)';
+/**
+ * Apply CSS transition to element
+ *
+ * @param {HTMLElement} el
+ * @param {string} [prop] CSS property to animate
+ * @param {number} [duration] in ms
+ * @param {string} [ease] CSS easing function
+ */
+
+function setTransitionStyle(el, prop, duration, ease) {
+  // inOut: 'cubic-bezier(.4, 0, .22, 1)', // for "toggle state" transitions
+  // out: 'cubic-bezier(0, 0, .22, 1)', // for "show" transitions
+  // in: 'cubic-bezier(.4, 0, 1, 1)'// for "hide" transitions
+  el.style.transition = prop ? `${prop} ${duration}ms ${ease || defaultCSSEasing}` : 'none';
+}
+/**
+ * Apply width and height CSS properties to element
+ *
+ * @param {HTMLElement} el
+ * @param {string | number} w
+ * @param {string | number} h
+ */
+
+function setWidthHeight(el, w, h) {
+  el.style.width = typeof w === 'number' ? `${w}px` : w;
+  el.style.height = typeof h === 'number' ? `${h}px` : h;
+}
+/**
+ * @param {HTMLElement} el
+ */
+
+function removeTransitionStyle(el) {
+  setTransitionStyle(el);
+}
+/**
+ * @param {HTMLImageElement} img
+ * @returns {Promise<HTMLImageElement | void>}
+ */
+
+function decodeImage(img) {
+  if ('decode' in img) {
+    return img.decode().catch(() => {});
+  }
+
+  if (img.complete) {
+    return Promise.resolve(img);
+  }
+
+  return new Promise((resolve, reject) => {
+    img.onload = () => resolve(img);
+
+    img.onerror = reject;
+  });
+}
+/** @typedef {LOAD_STATE[keyof LOAD_STATE]} LoadState */
+
+/** @type {{ IDLE: 'idle'; LOADING: 'loading'; LOADED: 'loaded'; ERROR: 'error' }} */
+
+const LOAD_STATE = {
+  IDLE: 'idle',
+  LOADING: 'loading',
+  LOADED: 'loaded',
+  ERROR: 'error'
+};
+/**
+ * Check if click or keydown event was dispatched
+ * with a special key or via mouse wheel.
+ *
+ * @param {MouseEvent | KeyboardEvent} e
+ * @returns {boolean}
+ */
+
+function specialKeyUsed(e) {
+  return 'button' in e && e.button === 1 || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey;
+}
+/**
+ * Parse `gallery` or `children` options.
+ *
+ * @param {import('../photoswipe.js').ElementProvider} [option]
+ * @param {string} [legacySelector]
+ * @param {HTMLElement | Document} [parent]
+ * @returns HTMLElement[]
+ */
+
+function getElementsFromOption(option, legacySelector, parent = document) {
+  /** @type {HTMLElement[]} */
+  let elements = [];
+
+  if (option instanceof Element) {
+    elements = [option];
+  } else if (option instanceof NodeList || Array.isArray(option)) {
+    elements = Array.from(option);
+  } else {
+    const selector = typeof option === 'string' ? option : legacySelector;
+
+    if (selector) {
+      elements = Array.from(parent.querySelectorAll(selector));
+    }
+  }
+
+  return elements;
+}
+/**
+ * Check if browser is Safari
+ *
+ * @returns {boolean}
+ */
+
+function isSafari() {
+  return !!(navigator.vendor && navigator.vendor.match(/apple/i));
+}
+
+// Detect passive event listener support
+let supportsPassive = false;
+/* eslint-disable */
+
+try {
+  /* @ts-ignore */
+  window.addEventListener('test', null, Object.defineProperty({}, 'passive', {
+    get: () => {
+      supportsPassive = true;
+    }
+  }));
+} catch (e) {}
+/* eslint-enable */
+
+/**
+ * @typedef {Object} PoolItem
+ * @prop {HTMLElement | Window | Document | undefined | null} target
+ * @prop {string} type
+ * @prop {EventListenerOrEventListenerObject} listener
+ * @prop {boolean} [passive]
+ */
+
+
+class DOMEvents {
+  constructor() {
+    /**
+     * @type {PoolItem[]}
+     * @private
+     */
+    this._pool = [];
+  }
+  /**
+   * Adds event listeners
+   *
+   * @param {PoolItem['target']} target
+   * @param {PoolItem['type']} type Can be multiple, separated by space.
+   * @param {PoolItem['listener']} listener
+   * @param {PoolItem['passive']} [passive]
+   */
+
+
+  add(target, type, listener, passive) {
+    this._toggleListener(target, type, listener, passive);
+  }
+  /**
+   * Removes event listeners
+   *
+   * @param {PoolItem['target']} target
+   * @param {PoolItem['type']} type
+   * @param {PoolItem['listener']} listener
+   * @param {PoolItem['passive']} [passive]
+   */
+
+
+  remove(target, type, listener, passive) {
+    this._toggleListener(target, type, listener, passive, true);
+  }
+  /**
+   * Removes all bound events
+   */
+
+
+  removeAll() {
+    this._pool.forEach(poolItem => {
+      this._toggleListener(poolItem.target, poolItem.type, poolItem.listener, poolItem.passive, true, true);
+    });
+
+    this._pool = [];
+  }
+  /**
+   * Adds or removes event
+   *
+   * @private
+   * @param {PoolItem['target']} target
+   * @param {PoolItem['type']} type
+   * @param {PoolItem['listener']} listener
+   * @param {PoolItem['passive']} [passive]
+   * @param {boolean} [unbind] Whether the event should be added or removed
+   * @param {boolean} [skipPool] Whether events pool should be skipped
+   */
+
+
+  _toggleListener(target, type, listener, passive, unbind, skipPool) {
+    if (!target) {
+      return;
+    }
+
+    const methodName = unbind ? 'removeEventListener' : 'addEventListener';
+    const types = type.split(' ');
+    types.forEach(eType => {
+      if (eType) {
+        // Events pool is used to easily unbind all events when PhotoSwipe is closed,
+        // so developer doesn't need to do this manually
+        if (!skipPool) {
+          if (unbind) {
+            // Remove from the events pool
+            this._pool = this._pool.filter(poolItem => {
+              return poolItem.type !== eType || poolItem.listener !== listener || poolItem.target !== target;
+            });
+          } else {
+            // Add to the events pool
+            this._pool.push({
+              target,
+              type: eType,
+              listener,
+              passive
+            });
+          }
+        } // most PhotoSwipe events call preventDefault,
+        // and we do not need browser to scroll the page
+
+
+        const eventOptions = supportsPassive ? {
+          passive: passive || false
+        } : false;
+        target[methodName](eType, listener, eventOptions);
+      }
+    });
+  }
+
+}
+
+/** @typedef {import('../photoswipe.js').PhotoSwipeOptions} PhotoSwipeOptions */
+
+/** @typedef {import('../core/base.js').default} PhotoSwipeBase */
+
+/** @typedef {import('../photoswipe.js').Point} Point */
+
+/** @typedef {import('../slide/slide.js').SlideData} SlideData */
+
+/**
+ * @param {PhotoSwipeOptions} options
+ * @param {PhotoSwipeBase} pswp
+ * @returns {Point}
+ */
+function getViewportSize(options, pswp) {
+  if (options.getViewportSizeFn) {
+    const newViewportSize = options.getViewportSizeFn(options, pswp);
+
+    if (newViewportSize) {
+      return newViewportSize;
+    }
+  }
+
+  return {
+    x: document.documentElement.clientWidth,
+    // TODO: height on mobile is very incosistent due to toolbar
+    // find a way to improve this
+    //
+    // document.documentElement.clientHeight - doesn't seem to work well
+    y: window.innerHeight
+  };
+}
+/**
+ * Parses padding option.
+ * Supported formats:
+ *
+ * // Object
+ * padding: {
+ *  top: 0,
+ *  bottom: 0,
+ *  left: 0,
+ *  right: 0
+ * }
+ *
+ * // A function that returns the object
+ * paddingFn: (viewportSize, itemData, index) => {
+ *  return {
+ *    top: 0,
+ *    bottom: 0,
+ *    left: 0,
+ *    right: 0
+ *  };
+ * }
+ *
+ * // Legacy variant
+ * paddingLeft: 0,
+ * paddingRight: 0,
+ * paddingTop: 0,
+ * paddingBottom: 0,
+ *
+ * @param {'left' | 'top' | 'bottom' | 'right'} prop
+ * @param {PhotoSwipeOptions} options PhotoSwipe options
+ * @param {Point} viewportSize PhotoSwipe viewport size, for example: { x:800, y:600 }
+ * @param {SlideData} itemData Data about the slide
+ * @param {number} index Slide index
+ * @returns {number}
+ */
+
+function parsePaddingOption(prop, options, viewportSize, itemData, index) {
+  let paddingValue = 0;
+
+  if (options.paddingFn) {
+    paddingValue = options.paddingFn(viewportSize, itemData, index)[prop];
+  } else if (options.padding) {
+    paddingValue = options.padding[prop];
+  } else {
+    const legacyPropName = 'padding' + prop[0].toUpperCase() + prop.slice(1); // @ts-expect-error
+
+    if (options[legacyPropName]) {
+      // @ts-expect-error
+      paddingValue = options[legacyPropName];
+    }
+  }
+
+  return Number(paddingValue) || 0;
+}
+/**
+ * @param {PhotoSwipeOptions} options
+ * @param {Point} viewportSize
+ * @param {SlideData} itemData
+ * @param {number} index
+ * @returns {Point}
+ */
+
+function getPanAreaSize(options, viewportSize, itemData, index) {
+  return {
+    x: viewportSize.x - parsePaddingOption('left', options, viewportSize, itemData, index) - parsePaddingOption('right', options, viewportSize, itemData, index),
+    y: viewportSize.y - parsePaddingOption('top', options, viewportSize, itemData, index) - parsePaddingOption('bottom', options, viewportSize, itemData, index)
+  };
+}
+
+/** @typedef {import('./slide.js').default} Slide */
+
+/** @typedef {Record<Axis, number>} Point */
+
+/** @typedef {'x' | 'y'} Axis */
+
+/**
+ * Calculates minimum, maximum and initial (center) bounds of a slide
+ */
+
+class PanBounds {
+  /**
+   * @param {Slide} slide
+   */
+  constructor(slide) {
+    this.slide = slide;
+    this.currZoomLevel = 1;
+    this.center =
+    /** @type {Point} */
+    {
+      x: 0,
+      y: 0
+    };
+    this.max =
+    /** @type {Point} */
+    {
+      x: 0,
+      y: 0
+    };
+    this.min =
+    /** @type {Point} */
+    {
+      x: 0,
+      y: 0
+    };
+  }
+  /**
+   * _getItemBounds
+   *
+   * @param {number} currZoomLevel
+   */
+
+
+  update(currZoomLevel) {
+    this.currZoomLevel = currZoomLevel;
+
+    if (!this.slide.width) {
+      this.reset();
+    } else {
+      this._updateAxis('x');
+
+      this._updateAxis('y');
+
+      this.slide.pswp.dispatch('calcBounds', {
+        slide: this.slide
+      });
+    }
+  }
+  /**
+   * _calculateItemBoundsForAxis
+   *
+   * @param {Axis} axis
+   */
+
+
+  _updateAxis(axis) {
+    const {
+      pswp
+    } = this.slide;
+    const elSize = this.slide[axis === 'x' ? 'width' : 'height'] * this.currZoomLevel;
+    const paddingProp = axis === 'x' ? 'left' : 'top';
+    const padding = parsePaddingOption(paddingProp, pswp.options, pswp.viewportSize, this.slide.data, this.slide.index);
+    const panAreaSize = this.slide.panAreaSize[axis]; // Default position of element.
+    // By default, it is center of viewport:
+
+    this.center[axis] = Math.round((panAreaSize - elSize) / 2) + padding; // maximum pan position
+
+    this.max[axis] = elSize > panAreaSize ? Math.round(panAreaSize - elSize) + padding : this.center[axis]; // minimum pan position
+
+    this.min[axis] = elSize > panAreaSize ? padding : this.center[axis];
+  } // _getZeroBounds
+
+
+  reset() {
+    this.center.x = 0;
+    this.center.y = 0;
+    this.max.x = 0;
+    this.max.y = 0;
+    this.min.x = 0;
+    this.min.y = 0;
+  }
+  /**
+   * Correct pan position if it's beyond the bounds
+   *
+   * @param {Axis} axis x or y
+   * @param {number} panOffset
+   * @returns {number}
+   */
+
+
+  correctPan(axis, panOffset) {
+    // checkPanBounds
+    return clamp(panOffset, this.max[axis], this.min[axis]);
+  }
+
+}
+
+const MAX_IMAGE_WIDTH = 4000;
+/** @typedef {import('../photoswipe.js').default} PhotoSwipe */
+
+/** @typedef {import('../photoswipe.js').PhotoSwipeOptions} PhotoSwipeOptions */
+
+/** @typedef {import('../photoswipe.js').Point} Point */
+
+/** @typedef {import('../slide/slide.js').SlideData} SlideData */
+
+/** @typedef {'fit' | 'fill' | number | ((zoomLevelObject: ZoomLevel) => number)} ZoomLevelOption */
+
+/**
+ * Calculates zoom levels for specific slide.
+ * Depends on viewport size and image size.
+ */
+
+class ZoomLevel {
+  /**
+   * @param {PhotoSwipeOptions} options PhotoSwipe options
+   * @param {SlideData} itemData Slide data
+   * @param {number} index Slide index
+   * @param {PhotoSwipe} [pswp] PhotoSwipe instance, can be undefined if not initialized yet
+   */
+  constructor(options, itemData, index, pswp) {
+    this.pswp = pswp;
+    this.options = options;
+    this.itemData = itemData;
+    this.index = index;
+    /** @type { Point | null } */
+
+    this.panAreaSize = null;
+    /** @type { Point | null } */
+
+    this.elementSize = null;
+    this.fit = 1;
+    this.fill = 1;
+    this.vFill = 1;
+    this.initial = 1;
+    this.secondary = 1;
+    this.max = 1;
+    this.min = 1;
+  }
+  /**
+   * Calculate initial, secondary and maximum zoom level for the specified slide.
+   *
+   * It should be called when either image or viewport size changes.
+   *
+   * @param {number} maxWidth
+   * @param {number} maxHeight
+   * @param {Point} panAreaSize
+   */
+
+
+  update(maxWidth, maxHeight, panAreaSize) {
+    /** @type {Point} */
+    const elementSize = {
+      x: maxWidth,
+      y: maxHeight
+    };
+    this.elementSize = elementSize;
+    this.panAreaSize = panAreaSize;
+    const hRatio = panAreaSize.x / elementSize.x;
+    const vRatio = panAreaSize.y / elementSize.y;
+    this.fit = Math.min(1, hRatio < vRatio ? hRatio : vRatio);
+    this.fill = Math.min(1, hRatio > vRatio ? hRatio : vRatio); // zoom.vFill defines zoom level of the image
+    // when it has 100% of viewport vertical space (height)
+
+    this.vFill = Math.min(1, vRatio);
+    this.initial = this._getInitial();
+    this.secondary = this._getSecondary();
+    this.max = Math.max(this.initial, this.secondary, this._getMax());
+    this.min = Math.min(this.fit, this.initial, this.secondary);
+
+    if (this.pswp) {
+      this.pswp.dispatch('zoomLevelsUpdate', {
+        zoomLevels: this,
+        slideData: this.itemData
+      });
+    }
+  }
+  /**
+   * Parses user-defined zoom option.
+   *
+   * @private
+   * @param {'initial' | 'secondary' | 'max'} optionPrefix Zoom level option prefix (initial, secondary, max)
+   * @returns { number | undefined }
+   */
+
+
+  _parseZoomLevelOption(optionPrefix) {
+    const optionName =
+    /** @type {'initialZoomLevel' | 'secondaryZoomLevel' | 'maxZoomLevel'} */
+    optionPrefix + 'ZoomLevel';
+    const optionValue = this.options[optionName];
+
+    if (!optionValue) {
+      return;
+    }
+
+    if (typeof optionValue === 'function') {
+      return optionValue(this);
+    }
+
+    if (optionValue === 'fill') {
+      return this.fill;
+    }
+
+    if (optionValue === 'fit') {
+      return this.fit;
+    }
+
+    return Number(optionValue);
+  }
+  /**
+   * Get zoom level to which image will be zoomed after double-tap gesture,
+   * or when user clicks on zoom icon,
+   * or mouse-click on image itself.
+   * If you return 1 image will be zoomed to its original size.
+   *
+   * @private
+   * @return {number}
+   */
+
+
+  _getSecondary() {
+    let currZoomLevel = this._parseZoomLevelOption('secondary');
+
+    if (currZoomLevel) {
+      return currZoomLevel;
+    } // 3x of "fit" state, but not larger than original
+
+
+    currZoomLevel = Math.min(1, this.fit * 3);
+
+    if (this.elementSize && currZoomLevel * this.elementSize.x > MAX_IMAGE_WIDTH) {
+      currZoomLevel = MAX_IMAGE_WIDTH / this.elementSize.x;
+    }
+
+    return currZoomLevel;
+  }
+  /**
+   * Get initial image zoom level.
+   *
+   * @private
+   * @return {number}
+   */
+
+
+  _getInitial() {
+    return this._parseZoomLevelOption('initial') || this.fit;
+  }
+  /**
+   * Maximum zoom level when user zooms
+   * via zoom/pinch gesture,
+   * via cmd/ctrl-wheel or via trackpad.
+   *
+   * @private
+   * @return {number}
+   */
+
+
+  _getMax() {
+    // max zoom level is x4 from "fit state",
+    // used for zoom gesture and ctrl/trackpad zoom
+    return this._parseZoomLevelOption('max') || Math.max(1, this.fit * 4);
+  }
+
+}
+
+/** @typedef {import('../photoswipe.js').default} PhotoSwipe */
+/**
+ * Renders and allows to control a single slide
+ */
+
+class Slide {
+  /**
+   * @param {SlideData} data
+   * @param {number} index
+   * @param {PhotoSwipe} pswp
+   */
+  constructor(data, index, pswp) {
+    this.data = data;
+    this.index = index;
+    this.pswp = pswp;
+    this.isActive = index === pswp.currIndex;
+    this.currentResolution = 0;
+    /** @type {Point} */
+
+    this.panAreaSize = {
+      x: 0,
+      y: 0
+    };
+    /** @type {Point} */
+
+    this.pan = {
+      x: 0,
+      y: 0
+    };
+    this.isFirstSlide = this.isActive && !pswp.opener.isOpen;
+    this.zoomLevels = new ZoomLevel(pswp.options, data, index, pswp);
+    this.pswp.dispatch('gettingData', {
+      slide: this,
+      data: this.data,
+      index
+    });
+    this.content = this.pswp.contentLoader.getContentBySlide(this);
+    this.container = createElement('pswp__zoom-wrap', 'div');
+    /** @type {HTMLElement | null} */
+
+    this.holderElement = null;
+    this.currZoomLevel = 1;
+    /** @type {number} */
+
+    this.width = this.content.width;
+    /** @type {number} */
+
+    this.height = this.content.height;
+    this.heavyAppended = false;
+    this.bounds = new PanBounds(this);
+    this.prevDisplayedWidth = -1;
+    this.prevDisplayedHeight = -1;
+    this.pswp.dispatch('slideInit', {
+      slide: this
+    });
+  }
+  /**
+   * If this slide is active/current/visible
+   *
+   * @param {boolean} isActive
+   */
+
+
+  setIsActive(isActive) {
+    if (isActive && !this.isActive) {
+      // slide just became active
+      this.activate();
+    } else if (!isActive && this.isActive) {
+      // slide just became non-active
+      this.deactivate();
+    }
+  }
+  /**
+   * Appends slide content to DOM
+   *
+   * @param {HTMLElement} holderElement
+   */
+
+
+  append(holderElement) {
+    this.holderElement = holderElement;
+    this.container.style.transformOrigin = '0 0'; // Slide appended to DOM
+
+    if (!this.data) {
+      return;
+    }
+
+    this.calculateSize();
+    this.load();
+    this.updateContentSize();
+    this.appendHeavy();
+    this.holderElement.appendChild(this.container);
+    this.zoomAndPanToInitial();
+    this.pswp.dispatch('firstZoomPan', {
+      slide: this
+    });
+    this.applyCurrentZoomPan();
+    this.pswp.dispatch('afterSetContent', {
+      slide: this
+    });
+
+    if (this.isActive) {
+      this.activate();
+    }
+  }
+
+  load() {
+    this.content.load(false);
+    this.pswp.dispatch('slideLoad', {
+      slide: this
+    });
+  }
+  /**
+   * Append "heavy" DOM elements
+   *
+   * This may depend on a type of slide,
+   * but generally these are large images.
+   */
+
+
+  appendHeavy() {
+    const {
+      pswp
+    } = this;
+    const appendHeavyNearby = true; // todo
+    // Avoid appending heavy elements during animations
+
+    if (this.heavyAppended || !pswp.opener.isOpen || pswp.mainScroll.isShifted() || !this.isActive && !appendHeavyNearby) {
+      return;
+    }
+
+    if (this.pswp.dispatch('appendHeavy', {
+      slide: this
+    }).defaultPrevented) {
+      return;
+    }
+
+    this.heavyAppended = true;
+    this.content.append();
+    this.pswp.dispatch('appendHeavyContent', {
+      slide: this
+    });
+  }
+  /**
+   * Triggered when this slide is active (selected).
+   *
+   * If it's part of opening/closing transition -
+   * activate() will trigger after the transition is ended.
+   */
+
+
+  activate() {
+    this.isActive = true;
+    this.appendHeavy();
+    this.content.activate();
+    this.pswp.dispatch('slideActivate', {
+      slide: this
+    });
+  }
+  /**
+   * Triggered when this slide becomes inactive.
+   *
+   * Slide can become inactive only after it was active.
+   */
+
+
+  deactivate() {
+    this.isActive = false;
+    this.content.deactivate();
+
+    if (this.currZoomLevel !== this.zoomLevels.initial) {
+      // allow filtering
+      this.calculateSize();
+    } // reset zoom level
+
+
+    this.currentResolution = 0;
+    this.zoomAndPanToInitial();
+    this.applyCurrentZoomPan();
+    this.updateContentSize();
+    this.pswp.dispatch('slideDeactivate', {
+      slide: this
+    });
+  }
+  /**
+   * The slide should destroy itself, it will never be used again.
+   * (unbind all events and destroy internal components)
+   */
+
+
+  destroy() {
+    this.content.hasSlide = false;
+    this.content.remove();
+    this.container.remove();
+    this.pswp.dispatch('slideDestroy', {
+      slide: this
+    });
+  }
+
+  resize() {
+    if (this.currZoomLevel === this.zoomLevels.initial || !this.isActive) {
+      // Keep initial zoom level if it was before the resize,
+      // as well as when this slide is not active
+      // Reset position and scale to original state
+      this.calculateSize();
+      this.currentResolution = 0;
+      this.zoomAndPanToInitial();
+      this.applyCurrentZoomPan();
+      this.updateContentSize();
+    } else {
+      // readjust pan position if it's beyond the bounds
+      this.calculateSize();
+      this.bounds.update(this.currZoomLevel);
+      this.panTo(this.pan.x, this.pan.y);
+    }
+  }
+  /**
+   * Apply size to current slide content,
+   * based on the current resolution and scale.
+   *
+   * @param {boolean} [force] if size should be updated even if dimensions weren't changed
+   */
+
+
+  updateContentSize(force) {
+    // Use initial zoom level
+    // if resolution is not defined (user didn't zoom yet)
+    const scaleMultiplier = this.currentResolution || this.zoomLevels.initial;
+
+    if (!scaleMultiplier) {
+      return;
+    }
+
+    const width = Math.round(this.width * scaleMultiplier) || this.pswp.viewportSize.x;
+    const height = Math.round(this.height * scaleMultiplier) || this.pswp.viewportSize.y;
+
+    if (!this.sizeChanged(width, height) && !force) {
+      return;
+    }
+
+    this.content.setDisplayedSize(width, height);
+  }
+  /**
+   * @param {number} width
+   * @param {number} height
+   */
+
+
+  sizeChanged(width, height) {
+    if (width !== this.prevDisplayedWidth || height !== this.prevDisplayedHeight) {
+      this.prevDisplayedWidth = width;
+      this.prevDisplayedHeight = height;
+      return true;
+    }
+
+    return false;
+  }
+  /** @returns {HTMLImageElement | HTMLDivElement | null | undefined} */
+
+
+  getPlaceholderElement() {
+    var _this$content$placeho;
+
+    return (_this$content$placeho = this.content.placeholder) === null || _this$content$placeho === void 0 ? void 0 : _this$content$placeho.element;
+  }
+  /**
+   * Zoom current slide image to...
+   *
+   * @param {number} destZoomLevel Destination zoom level.
+   * @param {Point} [centerPoint]
+   * Transform origin center point, or false if viewport center should be used.
+   * @param {number | false} [transitionDuration] Transition duration, may be set to 0.
+   * @param {boolean} [ignoreBounds] Minimum and maximum zoom levels will be ignored.
+   */
+
+
+  zoomTo(destZoomLevel, centerPoint, transitionDuration, ignoreBounds) {
+    const {
+      pswp
+    } = this;
+
+    if (!this.isZoomable() || pswp.mainScroll.isShifted()) {
+      return;
+    }
+
+    pswp.dispatch('beforeZoomTo', {
+      destZoomLevel,
+      centerPoint,
+      transitionDuration
+    }); // stop all pan and zoom transitions
+
+    pswp.animations.stopAllPan(); // if (!centerPoint) {
+    //   centerPoint = pswp.getViewportCenterPoint();
+    // }
+
+    const prevZoomLevel = this.currZoomLevel;
+
+    if (!ignoreBounds) {
+      destZoomLevel = clamp(destZoomLevel, this.zoomLevels.min, this.zoomLevels.max);
+    } // if (transitionDuration === undefined) {
+    //   transitionDuration = this.pswp.options.zoomAnimationDuration;
+    // }
+
+
+    this.setZoomLevel(destZoomLevel);
+    this.pan.x = this.calculateZoomToPanOffset('x', centerPoint, prevZoomLevel);
+    this.pan.y = this.calculateZoomToPanOffset('y', centerPoint, prevZoomLevel);
+    roundPoint(this.pan);
+
+    const finishTransition = () => {
+      this._setResolution(destZoomLevel);
+
+      this.applyCurrentZoomPan();
+    };
+
+    if (!transitionDuration) {
+      finishTransition();
+    } else {
+      pswp.animations.startTransition({
+        isPan: true,
+        name: 'zoomTo',
+        target: this.container,
+        transform: this.getCurrentTransform(),
+        onComplete: finishTransition,
+        duration: transitionDuration,
+        easing: pswp.options.easing
+      });
+    }
+  }
+  /**
+   * @param {Point} [centerPoint]
+   */
+
+
+  toggleZoom(centerPoint) {
+    this.zoomTo(this.currZoomLevel === this.zoomLevels.initial ? this.zoomLevels.secondary : this.zoomLevels.initial, centerPoint, this.pswp.options.zoomAnimationDuration);
+  }
+  /**
+   * Updates zoom level property and recalculates new pan bounds,
+   * unlike zoomTo it does not apply transform (use applyCurrentZoomPan)
+   *
+   * @param {number} currZoomLevel
+   */
+
+
+  setZoomLevel(currZoomLevel) {
+    this.currZoomLevel = currZoomLevel;
+    this.bounds.update(this.currZoomLevel);
+  }
+  /**
+   * Get pan position after zoom at a given `point`.
+   *
+   * Always call setZoomLevel(newZoomLevel) beforehand to recalculate
+   * pan bounds according to the new zoom level.
+   *
+   * @param {'x' | 'y'} axis
+   * @param {Point} [point]
+   * point based on which zoom is performed, usually refers to the current mouse position,
+   * if false - viewport center will be used.
+   * @param {number} [prevZoomLevel] Zoom level before new zoom was applied.
+   * @returns {number}
+   */
+
+
+  calculateZoomToPanOffset(axis, point, prevZoomLevel) {
+    const totalPanDistance = this.bounds.max[axis] - this.bounds.min[axis];
+
+    if (totalPanDistance === 0) {
+      return this.bounds.center[axis];
+    }
+
+    if (!point) {
+      point = this.pswp.getViewportCenterPoint();
+    }
+
+    if (!prevZoomLevel) {
+      prevZoomLevel = this.zoomLevels.initial;
+    }
+
+    const zoomFactor = this.currZoomLevel / prevZoomLevel;
+    return this.bounds.correctPan(axis, (this.pan[axis] - point[axis]) * zoomFactor + point[axis]);
+  }
+  /**
+   * Apply pan and keep it within bounds.
+   *
+   * @param {number} panX
+   * @param {number} panY
+   */
+
+
+  panTo(panX, panY) {
+    this.pan.x = this.bounds.correctPan('x', panX);
+    this.pan.y = this.bounds.correctPan('y', panY);
+    this.applyCurrentZoomPan();
+  }
+  /**
+   * If the slide in the current state can be panned by the user
+   * @returns {boolean}
+   */
+
+
+  isPannable() {
+    return Boolean(this.width) && this.currZoomLevel > this.zoomLevels.fit;
+  }
+  /**
+   * If the slide can be zoomed
+   * @returns {boolean}
+   */
+
+
+  isZoomable() {
+    return Boolean(this.width) && this.content.isZoomable();
+  }
+  /**
+   * Apply transform and scale based on
+   * the current pan position (this.pan) and zoom level (this.currZoomLevel)
+   */
+
+
+  applyCurrentZoomPan() {
+    this._applyZoomTransform(this.pan.x, this.pan.y, this.currZoomLevel);
+
+    if (this === this.pswp.currSlide) {
+      this.pswp.dispatch('zoomPanUpdate', {
+        slide: this
+      });
+    }
+  }
+
+  zoomAndPanToInitial() {
+    this.currZoomLevel = this.zoomLevels.initial; // pan according to the zoom level
+
+    this.bounds.update(this.currZoomLevel);
+    equalizePoints(this.pan, this.bounds.center);
+    this.pswp.dispatch('initialZoomPan', {
+      slide: this
+    });
+  }
+  /**
+   * Set translate and scale based on current resolution
+   *
+   * @param {number} x
+   * @param {number} y
+   * @param {number} zoom
+   * @private
+   */
+
+
+  _applyZoomTransform(x, y, zoom) {
+    zoom /= this.currentResolution || this.zoomLevels.initial;
+    setTransform(this.container, x, y, zoom);
+  }
+
+  calculateSize() {
+    const {
+      pswp
+    } = this;
+    equalizePoints(this.panAreaSize, getPanAreaSize(pswp.options, pswp.viewportSize, this.data, this.index));
+    this.zoomLevels.update(this.width, this.height, this.panAreaSize);
+    pswp.dispatch('calcSlideSize', {
+      slide: this
+    });
+  }
+  /** @returns {string} */
+
+
+  getCurrentTransform() {
+    const scale = this.currZoomLevel / (this.currentResolution || this.zoomLevels.initial);
+    return toTransformString(this.pan.x, this.pan.y, scale);
+  }
+  /**
+   * Set resolution and re-render the image.
+   *
+   * For example, if the real image size is 2000x1500,
+   * and resolution is 0.5 - it will be rendered as 1000x750.
+   *
+   * Image with zoom level 2 and resolution 0.5 is
+   * the same as image with zoom level 1 and resolution 1.
+   *
+   * Used to optimize animations and make
+   * sure that browser renders image in the highest quality.
+   * Also used by responsive images to load the correct one.
+   *
+   * @param {number} newResolution
+   */
+
+
+  _setResolution(newResolution) {
+    if (newResolution === this.currentResolution) {
+      return;
+    }
+
+    this.currentResolution = newResolution;
+    this.updateContentSize();
+    this.pswp.dispatch('resolutionChanged');
+  }
+
+}
+
+/** @typedef {import('../photoswipe.js').Point} Point */
+
+/** @typedef {import('./gestures.js').default} Gestures */
+
+const PAN_END_FRICTION = 0.35;
+const VERTICAL_DRAG_FRICTION = 0.6; // 1 corresponds to the third of viewport height
+
+const MIN_RATIO_TO_CLOSE = 0.4; // Minimum speed required to navigate
+// to next or previous slide
+
+const MIN_NEXT_SLIDE_SPEED = 0.5;
+/**
+ * @param {number} initialVelocity
+ * @param {number} decelerationRate
+ * @returns {number}
+ */
+
+function project(initialVelocity, decelerationRate) {
+  return initialVelocity * decelerationRate / (1 - decelerationRate);
+}
+/**
+ * Handles single pointer dragging
+ */
+
+
+class DragHandler {
+  /**
+   * @param {Gestures} gestures
+   */
+  constructor(gestures) {
+    this.gestures = gestures;
+    this.pswp = gestures.pswp;
+    /** @type {Point} */
+
+    this.startPan = {
+      x: 0,
+      y: 0
+    };
+  }
+
+  start() {
+    if (this.pswp.currSlide) {
+      equalizePoints(this.startPan, this.pswp.currSlide.pan);
+    }
+
+    this.pswp.animations.stopAll();
+  }
+
+  change() {
+    const {
+      p1,
+      prevP1,
+      dragAxis
+    } = this.gestures;
+    const {
+      currSlide
+    } = this.pswp;
+
+    if (dragAxis === 'y' && this.pswp.options.closeOnVerticalDrag && currSlide && currSlide.currZoomLevel <= currSlide.zoomLevels.fit && !this.gestures.isMultitouch) {
+      // Handle vertical drag to close
+      const panY = currSlide.pan.y + (p1.y - prevP1.y);
+
+      if (!this.pswp.dispatch('verticalDrag', {
+        panY
+      }).defaultPrevented) {
+        this._setPanWithFriction('y', panY, VERTICAL_DRAG_FRICTION);
+
+        const bgOpacity = 1 - Math.abs(this._getVerticalDragRatio(currSlide.pan.y));
+        this.pswp.applyBgOpacity(bgOpacity);
+        currSlide.applyCurrentZoomPan();
+      }
+    } else {
+      const mainScrollChanged = this._panOrMoveMainScroll('x');
+
+      if (!mainScrollChanged) {
+        this._panOrMoveMainScroll('y');
+
+        if (currSlide) {
+          roundPoint(currSlide.pan);
+          currSlide.applyCurrentZoomPan();
+        }
+      }
+    }
+  }
+
+  end() {
+    const {
+      velocity
+    } = this.gestures;
+    const {
+      mainScroll,
+      currSlide
+    } = this.pswp;
+    let indexDiff = 0;
+    this.pswp.animations.stopAll(); // Handle main scroll if it's shifted
+
+    if (mainScroll.isShifted()) {
+      // Position of the main scroll relative to the viewport
+      const mainScrollShiftDiff = mainScroll.x - mainScroll.getCurrSlideX(); // Ratio between 0 and 1:
+      // 0 - slide is not visible at all,
+      // 0.5 - half of the slide is visible
+      // 1 - slide is fully visible
+
+      const currentSlideVisibilityRatio = mainScrollShiftDiff / this.pswp.viewportSize.x; // Go next slide.
+      //
+      // - if velocity and its direction is matched,
+      //   and we see at least tiny part of the next slide
+      //
+      // - or if we see less than 50% of the current slide
+      //   and velocity is close to 0
+      //
+
+      if (velocity.x < -MIN_NEXT_SLIDE_SPEED && currentSlideVisibilityRatio < 0 || velocity.x < 0.1 && currentSlideVisibilityRatio < -0.5) {
+        // Go to next slide
+        indexDiff = 1;
+        velocity.x = Math.min(velocity.x, 0);
+      } else if (velocity.x > MIN_NEXT_SLIDE_SPEED && currentSlideVisibilityRatio > 0 || velocity.x > -0.1 && currentSlideVisibilityRatio > 0.5) {
+        // Go to prev slide
+        indexDiff = -1;
+        velocity.x = Math.max(velocity.x, 0);
+      }
+
+      mainScroll.moveIndexBy(indexDiff, true, velocity.x);
+    } // Restore zoom level
+
+
+    if (currSlide && currSlide.currZoomLevel > currSlide.zoomLevels.max || this.gestures.isMultitouch) {
+      this.gestures.zoomLevels.correctZoomPan(true);
+    } else {
+      // we run two animations instead of one,
+      // as each axis has own pan boundaries and thus different spring function
+      // (correctZoomPan does not have this functionality,
+      //  it animates all properties with single timing function)
+      this._finishPanGestureForAxis('x');
+
+      this._finishPanGestureForAxis('y');
+    }
+  }
+  /**
+   * @private
+   * @param {'x' | 'y'} axis
+   */
+
+
+  _finishPanGestureForAxis(axis) {
+    const {
+      velocity
+    } = this.gestures;
+    const {
+      currSlide
+    } = this.pswp;
+
+    if (!currSlide) {
+      return;
+    }
+
+    const {
+      pan,
+      bounds
+    } = currSlide;
+    const panPos = pan[axis];
+    const restoreBgOpacity = this.pswp.bgOpacity < 1 && axis === 'y'; // 0.995 means - scroll view loses 0.5% of its velocity per millisecond
+    // Increasing this number will reduce travel distance
+
+    const decelerationRate = 0.995; // 0.99
+    // Pan position if there is no bounds
+
+    const projectedPosition = panPos + project(velocity[axis], decelerationRate);
+
+    if (restoreBgOpacity) {
+      const vDragRatio = this._getVerticalDragRatio(panPos);
+
+      const projectedVDragRatio = this._getVerticalDragRatio(projectedPosition); // If we are above and moving upwards,
+      // or if we are below and moving downwards
+
+
+      if (vDragRatio < 0 && projectedVDragRatio < -MIN_RATIO_TO_CLOSE || vDragRatio > 0 && projectedVDragRatio > MIN_RATIO_TO_CLOSE) {
+        this.pswp.close();
+        return;
+      }
+    } // Pan position with corrected bounds
+
+
+    const correctedPanPosition = bounds.correctPan(axis, projectedPosition); // Exit if pan position should not be changed
+    // or if speed it too low
+
+    if (panPos === correctedPanPosition) {
+      return;
+    } // Overshoot if the final position is out of pan bounds
+
+
+    const dampingRatio = correctedPanPosition === projectedPosition ? 1 : 0.82;
+    const initialBgOpacity = this.pswp.bgOpacity;
+    const totalPanDist = correctedPanPosition - panPos;
+    this.pswp.animations.startSpring({
+      name: 'panGesture' + axis,
+      isPan: true,
+      start: panPos,
+      end: correctedPanPosition,
+      velocity: velocity[axis],
+      dampingRatio,
+      onUpdate: pos => {
+        // Animate opacity of background relative to Y pan position of an image
+        if (restoreBgOpacity && this.pswp.bgOpacity < 1) {
+          // 0 - start of animation, 1 - end of animation
+          const animationProgressRatio = 1 - (correctedPanPosition - pos) / totalPanDist; // We clamp opacity to keep it between 0 and 1.
+          // As progress ratio can be larger than 1 due to overshoot,
+          // and we do not want to bounce opacity.
+
+          this.pswp.applyBgOpacity(clamp(initialBgOpacity + (1 - initialBgOpacity) * animationProgressRatio, 0, 1));
+        }
+
+        pan[axis] = Math.floor(pos);
+        currSlide.applyCurrentZoomPan();
+      }
+    });
+  }
+  /**
+   * Update position of the main scroll,
+   * or/and update pan position of the current slide.
+   *
+   * Should return true if it changes (or can change) main scroll.
+   *
+   * @private
+   * @param {'x' | 'y'} axis
+   * @returns {boolean}
+   */
+
+
+  _panOrMoveMainScroll(axis) {
+    const {
+      p1,
+      dragAxis,
+      prevP1,
+      isMultitouch
+    } = this.gestures;
+    const {
+      currSlide,
+      mainScroll
+    } = this.pswp;
+    const delta = p1[axis] - prevP1[axis];
+    const newMainScrollX = mainScroll.x + delta;
+
+    if (!delta || !currSlide) {
+      return false;
+    } // Always move main scroll if image can not be panned
+
+
+    if (axis === 'x' && !currSlide.isPannable() && !isMultitouch) {
+      mainScroll.moveTo(newMainScrollX, true);
+      return true; // changed main scroll
+    }
+
+    const {
+      bounds
+    } = currSlide;
+    const newPan = currSlide.pan[axis] + delta;
+
+    if (this.pswp.options.allowPanToNext && dragAxis === 'x' && axis === 'x' && !isMultitouch) {
+      const currSlideMainScrollX = mainScroll.getCurrSlideX(); // Position of the main scroll relative to the viewport
+
+      const mainScrollShiftDiff = mainScroll.x - currSlideMainScrollX;
+      const isLeftToRight = delta > 0;
+      const isRightToLeft = !isLeftToRight;
+
+      if (newPan > bounds.min[axis] && isLeftToRight) {
+        // Panning from left to right, beyond the left edge
+        // Wether the image was at minimum pan position (or less)
+        // when this drag gesture started.
+        // Minimum pan position refers to the left edge of the image.
+        const wasAtMinPanPosition = bounds.min[axis] <= this.startPan[axis];
+
+        if (wasAtMinPanPosition) {
+          mainScroll.moveTo(newMainScrollX, true);
+          return true;
+        } else {
+          this._setPanWithFriction(axis, newPan); //currSlide.pan[axis] = newPan;
+
+        }
+      } else if (newPan < bounds.max[axis] && isRightToLeft) {
+        // Paning from right to left, beyond the right edge
+        // Maximum pan position refers to the right edge of the image.
+        const wasAtMaxPanPosition = this.startPan[axis] <= bounds.max[axis];
+
+        if (wasAtMaxPanPosition) {
+          mainScroll.moveTo(newMainScrollX, true);
+          return true;
+        } else {
+          this._setPanWithFriction(axis, newPan); //currSlide.pan[axis] = newPan;
+
+        }
+      } else {
+        // If main scroll is shifted
+        if (mainScrollShiftDiff !== 0) {
+          // If main scroll is shifted right
+          if (mainScrollShiftDiff > 0
+          /*&& isRightToLeft*/
+          ) {
+            mainScroll.moveTo(Math.max(newMainScrollX, currSlideMainScrollX), true);
+            return true;
+          } else if (mainScrollShiftDiff < 0
+          /*&& isLeftToRight*/
+          ) {
+            // Main scroll is shifted left (Position is less than 0 comparing to the viewport 0)
+            mainScroll.moveTo(Math.min(newMainScrollX, currSlideMainScrollX), true);
+            return true;
+          }
+        } else {
+          // We are within pan bounds, so just pan
+          this._setPanWithFriction(axis, newPan);
+        }
+      }
+    } else {
+      if (axis === 'y') {
+        // Do not pan vertically if main scroll is shifted o
+        if (!mainScroll.isShifted() && bounds.min.y !== bounds.max.y) {
+          this._setPanWithFriction(axis, newPan);
+        }
+      } else {
+        this._setPanWithFriction(axis, newPan);
+      }
+    }
+
+    return false;
+  } // If we move above - the ratio is negative
+  // If we move below the ratio is positive
+
+  /**
+   * Relation between pan Y position and third of viewport height.
+   *
+   * When we are at initial position (center bounds) - the ratio is 0,
+   * if position is shifted upwards - the ratio is negative,
+   * if position is shifted downwards - the ratio is positive.
+   *
+   * @private
+   * @param {number} panY The current pan Y position.
+   * @returns {number}
+   */
+
+
+  _getVerticalDragRatio(panY) {
+    var _this$pswp$currSlide$, _this$pswp$currSlide;
+
+    return (panY - ((_this$pswp$currSlide$ = (_this$pswp$currSlide = this.pswp.currSlide) === null || _this$pswp$currSlide === void 0 ? void 0 : _this$pswp$currSlide.bounds.center.y) !== null && _this$pswp$currSlide$ !== void 0 ? _this$pswp$currSlide$ : 0)) / (this.pswp.viewportSize.y / 3);
+  }
+  /**
+   * Set pan position of the current slide.
+   * Apply friction if the position is beyond the pan bounds,
+   * or if custom friction is defined.
+   *
+   * @private
+   * @param {'x' | 'y'} axis
+   * @param {number} potentialPan
+   * @param {number} [customFriction] (0.1 - 1)
+   */
+
+
+  _setPanWithFriction(axis, potentialPan, customFriction) {
+    const {
+      currSlide
+    } = this.pswp;
+
+    if (!currSlide) {
+      return;
+    }
+
+    const {
+      pan,
+      bounds
+    } = currSlide;
+    const correctedPan = bounds.correctPan(axis, potentialPan); // If we are out of pan bounds
+
+    if (correctedPan !== potentialPan || customFriction) {
+      const delta = Math.round(potentialPan - pan[axis]);
+      pan[axis] += delta * (customFriction || PAN_END_FRICTION);
+    } else {
+      pan[axis] = potentialPan;
+    }
+  }
+
+}
+
+/** @typedef {import('../photoswipe.js').Point} Point */
+
+/** @typedef {import('./gestures.js').default} Gestures */
+
+const UPPER_ZOOM_FRICTION = 0.05;
+const LOWER_ZOOM_FRICTION = 0.15;
+/**
+ * Get center point between two points
+ *
+ * @param {Point} p
+ * @param {Point} p1
+ * @param {Point} p2
+ * @returns {Point}
+ */
+
+function getZoomPointsCenter(p, p1, p2) {
+  p.x = (p1.x + p2.x) / 2;
+  p.y = (p1.y + p2.y) / 2;
+  return p;
+}
+
+class ZoomHandler {
+  /**
+   * @param {Gestures} gestures
+   */
+  constructor(gestures) {
+    this.gestures = gestures;
+    /**
+     * @private
+     * @type {Point}
+     */
+
+    this._startPan = {
+      x: 0,
+      y: 0
+    };
+    /**
+     * @private
+     * @type {Point}
+     */
+
+    this._startZoomPoint = {
+      x: 0,
+      y: 0
+    };
+    /**
+     * @private
+     * @type {Point}
+     */
+
+    this._zoomPoint = {
+      x: 0,
+      y: 0
+    };
+    /** @private */
+
+    this._wasOverFitZoomLevel = false;
+    /** @private */
+
+    this._startZoomLevel = 1;
+  }
+
+  start() {
+    const {
+      currSlide
+    } = this.gestures.pswp;
+
+    if (currSlide) {
+      this._startZoomLevel = currSlide.currZoomLevel;
+      equalizePoints(this._startPan, currSlide.pan);
+    }
+
+    this.gestures.pswp.animations.stopAllPan();
+    this._wasOverFitZoomLevel = false;
+  }
+
+  change() {
+    const {
+      p1,
+      startP1,
+      p2,
+      startP2,
+      pswp
+    } = this.gestures;
+    const {
+      currSlide
+    } = pswp;
+
+    if (!currSlide) {
+      return;
+    }
+
+    const minZoomLevel = currSlide.zoomLevels.min;
+    const maxZoomLevel = currSlide.zoomLevels.max;
+
+    if (!currSlide.isZoomable() || pswp.mainScroll.isShifted()) {
+      return;
+    }
+
+    getZoomPointsCenter(this._startZoomPoint, startP1, startP2);
+    getZoomPointsCenter(this._zoomPoint, p1, p2);
+
+    let currZoomLevel = 1 / getDistanceBetween(startP1, startP2) * getDistanceBetween(p1, p2) * this._startZoomLevel; // slightly over the zoom.fit
+
+
+    if (currZoomLevel > currSlide.zoomLevels.initial + currSlide.zoomLevels.initial / 15) {
+      this._wasOverFitZoomLevel = true;
+    }
+
+    if (currZoomLevel < minZoomLevel) {
+      if (pswp.options.pinchToClose && !this._wasOverFitZoomLevel && this._startZoomLevel <= currSlide.zoomLevels.initial) {
+        // fade out background if zooming out
+        const bgOpacity = 1 - (minZoomLevel - currZoomLevel) / (minZoomLevel / 1.2);
+
+        if (!pswp.dispatch('pinchClose', {
+          bgOpacity
+        }).defaultPrevented) {
+          pswp.applyBgOpacity(bgOpacity);
+        }
+      } else {
+        // Apply the friction if zoom level is below the min
+        currZoomLevel = minZoomLevel - (minZoomLevel - currZoomLevel) * LOWER_ZOOM_FRICTION;
+      }
+    } else if (currZoomLevel > maxZoomLevel) {
+      // Apply the friction if zoom level is above the max
+      currZoomLevel = maxZoomLevel + (currZoomLevel - maxZoomLevel) * UPPER_ZOOM_FRICTION;
+    }
+
+    currSlide.pan.x = this._calculatePanForZoomLevel('x', currZoomLevel);
+    currSlide.pan.y = this._calculatePanForZoomLevel('y', currZoomLevel);
+    currSlide.setZoomLevel(currZoomLevel);
+    currSlide.applyCurrentZoomPan();
+  }
+
+  end() {
+    const {
+      pswp
+    } = this.gestures;
+    const {
+      currSlide
+    } = pswp;
+
+    if ((!currSlide || currSlide.currZoomLevel < currSlide.zoomLevels.initial) && !this._wasOverFitZoomLevel && pswp.options.pinchToClose) {
+      pswp.close();
+    } else {
+      this.correctZoomPan();
+    }
+  }
+  /**
+   * @private
+   * @param {'x' | 'y'} axis
+   * @param {number} currZoomLevel
+   * @returns {number}
+   */
+
+
+  _calculatePanForZoomLevel(axis, currZoomLevel) {
+    const zoomFactor = currZoomLevel / this._startZoomLevel;
+    return this._zoomPoint[axis] - (this._startZoomPoint[axis] - this._startPan[axis]) * zoomFactor;
+  }
+  /**
+   * Correct currZoomLevel and pan if they are
+   * beyond minimum or maximum values.
+   * With animation.
+   *
+   * @param {boolean} [ignoreGesture]
+   * Wether gesture coordinates should be ignored when calculating destination pan position.
+   */
+
+
+  correctZoomPan(ignoreGesture) {
+    const {
+      pswp
+    } = this.gestures;
+    const {
+      currSlide
+    } = pswp;
+
+    if (!(currSlide !== null && currSlide !== void 0 && currSlide.isZoomable())) {
+      return;
+    }
+
+    if (this._zoomPoint.x === 0) {
+      ignoreGesture = true;
+    }
+
+    const prevZoomLevel = currSlide.currZoomLevel;
+    /** @type {number} */
+
+    let destinationZoomLevel;
+    let currZoomLevelNeedsChange = true;
+
+    if (prevZoomLevel < currSlide.zoomLevels.initial) {
+      destinationZoomLevel = currSlide.zoomLevels.initial; // zoom to min
+    } else if (prevZoomLevel > currSlide.zoomLevels.max) {
+      destinationZoomLevel = currSlide.zoomLevels.max; // zoom to max
+    } else {
+      currZoomLevelNeedsChange = false;
+      destinationZoomLevel = prevZoomLevel;
+    }
+
+    const initialBgOpacity = pswp.bgOpacity;
+    const restoreBgOpacity = pswp.bgOpacity < 1;
+    const initialPan = equalizePoints({
+      x: 0,
+      y: 0
+    }, currSlide.pan);
+    let destinationPan = equalizePoints({
+      x: 0,
+      y: 0
+    }, initialPan);
+
+    if (ignoreGesture) {
+      this._zoomPoint.x = 0;
+      this._zoomPoint.y = 0;
+      this._startZoomPoint.x = 0;
+      this._startZoomPoint.y = 0;
+      this._startZoomLevel = prevZoomLevel;
+      equalizePoints(this._startPan, initialPan);
+    }
+
+    if (currZoomLevelNeedsChange) {
+      destinationPan = {
+        x: this._calculatePanForZoomLevel('x', destinationZoomLevel),
+        y: this._calculatePanForZoomLevel('y', destinationZoomLevel)
+      };
+    } // set zoom level, so pan bounds are updated according to it
+
+
+    currSlide.setZoomLevel(destinationZoomLevel);
+    destinationPan = {
+      x: currSlide.bounds.correctPan('x', destinationPan.x),
+      y: currSlide.bounds.correctPan('y', destinationPan.y)
+    }; // return zoom level and its bounds to initial
+
+    currSlide.setZoomLevel(prevZoomLevel);
+    const panNeedsChange = !pointsEqual(destinationPan, initialPan);
+
+    if (!panNeedsChange && !currZoomLevelNeedsChange && !restoreBgOpacity) {
+      // update resolution after gesture
+      currSlide._setResolution(destinationZoomLevel);
+
+      currSlide.applyCurrentZoomPan(); // nothing to animate
+
+      return;
+    }
+
+    pswp.animations.stopAllPan();
+    pswp.animations.startSpring({
+      isPan: true,
+      start: 0,
+      end: 1000,
+      velocity: 0,
+      dampingRatio: 1,
+      naturalFrequency: 40,
+      onUpdate: now => {
+        now /= 1000; // 0 - start, 1 - end
+
+        if (panNeedsChange || currZoomLevelNeedsChange) {
+          if (panNeedsChange) {
+            currSlide.pan.x = initialPan.x + (destinationPan.x - initialPan.x) * now;
+            currSlide.pan.y = initialPan.y + (destinationPan.y - initialPan.y) * now;
+          }
+
+          if (currZoomLevelNeedsChange) {
+            const newZoomLevel = prevZoomLevel + (destinationZoomLevel - prevZoomLevel) * now;
+            currSlide.setZoomLevel(newZoomLevel);
+          }
+
+          currSlide.applyCurrentZoomPan();
+        } // Restore background opacity
+
+
+        if (restoreBgOpacity && pswp.bgOpacity < 1) {
+          // We clamp opacity to keep it between 0 and 1.
+          // As progress ratio can be larger than 1 due to overshoot,
+          // and we do not want to bounce opacity.
+          pswp.applyBgOpacity(clamp(initialBgOpacity + (1 - initialBgOpacity) * now, 0, 1));
+        }
+      },
+      onComplete: () => {
+        // update resolution after transition ends
+        currSlide._setResolution(destinationZoomLevel);
+
+        currSlide.applyCurrentZoomPan();
+      }
+    });
+  }
+
+}
+
+/**
+ * @template {string} T
+ * @template {string} P
+ * @typedef {import('../types.js').AddPostfix<T, P>} AddPostfix<T, P>
+ */
+
+/** @typedef {import('./gestures.js').default} Gestures */
+
+/** @typedef {import('../photoswipe.js').Point} Point */
+
+/** @typedef {'imageClick' | 'bgClick' | 'tap' | 'doubleTap'} Actions */
+
+/**
+ * Whether the tap was performed on the main slide
+ * (rather than controls or caption).
+ *
+ * @param {PointerEvent} event
+ * @returns {boolean}
+ */
+function didTapOnMainContent(event) {
+  return !!
+  /** @type {HTMLElement} */
+  event.target.closest('.pswp__container');
+}
+/**
+ * Tap, double-tap handler.
+ */
+
+
+class TapHandler {
+  /**
+   * @param {Gestures} gestures
+   */
+  constructor(gestures) {
+    this.gestures = gestures;
+  }
+  /**
+   * @param {Point} point
+   * @param {PointerEvent} originalEvent
+   */
+
+
+  click(point, originalEvent) {
+    const targetClassList =
+    /** @type {HTMLElement} */
+    originalEvent.target.classList;
+    const isImageClick = targetClassList.contains('pswp__img');
+    const isBackgroundClick = targetClassList.contains('pswp__item') || targetClassList.contains('pswp__zoom-wrap');
+
+    if (isImageClick) {
+      this._doClickOrTapAction('imageClick', point, originalEvent);
+    } else if (isBackgroundClick) {
+      this._doClickOrTapAction('bgClick', point, originalEvent);
+    }
+  }
+  /**
+   * @param {Point} point
+   * @param {PointerEvent} originalEvent
+   */
+
+
+  tap(point, originalEvent) {
+    if (didTapOnMainContent(originalEvent)) {
+      this._doClickOrTapAction('tap', point, originalEvent);
+    }
+  }
+  /**
+   * @param {Point} point
+   * @param {PointerEvent} originalEvent
+   */
+
+
+  doubleTap(point, originalEvent) {
+    if (didTapOnMainContent(originalEvent)) {
+      this._doClickOrTapAction('doubleTap', point, originalEvent);
+    }
+  }
+  /**
+   * @private
+   * @param {Actions} actionName
+   * @param {Point} point
+   * @param {PointerEvent} originalEvent
+   */
+
+
+  _doClickOrTapAction(actionName, point, originalEvent) {
+    var _this$gestures$pswp$e;
+
+    const {
+      pswp
+    } = this.gestures;
+    const {
+      currSlide
+    } = pswp;
+    const actionFullName =
+    /** @type {AddPostfix<Actions, 'Action'>} */
+    actionName + 'Action';
+    const optionValue = pswp.options[actionFullName];
+
+    if (pswp.dispatch(actionFullName, {
+      point,
+      originalEvent
+    }).defaultPrevented) {
+      return;
+    }
+
+    if (typeof optionValue === 'function') {
+      optionValue.call(pswp, point, originalEvent);
+      return;
+    }
+
+    switch (optionValue) {
+      case 'close':
+      case 'next':
+        pswp[optionValue]();
+        break;
+
+      case 'zoom':
+        currSlide === null || currSlide === void 0 || currSlide.toggleZoom(point);
+        break;
+
+      case 'zoom-or-close':
+        // by default click zooms current image,
+        // if it can not be zoomed - gallery will be closed
+        if (currSlide !== null && currSlide !== void 0 && currSlide.isZoomable() && currSlide.zoomLevels.secondary !== currSlide.zoomLevels.initial) {
+          currSlide.toggleZoom(point);
+        } else if (pswp.options.clickToCloseNonZoomable) {
+          pswp.close();
+        }
+
+        break;
+
+      case 'toggle-controls':
+        (_this$gestures$pswp$e = this.gestures.pswp.element) === null || _this$gestures$pswp$e === void 0 || _this$gestures$pswp$e.classList.toggle('pswp--ui-visible'); // if (_controlsVisible) {
+        //   _ui.hideControls();
+        // } else {
+        //   _ui.showControls();
+        // }
+
+        break;
+    }
+  }
+
+}
+
+/** @typedef {import('../photoswipe.js').default} PhotoSwipe */
+
+/** @typedef {import('../photoswipe.js').Point} Point */
+// How far should user should drag
+// until we can determine that the gesture is swipe and its direction
+
+const AXIS_SWIPE_HYSTERISIS = 10; //const PAN_END_FRICTION = 0.35;
+
+const DOUBLE_TAP_DELAY = 300; // ms
+
+const MIN_TAP_DISTANCE = 25; // px
+
+/**
+ * Gestures class bind touch, pointer or mouse events
+ * and emits drag to drag-handler and zoom events zoom-handler.
+ *
+ * Drag and zoom events are emited in requestAnimationFrame,
+ * and only when one of pointers was actually changed.
+ */
+
+class Gestures {
+  /**
+   * @param {PhotoSwipe} pswp
+   */
+  constructor(pswp) {
+    this.pswp = pswp;
+    /** @type {'x' | 'y' | null} */
+
+    this.dragAxis = null; // point objects are defined once and reused
+    // PhotoSwipe keeps track only of two pointers, others are ignored
+
+    /** @type {Point} */
+
+    this.p1 = {
+      x: 0,
+      y: 0
+    }; // the first pressed pointer
+
+    /** @type {Point} */
+
+    this.p2 = {
+      x: 0,
+      y: 0
+    }; // the second pressed pointer
+
+    /** @type {Point} */
+
+    this.prevP1 = {
+      x: 0,
+      y: 0
+    };
+    /** @type {Point} */
+
+    this.prevP2 = {
+      x: 0,
+      y: 0
+    };
+    /** @type {Point} */
+
+    this.startP1 = {
+      x: 0,
+      y: 0
+    };
+    /** @type {Point} */
+
+    this.startP2 = {
+      x: 0,
+      y: 0
+    };
+    /** @type {Point} */
+
+    this.velocity = {
+      x: 0,
+      y: 0
+    };
+    /** @type {Point}
+     * @private
+     */
+
+    this._lastStartP1 = {
+      x: 0,
+      y: 0
+    };
+    /** @type {Point}
+     * @private
+     */
+
+    this._intervalP1 = {
+      x: 0,
+      y: 0
+    };
+    /** @private */
+
+    this._numActivePoints = 0;
+    /** @type {Point[]}
+     * @private
+     */
+
+    this._ongoingPointers = [];
+    /** @private */
+
+    this._touchEventEnabled = 'ontouchstart' in window;
+    /** @private */
+
+    this._pointerEventEnabled = !!window.PointerEvent;
+    this.supportsTouch = this._touchEventEnabled || this._pointerEventEnabled && navigator.maxTouchPoints > 1;
+    /** @private */
+
+    this._numActivePoints = 0;
+    /** @private */
+
+    this._intervalTime = 0;
+    /** @private */
+
+    this._velocityCalculated = false;
+    this.isMultitouch = false;
+    this.isDragging = false;
+    this.isZooming = false;
+    /** @type {number | null} */
+
+    this.raf = null;
+    /** @type {NodeJS.Timeout | null}
+     * @private
+     */
+
+    this._tapTimer = null;
+
+    if (!this.supportsTouch) {
+      // disable pan to next slide for non-touch devices
+      pswp.options.allowPanToNext = false;
+    }
+
+    this.drag = new DragHandler(this);
+    this.zoomLevels = new ZoomHandler(this);
+    this.tapHandler = new TapHandler(this);
+    pswp.on('bindEvents', () => {
+      pswp.events.add(pswp.scrollWrap, 'click',
+      /** @type EventListener */
+      this._onClick.bind(this));
+
+      if (this._pointerEventEnabled) {
+        this._bindEvents('pointer', 'down', 'up', 'cancel');
+      } else if (this._touchEventEnabled) {
+        this._bindEvents('touch', 'start', 'end', 'cancel'); // In previous versions we also bound mouse event here,
+        // in case device supports both touch and mouse events,
+        // but newer versions of browsers now support PointerEvent.
+        // on iOS10 if you bind touchmove/end after touchstart,
+        // and you don't preventDefault touchstart (which PhotoSwipe does),
+        // preventDefault will have no effect on touchmove and touchend.
+        // Unless you bind it previously.
+
+
+        if (pswp.scrollWrap) {
+          pswp.scrollWrap.ontouchmove = () => {};
+
+          pswp.scrollWrap.ontouchend = () => {};
+        }
+      } else {
+        this._bindEvents('mouse', 'down', 'up');
+      }
+    });
+  }
+  /**
+   * @private
+   * @param {'mouse' | 'touch' | 'pointer'} pref
+   * @param {'down' | 'start'} down
+   * @param {'up' | 'end'} up
+   * @param {'cancel'} [cancel]
+   */
+
+
+  _bindEvents(pref, down, up, cancel) {
+    const {
+      pswp
+    } = this;
+    const {
+      events
+    } = pswp;
+    const cancelEvent = cancel ? pref + cancel : '';
+    events.add(pswp.scrollWrap, pref + down,
+    /** @type EventListener */
+    this.onPointerDown.bind(this));
+    events.add(window, pref + 'move',
+    /** @type EventListener */
+    this.onPointerMove.bind(this));
+    events.add(window, pref + up,
+    /** @type EventListener */
+    this.onPointerUp.bind(this));
+
+    if (cancelEvent) {
+      events.add(pswp.scrollWrap, cancelEvent,
+      /** @type EventListener */
+      this.onPointerUp.bind(this));
+    }
+  }
+  /**
+   * @param {PointerEvent} e
+   */
+
+
+  onPointerDown(e) {
+    // We do not call preventDefault for touch events
+    // to allow browser to show native dialog on longpress
+    // (the one that allows to save image or open it in new tab).
+    //
+    // Desktop Safari allows to drag images when preventDefault isn't called on mousedown,
+    // even though preventDefault IS called on mousemove. That's why we preventDefault mousedown.
+    const isMousePointer = e.type === 'mousedown' || e.pointerType === 'mouse'; // Allow dragging only via left mouse button.
+    // http://www.quirksmode.org/js/events_properties.html
+    // https://developer.mozilla.org/en-US/docs/Web/API/event.button
+
+    if (isMousePointer && e.button > 0) {
+      return;
+    }
+
+    const {
+      pswp
+    } = this; // if PhotoSwipe is opening or closing
+
+    if (!pswp.opener.isOpen) {
+      e.preventDefault();
+      return;
+    }
+
+    if (pswp.dispatch('pointerDown', {
+      originalEvent: e
+    }).defaultPrevented) {
+      return;
+    }
+
+    if (isMousePointer) {
+      pswp.mouseDetected(); // preventDefault mouse event to prevent
+      // browser image drag feature
+
+      this._preventPointerEventBehaviour(e, 'down');
+    }
+
+    pswp.animations.stopAll();
+
+    this._updatePoints(e, 'down');
+
+    if (this._numActivePoints === 1) {
+      this.dragAxis = null; // we need to store initial point to determine the main axis,
+      // drag is activated only after the axis is determined
+
+      equalizePoints(this.startP1, this.p1);
+    }
+
+    if (this._numActivePoints > 1) {
+      // Tap or double tap should not trigger if more than one pointer
+      this._clearTapTimer();
+
+      this.isMultitouch = true;
+    } else {
+      this.isMultitouch = false;
+    }
+  }
+  /**
+   * @param {PointerEvent} e
+   */
+
+
+  onPointerMove(e) {
+    this._preventPointerEventBehaviour(e, 'move');
+
+    if (!this._numActivePoints) {
+      return;
+    }
+
+    this._updatePoints(e, 'move');
+
+    if (this.pswp.dispatch('pointerMove', {
+      originalEvent: e
+    }).defaultPrevented) {
+      return;
+    }
+
+    if (this._numActivePoints === 1 && !this.isDragging) {
+      if (!this.dragAxis) {
+        this._calculateDragDirection();
+      } // Drag axis was detected, emit drag.start
+
+
+      if (this.dragAxis && !this.isDragging) {
+        if (this.isZooming) {
+          this.isZooming = false;
+          this.zoomLevels.end();
+        }
+
+        this.isDragging = true;
+
+        this._clearTapTimer(); // Tap can not trigger after drag
+        // Adjust starting point
+
+
+        this._updateStartPoints();
+
+        this._intervalTime = Date.now(); //this._startTime = this._intervalTime;
+
+        this._velocityCalculated = false;
+        equalizePoints(this._intervalP1, this.p1);
+        this.velocity.x = 0;
+        this.velocity.y = 0;
+        this.drag.start();
+
+        this._rafStopLoop();
+
+        this._rafRenderLoop();
+      }
+    } else if (this._numActivePoints > 1 && !this.isZooming) {
+      this._finishDrag();
+
+      this.isZooming = true; // Adjust starting points
+
+      this._updateStartPoints();
+
+      this.zoomLevels.start();
+
+      this._rafStopLoop();
+
+      this._rafRenderLoop();
+    }
+  }
+  /**
+   * @private
+   */
+
+
+  _finishDrag() {
+    if (this.isDragging) {
+      this.isDragging = false; // Try to calculate velocity,
+      // if it wasn't calculated yet in drag.change
+
+      if (!this._velocityCalculated) {
+        this._updateVelocity(true);
+      }
+
+      this.drag.end();
+      this.dragAxis = null;
+    }
+  }
+  /**
+   * @param {PointerEvent} e
+   */
+
+
+  onPointerUp(e) {
+    if (!this._numActivePoints) {
+      return;
+    }
+
+    this._updatePoints(e, 'up');
+
+    if (this.pswp.dispatch('pointerUp', {
+      originalEvent: e
+    }).defaultPrevented) {
+      return;
+    }
+
+    if (this._numActivePoints === 0) {
+      this._rafStopLoop();
+
+      if (this.isDragging) {
+        this._finishDrag();
+      } else if (!this.isZooming && !this.isMultitouch) {
+        //this.zoomLevels.correctZoomPan();
+        this._finishTap(e);
+      }
+    }
+
+    if (this._numActivePoints < 2 && this.isZooming) {
+      this.isZooming = false;
+      this.zoomLevels.end();
+
+      if (this._numActivePoints === 1) {
+        // Since we have 1 point left, we need to reinitiate drag
+        this.dragAxis = null;
+
+        this._updateStartPoints();
+      }
+    }
+  }
+  /**
+   * @private
+   */
+
+
+  _rafRenderLoop() {
+    if (this.isDragging || this.isZooming) {
+      this._updateVelocity();
+
+      if (this.isDragging) {
+        // make sure that pointer moved since the last update
+        if (!pointsEqual(this.p1, this.prevP1)) {
+          this.drag.change();
+        }
+      } else
+        /* if (this.isZooming) */
+        {
+          if (!pointsEqual(this.p1, this.prevP1) || !pointsEqual(this.p2, this.prevP2)) {
+            this.zoomLevels.change();
+          }
+        }
+
+      this._updatePrevPoints();
+
+      this.raf = requestAnimationFrame(this._rafRenderLoop.bind(this));
+    }
+  }
+  /**
+   * Update velocity at 50ms interval
+   *
+   * @private
+   * @param {boolean} [force]
+   */
+
+
+  _updateVelocity(force) {
+    const time = Date.now();
+    const duration = time - this._intervalTime;
+
+    if (duration < 50 && !force) {
+      return;
+    }
+
+    this.velocity.x = this._getVelocity('x', duration);
+    this.velocity.y = this._getVelocity('y', duration);
+    this._intervalTime = time;
+    equalizePoints(this._intervalP1, this.p1);
+    this._velocityCalculated = true;
+  }
+  /**
+   * @private
+   * @param {PointerEvent} e
+   */
+
+
+  _finishTap(e) {
+    const {
+      mainScroll
+    } = this.pswp; // Do not trigger tap events if main scroll is shifted
+
+    if (mainScroll.isShifted()) {
+      // restore main scroll position
+      // (usually happens if stopped in the middle of animation)
+      mainScroll.moveIndexBy(0, true);
+      return;
+    } // Do not trigger tap for touchcancel or pointercancel
+
+
+    if (e.type.indexOf('cancel') > 0) {
+      return;
+    } // Trigger click instead of tap for mouse events
+
+
+    if (e.type === 'mouseup' || e.pointerType === 'mouse') {
+      this.tapHandler.click(this.startP1, e);
+      return;
+    } // Disable delay if there is no doubleTapAction
+
+
+    const tapDelay = this.pswp.options.doubleTapAction ? DOUBLE_TAP_DELAY : 0; // If tapTimer is defined - we tapped recently,
+    // check if the current tap is close to the previous one,
+    // if yes - trigger double tap
+
+    if (this._tapTimer) {
+      this._clearTapTimer(); // Check if two taps were more or less on the same place
+
+
+      if (getDistanceBetween(this._lastStartP1, this.startP1) < MIN_TAP_DISTANCE) {
+        this.tapHandler.doubleTap(this.startP1, e);
+      }
+    } else {
+      equalizePoints(this._lastStartP1, this.startP1);
+      this._tapTimer = setTimeout(() => {
+        this.tapHandler.tap(this.startP1, e);
+
+        this._clearTapTimer();
+      }, tapDelay);
+    }
+  }
+  /**
+   * @private
+   */
+
+
+  _clearTapTimer() {
+    if (this._tapTimer) {
+      clearTimeout(this._tapTimer);
+      this._tapTimer = null;
+    }
+  }
+  /**
+   * Get velocity for axis
+   *
+   * @private
+   * @param {'x' | 'y'} axis
+   * @param {number} duration
+   * @returns {number}
+   */
+
+
+  _getVelocity(axis, duration) {
+    // displacement is like distance, but can be negative.
+    const displacement = this.p1[axis] - this._intervalP1[axis];
+
+    if (Math.abs(displacement) > 1 && duration > 5) {
+      return displacement / duration;
+    }
+
+    return 0;
+  }
+  /**
+   * @private
+   */
+
+
+  _rafStopLoop() {
+    if (this.raf) {
+      cancelAnimationFrame(this.raf);
+      this.raf = null;
+    }
+  }
+  /**
+   * @private
+   * @param {PointerEvent} e
+   * @param {'up' | 'down' | 'move'} pointerType Normalized pointer type
+   */
+
+
+  _preventPointerEventBehaviour(e, pointerType) {
+    const preventPointerEvent = this.pswp.applyFilters('preventPointerEvent', true, e, pointerType);
+
+    if (preventPointerEvent) {
+      e.preventDefault();
+    }
+  }
+  /**
+   * Parses and normalizes points from the touch, mouse or pointer event.
+   * Updates p1 and p2.
+   *
+   * @private
+   * @param {PointerEvent | TouchEvent} e
+   * @param {'up' | 'down' | 'move'} pointerType Normalized pointer type
+   */
+
+
+  _updatePoints(e, pointerType) {
+    if (this._pointerEventEnabled) {
+      const pointerEvent =
+      /** @type {PointerEvent} */
+      e; // Try to find the current pointer in ongoing pointers by its ID
+
+      const pointerIndex = this._ongoingPointers.findIndex(ongoingPointer => {
+        return ongoingPointer.id === pointerEvent.pointerId;
+      });
+
+      if (pointerType === 'up' && pointerIndex > -1) {
+        // release the pointer - remove it from ongoing
+        this._ongoingPointers.splice(pointerIndex, 1);
+      } else if (pointerType === 'down' && pointerIndex === -1) {
+        // add new pointer
+        this._ongoingPointers.push(this._convertEventPosToPoint(pointerEvent, {
+          x: 0,
+          y: 0
+        }));
+      } else if (pointerIndex > -1) {
+        // update existing pointer
+        this._convertEventPosToPoint(pointerEvent, this._ongoingPointers[pointerIndex]);
+      }
+
+      this._numActivePoints = this._ongoingPointers.length; // update points that PhotoSwipe uses
+      // to calculate position and scale
+
+      if (this._numActivePoints > 0) {
+        equalizePoints(this.p1, this._ongoingPointers[0]);
+      }
+
+      if (this._numActivePoints > 1) {
+        equalizePoints(this.p2, this._ongoingPointers[1]);
+      }
+    } else {
+      const touchEvent =
+      /** @type {TouchEvent} */
+      e;
+      this._numActivePoints = 0;
+
+      if (touchEvent.type.indexOf('touch') > -1) {
+        // Touch Event
+        // https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent
+        if (touchEvent.touches && touchEvent.touches.length > 0) {
+          this._convertEventPosToPoint(touchEvent.touches[0], this.p1);
+
+          this._numActivePoints++;
+
+          if (touchEvent.touches.length > 1) {
+            this._convertEventPosToPoint(touchEvent.touches[1], this.p2);
+
+            this._numActivePoints++;
+          }
+        }
+      } else {
+        // Mouse Event
+        this._convertEventPosToPoint(
+        /** @type {PointerEvent} */
+        e, this.p1);
+
+        if (pointerType === 'up') {
+          // clear all points on mouseup
+          this._numActivePoints = 0;
+        } else {
+          this._numActivePoints++;
+        }
+      }
+    }
+  }
+  /** update points that were used during previous rAF tick
+   * @private
+   */
+
+
+  _updatePrevPoints() {
+    equalizePoints(this.prevP1, this.p1);
+    equalizePoints(this.prevP2, this.p2);
+  }
+  /** update points at the start of gesture
+   * @private
+   */
+
+
+  _updateStartPoints() {
+    equalizePoints(this.startP1, this.p1);
+    equalizePoints(this.startP2, this.p2);
+
+    this._updatePrevPoints();
+  }
+  /** @private */
+
+
+  _calculateDragDirection() {
+    if (this.pswp.mainScroll.isShifted()) {
+      // if main scroll position is shifted – direction is always horizontal
+      this.dragAxis = 'x';
+    } else {
+      // calculate delta of the last touchmove tick
+      const diff = Math.abs(this.p1.x - this.startP1.x) - Math.abs(this.p1.y - this.startP1.y);
+
+      if (diff !== 0) {
+        // check if pointer was shifted horizontally or vertically
+        const axisToCheck = diff > 0 ? 'x' : 'y';
+
+        if (Math.abs(this.p1[axisToCheck] - this.startP1[axisToCheck]) >= AXIS_SWIPE_HYSTERISIS) {
+          this.dragAxis = axisToCheck;
+        }
+      }
+    }
+  }
+  /**
+   * Converts touch, pointer or mouse event
+   * to PhotoSwipe point.
+   *
+   * @private
+   * @param {Touch | PointerEvent} e
+   * @param {Point} p
+   * @returns {Point}
+   */
+
+
+  _convertEventPosToPoint(e, p) {
+    p.x = e.pageX - this.pswp.offset.x;
+    p.y = e.pageY - this.pswp.offset.y;
+
+    if ('pointerId' in e) {
+      p.id = e.pointerId;
+    } else if (e.identifier !== undefined) {
+      p.id = e.identifier;
+    }
+
+    return p;
+  }
+  /**
+   * @private
+   * @param {PointerEvent} e
+   */
+
+
+  _onClick(e) {
+    // Do not allow click event to pass through after drag
+    if (this.pswp.mainScroll.isShifted()) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+
+}
+
+/** @typedef {import('./photoswipe.js').default} PhotoSwipe */
+
+/** @typedef {import('./slide/slide.js').default} Slide */
+
+/** @typedef {{ el: HTMLDivElement; slide?: Slide }} ItemHolder */
+
+const MAIN_SCROLL_END_FRICTION = 0.35; // const MIN_SWIPE_TRANSITION_DURATION = 250;
+// const MAX_SWIPE_TRABSITION_DURATION = 500;
+// const DEFAULT_SWIPE_TRANSITION_DURATION = 333;
+
+/**
+ * Handles movement of the main scrolling container
+ * (for example, it repositions when user swipes left or right).
+ *
+ * Also stores its state.
+ */
+
+class MainScroll {
+  /**
+   * @param {PhotoSwipe} pswp
+   */
+  constructor(pswp) {
+    this.pswp = pswp;
+    this.x = 0;
+    this.slideWidth = 0;
+    /** @private */
+
+    this._currPositionIndex = 0;
+    /** @private */
+
+    this._prevPositionIndex = 0;
+    /** @private */
+
+    this._containerShiftIndex = -1;
+    /** @type {ItemHolder[]} */
+
+    this.itemHolders = [];
+  }
+  /**
+   * Position the scroller and slide containers
+   * according to viewport size.
+   *
+   * @param {boolean} [resizeSlides] Whether slides content should resized
+   */
+
+
+  resize(resizeSlides) {
+    const {
+      pswp
+    } = this;
+    const newSlideWidth = Math.round(pswp.viewportSize.x + pswp.viewportSize.x * pswp.options.spacing); // Mobile browsers might trigger a resize event during a gesture.
+    // (due to toolbar appearing or hiding).
+    // Avoid re-adjusting main scroll position if width wasn't changed
+
+    const slideWidthChanged = newSlideWidth !== this.slideWidth;
+
+    if (slideWidthChanged) {
+      this.slideWidth = newSlideWidth;
+      this.moveTo(this.getCurrSlideX());
+    }
+
+    this.itemHolders.forEach((itemHolder, index) => {
+      if (slideWidthChanged) {
+        setTransform(itemHolder.el, (index + this._containerShiftIndex) * this.slideWidth);
+      }
+
+      if (resizeSlides && itemHolder.slide) {
+        itemHolder.slide.resize();
+      }
+    });
+  }
+  /**
+   * Reset X position of the main scroller to zero
+   */
+
+
+  resetPosition() {
+    // Position on the main scroller (offset)
+    // it is independent from slide index
+    this._currPositionIndex = 0;
+    this._prevPositionIndex = 0; // This will force recalculation of size on next resize()
+
+    this.slideWidth = 0; // _containerShiftIndex*viewportSize will give you amount of transform of the current slide
+
+    this._containerShiftIndex = -1;
+  }
+  /**
+   * Create and append array of three items
+   * that hold data about slides in DOM
+   */
+
+
+  appendHolders() {
+    this.itemHolders = []; // append our three slide holders -
+    // previous, current, and next
+
+    for (let i = 0; i < 3; i++) {
+      const el = createElement('pswp__item', 'div', this.pswp.container);
+      el.setAttribute('role', 'group');
+      el.setAttribute('aria-roledescription', 'slide');
+      el.setAttribute('aria-hidden', 'true'); // hide nearby item holders until initial zoom animation finishes (to avoid extra Paints)
+
+      el.style.display = i === 1 ? 'block' : 'none';
+      this.itemHolders.push({
+        el //index: -1
+
+      });
+    }
+  }
+  /**
+   * Whether the main scroll can be horizontally swiped to the next or previous slide.
+   * @returns {boolean}
+   */
+
+
+  canBeSwiped() {
+    return this.pswp.getNumItems() > 1;
+  }
+  /**
+   * Move main scroll by X amount of slides.
+   * For example:
+   *   `-1` will move to the previous slide,
+   *    `0` will reset the scroll position of the current slide,
+   *    `3` will move three slides forward
+   *
+   * If loop option is enabled - index will be automatically looped too,
+   * (for example `-1` will move to the last slide of the gallery).
+   *
+   * @param {number} diff
+   * @param {boolean} [animate]
+   * @param {number} [velocityX]
+   * @returns {boolean} whether index was changed or not
+   */
+
+
+  moveIndexBy(diff, animate, velocityX) {
+    const {
+      pswp
+    } = this;
+    let newIndex = pswp.potentialIndex + diff;
+    const numSlides = pswp.getNumItems();
+
+    if (pswp.canLoop()) {
+      newIndex = pswp.getLoopedIndex(newIndex);
+      const distance = (diff + numSlides) % numSlides;
+
+      if (distance <= numSlides / 2) {
+        // go forward
+        diff = distance;
+      } else {
+        // go backwards
+        diff = distance - numSlides;
+      }
+    } else {
+      if (newIndex < 0) {
+        newIndex = 0;
+      } else if (newIndex >= numSlides) {
+        newIndex = numSlides - 1;
+      }
+
+      diff = newIndex - pswp.potentialIndex;
+    }
+
+    pswp.potentialIndex = newIndex;
+    this._currPositionIndex -= diff;
+    pswp.animations.stopMainScroll();
+    const destinationX = this.getCurrSlideX();
+
+    if (!animate) {
+      this.moveTo(destinationX);
+      this.updateCurrItem();
+    } else {
+      pswp.animations.startSpring({
+        isMainScroll: true,
+        start: this.x,
+        end: destinationX,
+        velocity: velocityX || 0,
+        naturalFrequency: 30,
+        dampingRatio: 1,
+        //0.7,
+        onUpdate: x => {
+          this.moveTo(x);
+        },
+        onComplete: () => {
+          this.updateCurrItem();
+          pswp.appendHeavy();
+        }
+      });
+      let currDiff = pswp.potentialIndex - pswp.currIndex;
+
+      if (pswp.canLoop()) {
+        const currDistance = (currDiff + numSlides) % numSlides;
+
+        if (currDistance <= numSlides / 2) {
+          // go forward
+          currDiff = currDistance;
+        } else {
+          // go backwards
+          currDiff = currDistance - numSlides;
+        }
+      } // Force-append new slides during transition
+      // if difference between slides is more than 1
+
+
+      if (Math.abs(currDiff) > 1) {
+        this.updateCurrItem();
+      }
+    }
+
+    return Boolean(diff);
+  }
+  /**
+   * X position of the main scroll for the current slide
+   * (ignores position during dragging)
+   * @returns {number}
+   */
+
+
+  getCurrSlideX() {
+    return this.slideWidth * this._currPositionIndex;
+  }
+  /**
+   * Whether scroll position is shifted.
+   * For example, it will return true if the scroll is being dragged or animated.
+   * @returns {boolean}
+   */
+
+
+  isShifted() {
+    return this.x !== this.getCurrSlideX();
+  }
+  /**
+   * Update slides X positions and set their content
+   */
+
+
+  updateCurrItem() {
+    var _this$itemHolders$;
+
+    const {
+      pswp
+    } = this;
+    const positionDifference = this._prevPositionIndex - this._currPositionIndex;
+
+    if (!positionDifference) {
+      return;
+    }
+
+    this._prevPositionIndex = this._currPositionIndex;
+    pswp.currIndex = pswp.potentialIndex;
+    let diffAbs = Math.abs(positionDifference);
+    /** @type {ItemHolder | undefined} */
+
+    let tempHolder;
+
+    if (diffAbs >= 3) {
+      this._containerShiftIndex += positionDifference + (positionDifference > 0 ? -3 : 3);
+      diffAbs = 3; // If slides are changed by 3 screens or more - clean up previous slides
+
+      this.itemHolders.forEach(itemHolder => {
+        var _itemHolder$slide;
+
+        (_itemHolder$slide = itemHolder.slide) === null || _itemHolder$slide === void 0 || _itemHolder$slide.destroy();
+        itemHolder.slide = undefined;
+      });
+    }
+
+    for (let i = 0; i < diffAbs; i++) {
+      if (positionDifference > 0) {
+        tempHolder = this.itemHolders.shift();
+
+        if (tempHolder) {
+          this.itemHolders[2] = tempHolder; // move first to last
+
+          this._containerShiftIndex++;
+          setTransform(tempHolder.el, (this._containerShiftIndex + 2) * this.slideWidth);
+          pswp.setContent(tempHolder, pswp.currIndex - diffAbs + i + 2);
+        }
+      } else {
+        tempHolder = this.itemHolders.pop();
+
+        if (tempHolder) {
+          this.itemHolders.unshift(tempHolder); // move last to first
+
+          this._containerShiftIndex--;
+          setTransform(tempHolder.el, this._containerShiftIndex * this.slideWidth);
+          pswp.setContent(tempHolder, pswp.currIndex + diffAbs - i - 2);
+        }
+      }
+    } // Reset transfrom every 50ish navigations in one direction.
+    //
+    // Otherwise transform will keep growing indefinitely,
+    // which might cause issues as browsers have a maximum transform limit.
+    // I wasn't able to reach it, but just to be safe.
+    // This should not cause noticable lag.
+
+
+    if (Math.abs(this._containerShiftIndex) > 50 && !this.isShifted()) {
+      this.resetPosition();
+      this.resize();
+    } // Pan transition might be running (and consntantly updating pan position)
+
+
+    pswp.animations.stopAllPan();
+    this.itemHolders.forEach((itemHolder, i) => {
+      if (itemHolder.slide) {
+        // Slide in the 2nd holder is always active
+        itemHolder.slide.setIsActive(i === 1);
+      }
+    });
+    pswp.currSlide = (_this$itemHolders$ = this.itemHolders[1]) === null || _this$itemHolders$ === void 0 ? void 0 : _this$itemHolders$.slide;
+    pswp.contentLoader.updateLazy(positionDifference);
+
+    if (pswp.currSlide) {
+      pswp.currSlide.applyCurrentZoomPan();
+    }
+
+    pswp.dispatch('change');
+  }
+  /**
+   * Move the X position of the main scroll container
+   *
+   * @param {number} x
+   * @param {boolean} [dragging]
+   */
+
+
+  moveTo(x, dragging) {
+    if (!this.pswp.canLoop() && dragging) {
+      // Apply friction
+      let newSlideIndexOffset = (this.slideWidth * this._currPositionIndex - x) / this.slideWidth;
+      newSlideIndexOffset += this.pswp.currIndex;
+      const delta = Math.round(x - this.x);
+
+      if (newSlideIndexOffset < 0 && delta > 0 || newSlideIndexOffset >= this.pswp.getNumItems() - 1 && delta < 0) {
+        x = this.x + delta * MAIN_SCROLL_END_FRICTION;
+      }
+    }
+
+    this.x = x;
+
+    if (this.pswp.container) {
+      setTransform(this.pswp.container, x);
+    }
+
+    this.pswp.dispatch('moveMainScroll', {
+      x,
+      dragging: dragging !== null && dragging !== void 0 ? dragging : false
+    });
+  }
+
+}
+
+/** @typedef {import('./photoswipe.js').default} PhotoSwipe */
+
+/**
+ * @template T
+ * @typedef {import('./types.js').Methods<T>} Methods<T>
+ */
+
+const KeyboardKeyCodesMap = {
+  Escape: 27,
+  z: 90,
+  ArrowLeft: 37,
+  ArrowUp: 38,
+  ArrowRight: 39,
+  ArrowDown: 40,
+  Tab: 9
+};
+/**
+ * @template {keyof KeyboardKeyCodesMap} T
+ * @param {T} key
+ * @param {boolean} isKeySupported
+ * @returns {T | number | undefined}
+ */
+
+const getKeyboardEventKey = (key, isKeySupported) => {
+  return isKeySupported ? key : KeyboardKeyCodesMap[key];
+};
+/**
+ * - Manages keyboard shortcuts.
+ * - Helps trap focus within photoswipe.
+ */
+
+
+class Keyboard {
+  /**
+   * @param {PhotoSwipe} pswp
+   */
+  constructor(pswp) {
+    this.pswp = pswp;
+    /** @private */
+
+    this._wasFocused = false;
+    pswp.on('bindEvents', () => {
+      if (pswp.options.trapFocus) {
+        // Dialog was likely opened by keyboard if initial point is not defined
+        if (!pswp.options.initialPointerPos) {
+          // focus causes layout,
+          // which causes lag during the animation,
+          // that's why we delay it until the opener transition ends
+          this._focusRoot();
+        }
+
+        pswp.events.add(document, 'focusin',
+        /** @type EventListener */
+        this._onFocusIn.bind(this));
+      }
+
+      pswp.events.add(document, 'keydown',
+      /** @type EventListener */
+      this._onKeyDown.bind(this));
+    });
+    const lastActiveElement =
+    /** @type {HTMLElement} */
+    document.activeElement;
+    pswp.on('destroy', () => {
+      if (pswp.options.returnFocus && lastActiveElement && this._wasFocused) {
+        lastActiveElement.focus();
+      }
+    });
+  }
+  /** @private */
+
+
+  _focusRoot() {
+    if (!this._wasFocused && this.pswp.element) {
+      this.pswp.element.focus();
+      this._wasFocused = true;
+    }
+  }
+  /**
+   * @private
+   * @param {KeyboardEvent} e
+   */
+
+
+  _onKeyDown(e) {
+    const {
+      pswp
+    } = this;
+
+    if (pswp.dispatch('keydown', {
+      originalEvent: e
+    }).defaultPrevented) {
+      return;
+    }
+
+    if (specialKeyUsed(e)) {
+      // don't do anything if special key pressed
+      // to prevent from overriding default browser actions
+      // for example, in Chrome on Mac cmd+arrow-left returns to previous page
+      return;
+    }
+    /** @type {Methods<PhotoSwipe> | undefined} */
+
+
+    let keydownAction;
+    /** @type {'x' | 'y' | undefined} */
+
+    let axis;
+    let isForward = false;
+    const isKeySupported = ('key' in e);
+
+    switch (isKeySupported ? e.key : e.keyCode) {
+      case getKeyboardEventKey('Escape', isKeySupported):
+        if (pswp.options.escKey) {
+          keydownAction = 'close';
+        }
+
+        break;
+
+      case getKeyboardEventKey('z', isKeySupported):
+        keydownAction = 'toggleZoom';
+        break;
+
+      case getKeyboardEventKey('ArrowLeft', isKeySupported):
+        axis = 'x';
+        break;
+
+      case getKeyboardEventKey('ArrowUp', isKeySupported):
+        axis = 'y';
+        break;
+
+      case getKeyboardEventKey('ArrowRight', isKeySupported):
+        axis = 'x';
+        isForward = true;
+        break;
+
+      case getKeyboardEventKey('ArrowDown', isKeySupported):
+        isForward = true;
+        axis = 'y';
+        break;
+
+      case getKeyboardEventKey('Tab', isKeySupported):
+        this._focusRoot();
+
+        break;
+    } // if left/right/top/bottom key
+
+
+    if (axis) {
+      // prevent page scroll
+      e.preventDefault();
+      const {
+        currSlide
+      } = pswp;
+
+      if (pswp.options.arrowKeys && axis === 'x' && pswp.getNumItems() > 1) {
+        keydownAction = isForward ? 'next' : 'prev';
+      } else if (currSlide && currSlide.currZoomLevel > currSlide.zoomLevels.fit) {
+        // up/down arrow keys pan the image vertically
+        // left/right arrow keys pan horizontally.
+        // Unless there is only one image,
+        // or arrowKeys option is disabled
+        currSlide.pan[axis] += isForward ? -80 : 80;
+        currSlide.panTo(currSlide.pan.x, currSlide.pan.y);
+      }
+    }
+
+    if (keydownAction) {
+      e.preventDefault(); // @ts-ignore
+
+      pswp[keydownAction]();
+    }
+  }
+  /**
+   * Trap focus inside photoswipe
+   *
+   * @private
+   * @param {FocusEvent} e
+   */
+
+
+  _onFocusIn(e) {
+    const {
+      template
+    } = this.pswp;
+
+    if (template && document !== e.target && template !== e.target && !template.contains(
+    /** @type {Node} */
+    e.target)) {
+      // focus root element
+      template.focus();
+    }
+  }
+
+}
+
+const DEFAULT_EASING = 'cubic-bezier(.4,0,.22,1)';
+/** @typedef {import('./animations.js').SharedAnimationProps} SharedAnimationProps */
+
+/** @typedef {Object} DefaultCssAnimationProps
+ *
+ * @prop {HTMLElement} target
+ * @prop {number} [duration]
+ * @prop {string} [easing]
+ * @prop {string} [transform]
+ * @prop {string} [opacity]
+ * */
+
+/** @typedef {SharedAnimationProps & DefaultCssAnimationProps} CssAnimationProps */
+
+/**
+ * Runs CSS transition.
+ */
+
+class CSSAnimation {
+  /**
+   * onComplete can be unpredictable, be careful about current state
+   *
+   * @param {CssAnimationProps} props
+   */
+  constructor(props) {
+    var _props$prop;
+
+    this.props = props;
+    const {
+      target,
+      onComplete,
+      transform,
+      onFinish = () => {},
+      duration = 333,
+      easing = DEFAULT_EASING
+    } = props;
+    this.onFinish = onFinish; // support only transform and opacity
+
+    const prop = transform ? 'transform' : 'opacity';
+    const propValue = (_props$prop = props[prop]) !== null && _props$prop !== void 0 ? _props$prop : '';
+    /** @private */
+
+    this._target = target;
+    /** @private */
+
+    this._onComplete = onComplete;
+    /** @private */
+
+    this._finished = false;
+    /** @private */
+
+    this._onTransitionEnd = this._onTransitionEnd.bind(this); // Using timeout hack to make sure that animation
+    // starts even if the animated property was changed recently,
+    // otherwise transitionend might not fire or transition won't start.
+    // https://drafts.csswg.org/css-transitions/#starting
+    //
+    // ¯\_(ツ)_/¯
+
+    /** @private */
+
+    this._helperTimeout = setTimeout(() => {
+      setTransitionStyle(target, prop, duration, easing);
+      this._helperTimeout = setTimeout(() => {
+        target.addEventListener('transitionend', this._onTransitionEnd, false);
+        target.addEventListener('transitioncancel', this._onTransitionEnd, false); // Safari occasionally does not emit transitionend event
+        // if element property was modified during the transition,
+        // which may be caused by resize or third party component,
+        // using timeout as a safety fallback
+
+        this._helperTimeout = setTimeout(() => {
+          this._finalizeAnimation();
+        }, duration + 500);
+        target.style[prop] = propValue;
+      }, 30); // Do not reduce this number
+    }, 0);
+  }
+  /**
+   * @private
+   * @param {TransitionEvent} e
+   */
+
+
+  _onTransitionEnd(e) {
+    if (e.target === this._target) {
+      this._finalizeAnimation();
+    }
+  }
+  /**
+   * @private
+   */
+
+
+  _finalizeAnimation() {
+    if (!this._finished) {
+      this._finished = true;
+      this.onFinish();
+
+      if (this._onComplete) {
+        this._onComplete();
+      }
+    }
+  } // Destroy is called automatically onFinish
+
+
+  destroy() {
+    if (this._helperTimeout) {
+      clearTimeout(this._helperTimeout);
+    }
+
+    removeTransitionStyle(this._target);
+
+    this._target.removeEventListener('transitionend', this._onTransitionEnd, false);
+
+    this._target.removeEventListener('transitioncancel', this._onTransitionEnd, false);
+
+    if (!this._finished) {
+      this._finalizeAnimation();
+    }
+  }
+
+}
+
+const DEFAULT_NATURAL_FREQUENCY = 12;
+const DEFAULT_DAMPING_RATIO = 0.75;
+/**
+ * Spring easing helper
+ */
+
+class SpringEaser {
+  /**
+   * @param {number} initialVelocity Initial velocity, px per ms.
+   *
+   * @param {number} [dampingRatio]
+   * Determines how bouncy animation will be.
+   * From 0 to 1, 0 - always overshoot, 1 - do not overshoot.
+   * "overshoot" refers to part of animation that
+   * goes beyond the final value.
+   *
+   * @param {number} [naturalFrequency]
+   * Determines how fast animation will slow down.
+   * The higher value - the stiffer the transition will be,
+   * and the faster it will slow down.
+   * Recommended value from 10 to 50
+   */
+  constructor(initialVelocity, dampingRatio, naturalFrequency) {
+    this.velocity = initialVelocity * 1000; // convert to "pixels per second"
+    // https://en.wikipedia.org/wiki/Damping_ratio
+
+    this._dampingRatio = dampingRatio || DEFAULT_DAMPING_RATIO; // https://en.wikipedia.org/wiki/Natural_frequency
+
+    this._naturalFrequency = naturalFrequency || DEFAULT_NATURAL_FREQUENCY;
+    this._dampedFrequency = this._naturalFrequency;
+
+    if (this._dampingRatio < 1) {
+      this._dampedFrequency *= Math.sqrt(1 - this._dampingRatio * this._dampingRatio);
+    }
+  }
+  /**
+   * @param {number} deltaPosition Difference between current and end position of the animation
+   * @param {number} deltaTime Frame duration in milliseconds
+   *
+   * @returns {number} Displacement, relative to the end position.
+   */
+
+
+  easeFrame(deltaPosition, deltaTime) {
+    // Inspired by Apple Webkit and Android spring function implementation
+    // https://en.wikipedia.org/wiki/Oscillation
+    // https://en.wikipedia.org/wiki/Damping_ratio
+    // we ignore mass (assume that it's 1kg)
+    let displacement = 0;
+    let coeff;
+    deltaTime /= 1000;
+    const naturalDumpingPow = Math.E ** (-this._dampingRatio * this._naturalFrequency * deltaTime);
+
+    if (this._dampingRatio === 1) {
+      coeff = this.velocity + this._naturalFrequency * deltaPosition;
+      displacement = (deltaPosition + coeff * deltaTime) * naturalDumpingPow;
+      this.velocity = displacement * -this._naturalFrequency + coeff * naturalDumpingPow;
+    } else if (this._dampingRatio < 1) {
+      coeff = 1 / this._dampedFrequency * (this._dampingRatio * this._naturalFrequency * deltaPosition + this.velocity);
+      const dumpedFCos = Math.cos(this._dampedFrequency * deltaTime);
+      const dumpedFSin = Math.sin(this._dampedFrequency * deltaTime);
+      displacement = naturalDumpingPow * (deltaPosition * dumpedFCos + coeff * dumpedFSin);
+      this.velocity = displacement * -this._naturalFrequency * this._dampingRatio + naturalDumpingPow * (-this._dampedFrequency * deltaPosition * dumpedFSin + this._dampedFrequency * coeff * dumpedFCos);
+    } // Overdamped (>1) damping ratio is not supported
+
+
+    return displacement;
+  }
+
+}
+
+/** @typedef {import('./animations.js').SharedAnimationProps} SharedAnimationProps */
+
+/**
+ * @typedef {Object} DefaultSpringAnimationProps
+ *
+ * @prop {number} start
+ * @prop {number} end
+ * @prop {number} velocity
+ * @prop {number} [dampingRatio]
+ * @prop {number} [naturalFrequency]
+ * @prop {(end: number) => void} onUpdate
+ */
+
+/** @typedef {SharedAnimationProps & DefaultSpringAnimationProps} SpringAnimationProps */
+
+class SpringAnimation {
+  /**
+   * @param {SpringAnimationProps} props
+   */
+  constructor(props) {
+    this.props = props;
+    this._raf = 0;
+    const {
+      start,
+      end,
+      velocity,
+      onUpdate,
+      onComplete,
+      onFinish = () => {},
+      dampingRatio,
+      naturalFrequency
+    } = props;
+    this.onFinish = onFinish;
+    const easer = new SpringEaser(velocity, dampingRatio, naturalFrequency);
+    let prevTime = Date.now();
+    let deltaPosition = start - end;
+
+    const animationLoop = () => {
+      if (this._raf) {
+        deltaPosition = easer.easeFrame(deltaPosition, Date.now() - prevTime); // Stop the animation if velocity is low and position is close to end
+
+        if (Math.abs(deltaPosition) < 1 && Math.abs(easer.velocity) < 50) {
+          // Finalize the animation
+          onUpdate(end);
+
+          if (onComplete) {
+            onComplete();
+          }
+
+          this.onFinish();
+        } else {
+          prevTime = Date.now();
+          onUpdate(deltaPosition + end);
+          this._raf = requestAnimationFrame(animationLoop);
+        }
+      }
+    };
+
+    this._raf = requestAnimationFrame(animationLoop);
+  } // Destroy is called automatically onFinish
+
+
+  destroy() {
+    if (this._raf >= 0) {
+      cancelAnimationFrame(this._raf);
+    }
+
+    this._raf = 0;
+  }
+
+}
+
+/** @typedef {import('./css-animation.js').CssAnimationProps} CssAnimationProps */
+
+/** @typedef {import('./spring-animation.js').SpringAnimationProps} SpringAnimationProps */
+
+/** @typedef {Object} SharedAnimationProps
+ * @prop {string} [name]
+ * @prop {boolean} [isPan]
+ * @prop {boolean} [isMainScroll]
+ * @prop {VoidFunction} [onComplete]
+ * @prop {VoidFunction} [onFinish]
+ */
+
+/** @typedef {SpringAnimation | CSSAnimation} Animation */
+
+/** @typedef {SpringAnimationProps | CssAnimationProps} AnimationProps */
+
+/**
+ * Manages animations
+ */
+
+class Animations {
+  constructor() {
+    /** @type {Animation[]} */
+    this.activeAnimations = [];
+  }
+  /**
+   * @param {SpringAnimationProps} props
+   */
+
+
+  startSpring(props) {
+    this._start(props, true);
+  }
+  /**
+   * @param {CssAnimationProps} props
+   */
+
+
+  startTransition(props) {
+    this._start(props);
+  }
+  /**
+   * @private
+   * @param {AnimationProps} props
+   * @param {boolean} [isSpring]
+   * @returns {Animation}
+   */
+
+
+  _start(props, isSpring) {
+    const animation = isSpring ? new SpringAnimation(
+    /** @type SpringAnimationProps */
+    props) : new CSSAnimation(
+    /** @type CssAnimationProps */
+    props);
+    this.activeAnimations.push(animation);
+
+    animation.onFinish = () => this.stop(animation);
+
+    return animation;
+  }
+  /**
+   * @param {Animation} animation
+   */
+
+
+  stop(animation) {
+    animation.destroy();
+    const index = this.activeAnimations.indexOf(animation);
+
+    if (index > -1) {
+      this.activeAnimations.splice(index, 1);
+    }
+  }
+
+  stopAll() {
+    // _stopAllAnimations
+    this.activeAnimations.forEach(animation => {
+      animation.destroy();
+    });
+    this.activeAnimations = [];
+  }
+  /**
+   * Stop all pan or zoom transitions
+   */
+
+
+  stopAllPan() {
+    this.activeAnimations = this.activeAnimations.filter(animation => {
+      if (animation.props.isPan) {
+        animation.destroy();
+        return false;
+      }
+
+      return true;
+    });
+  }
+
+  stopMainScroll() {
+    this.activeAnimations = this.activeAnimations.filter(animation => {
+      if (animation.props.isMainScroll) {
+        animation.destroy();
+        return false;
+      }
+
+      return true;
+    });
+  }
+  /**
+   * Returns true if main scroll transition is running
+   */
+  // isMainScrollRunning() {
+  //   return this.activeAnimations.some((animation) => {
+  //     return animation.props.isMainScroll;
+  //   });
+  // }
+
+  /**
+   * Returns true if any pan or zoom transition is running
+   */
+
+
+  isPanRunning() {
+    return this.activeAnimations.some(animation => {
+      return animation.props.isPan;
+    });
+  }
+
+}
+
+/** @typedef {import('./photoswipe.js').default} PhotoSwipe */
+
+/**
+ * Handles scroll wheel.
+ * Can pan and zoom current slide image.
+ */
+class ScrollWheel {
+  /**
+   * @param {PhotoSwipe} pswp
+   */
+  constructor(pswp) {
+    this.pswp = pswp;
+    pswp.events.add(pswp.element, 'wheel',
+    /** @type EventListener */
+    this._onWheel.bind(this));
+  }
+  /**
+   * @private
+   * @param {WheelEvent} e
+   */
+
+
+  _onWheel(e) {
+    e.preventDefault();
+    const {
+      currSlide
+    } = this.pswp;
+    let {
+      deltaX,
+      deltaY
+    } = e;
+
+    if (!currSlide) {
+      return;
+    }
+
+    if (this.pswp.dispatch('wheel', {
+      originalEvent: e
+    }).defaultPrevented) {
+      return;
+    }
+
+    if (e.ctrlKey || this.pswp.options.wheelToZoom) {
+      // zoom
+      if (currSlide.isZoomable()) {
+        let zoomFactor = -deltaY;
+
+        if (e.deltaMode === 1
+        /* DOM_DELTA_LINE */
+        ) {
+          zoomFactor *= 0.05;
+        } else {
+          zoomFactor *= e.deltaMode ? 1 : 0.002;
+        }
+
+        zoomFactor = 2 ** zoomFactor;
+        const destZoomLevel = currSlide.currZoomLevel * zoomFactor;
+        currSlide.zoomTo(destZoomLevel, {
+          x: e.clientX,
+          y: e.clientY
+        });
+      }
+    } else {
+      // pan
+      if (currSlide.isPannable()) {
+        if (e.deltaMode === 1
+        /* DOM_DELTA_LINE */
+        ) {
+          // 18 - average line height
+          deltaX *= 18;
+          deltaY *= 18;
+        }
+
+        currSlide.panTo(currSlide.pan.x - deltaX, currSlide.pan.y - deltaY);
+      }
+    }
+  }
+
+}
+
+/** @typedef {import('../photoswipe.js').default} PhotoSwipe */
+
+/**
+ * @template T
+ * @typedef {import('../types.js').Methods<T>} Methods<T>
+ */
+
+/**
+ * @typedef {Object} UIElementMarkupProps
+ * @prop {boolean} [isCustomSVG]
+ * @prop {string} inner
+ * @prop {string} [outlineID]
+ * @prop {number | string} [size]
+ */
+
+/**
+ * @typedef {Object} UIElementData
+ * @prop {DefaultUIElements | string} [name]
+ * @prop {string} [className]
+ * @prop {UIElementMarkup} [html]
+ * @prop {boolean} [isButton]
+ * @prop {keyof HTMLElementTagNameMap} [tagName]
+ * @prop {string} [title]
+ * @prop {string} [ariaLabel]
+ * @prop {(element: HTMLElement, pswp: PhotoSwipe) => void} [onInit]
+ * @prop {Methods<PhotoSwipe> | ((e: MouseEvent, element: HTMLElement, pswp: PhotoSwipe) => void)} [onClick]
+ * @prop {'bar' | 'wrapper' | 'root'} [appendTo]
+ * @prop {number} [order]
+ */
+
+/** @typedef {'arrowPrev' | 'arrowNext' | 'close' | 'zoom' | 'counter'} DefaultUIElements */
+
+/** @typedef {string | UIElementMarkupProps} UIElementMarkup */
+
+/**
+ * @param {UIElementMarkup} [htmlData]
+ * @returns {string}
+ */
+
+function addElementHTML(htmlData) {
+  if (typeof htmlData === 'string') {
+    // Allow developers to provide full svg,
+    // For example:
+    // <svg viewBox="0 0 32 32" width="32" height="32" aria-hidden="true" class="pswp__icn">
+    //   <path d="..." />
+    //   <circle ... />
+    // </svg>
+    // Can also be any HTML string.
+    return htmlData;
+  }
+
+  if (!htmlData || !htmlData.isCustomSVG) {
+    return '';
+  }
+
+  const svgData = htmlData;
+  let out = '<svg aria-hidden="true" class="pswp__icn" viewBox="0 0 %d %d" width="%d" height="%d">'; // replace all %d with size
+
+  out = out.split('%d').join(
+  /** @type {string} */
+  svgData.size || 32); // Icons may contain outline/shadow,
+  // to make it we "clone" base icon shape and add border to it.
+  // Icon itself and border are styled via CSS.
+  //
+  // Property shadowID defines ID of element that should be cloned.
+
+  if (svgData.outlineID) {
+    out += '<use class="pswp__icn-shadow" xlink:href="#' + svgData.outlineID + '"/>';
+  }
+
+  out += svgData.inner;
+  out += '</svg>';
+  return out;
+}
+
+class UIElement {
+  /**
+   * @param {PhotoSwipe} pswp
+   * @param {UIElementData} data
+   */
+  constructor(pswp, data) {
+    var _container;
+
+    const name = data.name || data.className;
+    let elementHTML = data.html; // @ts-expect-error lookup only by `data.name` maybe?
+
+    if (pswp.options[name] === false) {
+      // exit if element is disabled from options
+      return;
+    } // Allow to override SVG icons from options
+    // @ts-expect-error lookup only by `data.name` maybe?
+
+
+    if (typeof pswp.options[name + 'SVG'] === 'string') {
+      // arrowPrevSVG
+      // arrowNextSVG
+      // closeSVG
+      // zoomSVG
+      // @ts-expect-error lookup only by `data.name` maybe?
+      elementHTML = pswp.options[name + 'SVG'];
+    }
+
+    pswp.dispatch('uiElementCreate', {
+      data
+    });
+    let className = '';
+
+    if (data.isButton) {
+      className += 'pswp__button ';
+      className += data.className || `pswp__button--${data.name}`;
+    } else {
+      className += data.className || `pswp__${data.name}`;
+    }
+
+    let tagName = data.isButton ? data.tagName || 'button' : data.tagName || 'div';
+    tagName =
+    /** @type {keyof HTMLElementTagNameMap} */
+    tagName.toLowerCase();
+    /** @type {HTMLElement} */
+
+    const element = createElement(className, tagName);
+
+    if (data.isButton) {
+      if (tagName === 'button') {
+        /** @type {HTMLButtonElement} */
+        element.type = 'button';
+      }
+
+      let {
+        title
+      } = data;
+      const {
+        ariaLabel
+      } = data; // @ts-expect-error lookup only by `data.name` maybe?
+
+      if (typeof pswp.options[name + 'Title'] === 'string') {
+        // @ts-expect-error lookup only by `data.name` maybe?
+        title = pswp.options[name + 'Title'];
+      }
+
+      if (title) {
+        element.title = title;
+      }
+
+      const ariaText = ariaLabel || title;
+
+      if (ariaText) {
+        element.setAttribute('aria-label', ariaText);
+      }
+    }
+
+    element.innerHTML = addElementHTML(elementHTML);
+
+    if (data.onInit) {
+      data.onInit(element, pswp);
+    }
+
+    if (data.onClick) {
+      element.onclick = e => {
+        if (typeof data.onClick === 'string') {
+          // @ts-ignore
+          pswp[data.onClick]();
+        } else if (typeof data.onClick === 'function') {
+          data.onClick(e, element, pswp);
+        }
+      };
+    } // Top bar is default position
+
+
+    const appendTo = data.appendTo || 'bar';
+    /** @type {HTMLElement | undefined} root element by default */
+
+    let container = pswp.element;
+
+    if (appendTo === 'bar') {
+      if (!pswp.topBar) {
+        pswp.topBar = createElement('pswp__top-bar pswp__hide-on-close', 'div', pswp.scrollWrap);
+      }
+
+      container = pswp.topBar;
+    } else {
+      // element outside of top bar gets a secondary class
+      // that makes element fade out on close
+      element.classList.add('pswp__hide-on-close');
+
+      if (appendTo === 'wrapper') {
+        container = pswp.scrollWrap;
+      }
+    }
+
+    (_container = container) === null || _container === void 0 || _container.appendChild(pswp.applyFilters('uiElement', element, data));
+  }
+
+}
+
+/*
+  Backward and forward arrow buttons
+ */
+
+/** @typedef {import('./ui-element.js').UIElementData} UIElementData */
+
+/** @typedef {import('../photoswipe.js').default} PhotoSwipe */
+
+/**
+ *
+ * @param {HTMLElement} element
+ * @param {PhotoSwipe} pswp
+ * @param {boolean} [isNextButton]
+ */
+function initArrowButton(element, pswp, isNextButton) {
+  element.classList.add('pswp__button--arrow'); // TODO: this should point to a unique id for this instance
+
+  element.setAttribute('aria-controls', 'pswp__items');
+  pswp.on('change', () => {
+    if (!pswp.options.loop) {
+      if (isNextButton) {
+        /** @type {HTMLButtonElement} */
+        element.disabled = !(pswp.currIndex < pswp.getNumItems() - 1);
+      } else {
+        /** @type {HTMLButtonElement} */
+        element.disabled = !(pswp.currIndex > 0);
+      }
+    }
+  });
+}
+/** @type {UIElementData} */
+
+
+const arrowPrev = {
+  name: 'arrowPrev',
+  className: 'pswp__button--arrow--prev',
+  title: 'Previous',
+  order: 10,
+  isButton: true,
+  appendTo: 'wrapper',
+  html: {
+    isCustomSVG: true,
+    size: 60,
+    inner: '<path d="M29 43l-3 3-16-16 16-16 3 3-13 13 13 13z" id="pswp__icn-arrow"/>',
+    outlineID: 'pswp__icn-arrow'
+  },
+  onClick: 'prev',
+  onInit: initArrowButton
+};
+/** @type {UIElementData} */
+
+const arrowNext = {
+  name: 'arrowNext',
+  className: 'pswp__button--arrow--next',
+  title: 'Next',
+  order: 11,
+  isButton: true,
+  appendTo: 'wrapper',
+  html: {
+    isCustomSVG: true,
+    size: 60,
+    inner: '<use xlink:href="#pswp__icn-arrow"/>',
+    outlineID: 'pswp__icn-arrow'
+  },
+  onClick: 'next',
+  onInit: (el, pswp) => {
+    initArrowButton(el, pswp, true);
+  }
+};
+
+/** @type {import('./ui-element.js').UIElementData} UIElementData */
+const closeButton = {
+  name: 'close',
+  title: 'Close',
+  order: 20,
+  isButton: true,
+  html: {
+    isCustomSVG: true,
+    inner: '<path d="M24 10l-2-2-6 6-6-6-2 2 6 6-6 6 2 2 6-6 6 6 2-2-6-6z" id="pswp__icn-close"/>',
+    outlineID: 'pswp__icn-close'
+  },
+  onClick: 'close'
+};
+
+/** @type {import('./ui-element.js').UIElementData} UIElementData */
+const zoomButton = {
+  name: 'zoom',
+  title: 'Zoom',
+  order: 10,
+  isButton: true,
+  html: {
+    isCustomSVG: true,
+    // eslint-disable-next-line max-len
+    inner: '<path d="M17.426 19.926a6 6 0 1 1 1.5-1.5L23 22.5 21.5 24l-4.074-4.074z" id="pswp__icn-zoom"/>' + '<path fill="currentColor" class="pswp__zoom-icn-bar-h" d="M11 16v-2h6v2z"/>' + '<path fill="currentColor" class="pswp__zoom-icn-bar-v" d="M13 12h2v6h-2z"/>',
+    outlineID: 'pswp__icn-zoom'
+  },
+  onClick: 'toggleZoom'
+};
+
+/** @type {import('./ui-element.js').UIElementData} UIElementData */
+const loadingIndicator = {
+  name: 'preloader',
+  appendTo: 'bar',
+  order: 7,
+  html: {
+    isCustomSVG: true,
+    // eslint-disable-next-line max-len
+    inner: '<path fill-rule="evenodd" clip-rule="evenodd" d="M21.2 16a5.2 5.2 0 1 1-5.2-5.2V8a8 8 0 1 0 8 8h-2.8Z" id="pswp__icn-loading"/>',
+    outlineID: 'pswp__icn-loading'
+  },
+  onInit: (indicatorElement, pswp) => {
+    /** @type {boolean | undefined} */
+    let isVisible;
+    /** @type {NodeJS.Timeout | null} */
+
+    let delayTimeout = null;
+    /**
+     * @param {string} className
+     * @param {boolean} add
+     */
+
+    const toggleIndicatorClass = (className, add) => {
+      indicatorElement.classList.toggle('pswp__preloader--' + className, add);
+    };
+    /**
+     * @param {boolean} visible
+     */
+
+
+    const setIndicatorVisibility = visible => {
+      if (isVisible !== visible) {
+        isVisible = visible;
+        toggleIndicatorClass('active', visible);
+      }
+    };
+
+    const updatePreloaderVisibility = () => {
+      var _pswp$currSlide;
+
+      if (!((_pswp$currSlide = pswp.currSlide) !== null && _pswp$currSlide !== void 0 && _pswp$currSlide.content.isLoading())) {
+        setIndicatorVisibility(false);
+
+        if (delayTimeout) {
+          clearTimeout(delayTimeout);
+          delayTimeout = null;
+        }
+
+        return;
+      }
+
+      if (!delayTimeout) {
+        // display loading indicator with delay
+        delayTimeout = setTimeout(() => {
+          var _pswp$currSlide2;
+
+          setIndicatorVisibility(Boolean((_pswp$currSlide2 = pswp.currSlide) === null || _pswp$currSlide2 === void 0 ? void 0 : _pswp$currSlide2.content.isLoading()));
+          delayTimeout = null;
+        }, pswp.options.preloaderDelay);
+      }
+    };
+
+    pswp.on('change', updatePreloaderVisibility);
+    pswp.on('loadComplete', e => {
+      if (pswp.currSlide === e.slide) {
+        updatePreloaderVisibility();
+      }
+    }); // expose the method
+
+    if (pswp.ui) {
+      pswp.ui.updatePreloaderVisibility = updatePreloaderVisibility;
+    }
+  }
+};
+
+/** @type {import('./ui-element.js').UIElementData} UIElementData */
+const counterIndicator = {
+  name: 'counter',
+  order: 5,
+  onInit: (counterElement, pswp) => {
+    pswp.on('change', () => {
+      counterElement.innerText = pswp.currIndex + 1 + pswp.options.indexIndicatorSep + pswp.getNumItems();
+    });
+  }
+};
+
+/** @typedef {import('../photoswipe.js').default} PhotoSwipe */
+
+/** @typedef {import('./ui-element.js').UIElementData} UIElementData */
+
+/**
+ * Set special class on element when image is zoomed.
+ *
+ * By default, it is used to adjust
+ * zoom icon and zoom cursor via CSS.
+ *
+ * @param {HTMLElement} el
+ * @param {boolean} isZoomedIn
+ */
+
+function setZoomedIn(el, isZoomedIn) {
+  el.classList.toggle('pswp--zoomed-in', isZoomedIn);
+}
+
+class UI {
+  /**
+   * @param {PhotoSwipe} pswp
+   */
+  constructor(pswp) {
+    this.pswp = pswp;
+    this.isRegistered = false;
+    /** @type {UIElementData[]} */
+
+    this.uiElementsData = [];
+    /** @type {(UIElement | UIElementData)[]} */
+
+    this.items = [];
+    /** @type {() => void} */
+
+    this.updatePreloaderVisibility = () => {};
+    /**
+     * @private
+     * @type {number | undefined}
+     */
+
+
+    this._lastUpdatedZoomLevel = undefined;
+  }
+
+  init() {
+    const {
+      pswp
+    } = this;
+    this.isRegistered = false;
+    this.uiElementsData = [closeButton, arrowPrev, arrowNext, zoomButton, loadingIndicator, counterIndicator];
+    pswp.dispatch('uiRegister'); // sort by order
+
+    this.uiElementsData.sort((a, b) => {
+      // default order is 0
+      return (a.order || 0) - (b.order || 0);
+    });
+    this.items = [];
+    this.isRegistered = true;
+    this.uiElementsData.forEach(uiElementData => {
+      this.registerElement(uiElementData);
+    });
+    pswp.on('change', () => {
+      var _pswp$element;
+
+      (_pswp$element = pswp.element) === null || _pswp$element === void 0 || _pswp$element.classList.toggle('pswp--one-slide', pswp.getNumItems() === 1);
+    });
+    pswp.on('zoomPanUpdate', () => this._onZoomPanUpdate());
+  }
+  /**
+   * @param {UIElementData} elementData
+   */
+
+
+  registerElement(elementData) {
+    if (this.isRegistered) {
+      this.items.push(new UIElement(this.pswp, elementData));
+    } else {
+      this.uiElementsData.push(elementData);
+    }
+  }
+  /**
+   * Fired each time zoom or pan position is changed.
+   * Update classes that control visibility of zoom button and cursor icon.
+   *
+   * @private
+   */
+
+
+  _onZoomPanUpdate() {
+    const {
+      template,
+      currSlide,
+      options
+    } = this.pswp;
+
+    if (this.pswp.opener.isClosing || !template || !currSlide) {
+      return;
+    }
+
+    let {
+      currZoomLevel
+    } = currSlide; // if not open yet - check against initial zoom level
+
+    if (!this.pswp.opener.isOpen) {
+      currZoomLevel = currSlide.zoomLevels.initial;
+    }
+
+    if (currZoomLevel === this._lastUpdatedZoomLevel) {
+      return;
+    }
+
+    this._lastUpdatedZoomLevel = currZoomLevel;
+    const currZoomLevelDiff = currSlide.zoomLevels.initial - currSlide.zoomLevels.secondary; // Initial and secondary zoom levels are almost equal
+
+    if (Math.abs(currZoomLevelDiff) < 0.01 || !currSlide.isZoomable()) {
+      // disable zoom
+      setZoomedIn(template, false);
+      template.classList.remove('pswp--zoom-allowed');
+      return;
+    }
+
+    template.classList.add('pswp--zoom-allowed');
+    const potentialZoomLevel = currZoomLevel === currSlide.zoomLevels.initial ? currSlide.zoomLevels.secondary : currSlide.zoomLevels.initial;
+    setZoomedIn(template, potentialZoomLevel <= currZoomLevel);
+
+    if (options.imageClickAction === 'zoom' || options.imageClickAction === 'zoom-or-close') {
+      template.classList.add('pswp--click-to-zoom');
+    }
+  }
+
+}
+
+/** @typedef {import('./slide.js').SlideData} SlideData */
+
+/** @typedef {import('../photoswipe.js').default} PhotoSwipe */
+
+/** @typedef {{ x: number; y: number; w: number; innerRect?: { w: number; h: number; x: number; y: number } }} Bounds */
+
+/**
+ * @param {HTMLElement} el
+ * @returns Bounds
+ */
+function getBoundsByElement(el) {
+  const thumbAreaRect = el.getBoundingClientRect();
+  return {
+    x: thumbAreaRect.left,
+    y: thumbAreaRect.top,
+    w: thumbAreaRect.width
+  };
+}
+/**
+ * @param {HTMLElement} el
+ * @param {number} imageWidth
+ * @param {number} imageHeight
+ * @returns Bounds
+ */
+
+
+function getCroppedBoundsByElement(el, imageWidth, imageHeight) {
+  const thumbAreaRect = el.getBoundingClientRect(); // fill image into the area
+  // (do they same as object-fit:cover does to retrieve coordinates)
+
+  const hRatio = thumbAreaRect.width / imageWidth;
+  const vRatio = thumbAreaRect.height / imageHeight;
+  const fillZoomLevel = hRatio > vRatio ? hRatio : vRatio;
+  const offsetX = (thumbAreaRect.width - imageWidth * fillZoomLevel) / 2;
+  const offsetY = (thumbAreaRect.height - imageHeight * fillZoomLevel) / 2;
+  /**
+   * Coordinates of the image,
+   * as if it was not cropped,
+   * height is calculated automatically
+   *
+   * @type {Bounds}
+   */
+
+  const bounds = {
+    x: thumbAreaRect.left + offsetX,
+    y: thumbAreaRect.top + offsetY,
+    w: imageWidth * fillZoomLevel
+  }; // Coordinates of inner crop area
+  // relative to the image
+
+  bounds.innerRect = {
+    w: thumbAreaRect.width,
+    h: thumbAreaRect.height,
+    x: offsetX,
+    y: offsetY
+  };
+  return bounds;
+}
+/**
+ * Get dimensions of thumbnail image
+ * (click on which opens photoswipe or closes photoswipe to)
+ *
+ * @param {number} index
+ * @param {SlideData} itemData
+ * @param {PhotoSwipe} instance PhotoSwipe instance
+ * @returns {Bounds | undefined}
+ */
+
+
+function getThumbBounds(index, itemData, instance) {
+  // legacy event, before filters were introduced
+  const event = instance.dispatch('thumbBounds', {
+    index,
+    itemData,
+    instance
+  }); // @ts-expect-error
+
+  if (event.thumbBounds) {
+    // @ts-expect-error
+    return event.thumbBounds;
+  }
+
+  const {
+    element
+  } = itemData;
+  /** @type {Bounds | undefined} */
+
+  let thumbBounds;
+  /** @type {HTMLElement | null | undefined} */
+
+  let thumbnail;
+
+  if (element && instance.options.thumbSelector !== false) {
+    const thumbSelector = instance.options.thumbSelector || 'img';
+    thumbnail = element.matches(thumbSelector) ? element :
+    /** @type {HTMLElement | null} */
+    element.querySelector(thumbSelector);
+  }
+
+  thumbnail = instance.applyFilters('thumbEl', thumbnail, itemData, index);
+
+  if (thumbnail) {
+    if (!itemData.thumbCropped) {
+      thumbBounds = getBoundsByElement(thumbnail);
+    } else {
+      thumbBounds = getCroppedBoundsByElement(thumbnail, itemData.width || itemData.w || 0, itemData.height || itemData.h || 0);
+    }
+  }
+
+  return instance.applyFilters('thumbBounds', thumbBounds, itemData, index);
+}
+
+/** @typedef {import('../lightbox/lightbox.js').default} PhotoSwipeLightbox */
+
+/** @typedef {import('../photoswipe.js').default} PhotoSwipe */
+
+/** @typedef {import('../photoswipe.js').PhotoSwipeOptions} PhotoSwipeOptions */
+
+/** @typedef {import('../photoswipe.js').DataSource} DataSource */
+
+/** @typedef {import('../ui/ui-element.js').UIElementData} UIElementData */
+
+/** @typedef {import('../slide/content.js').default} ContentDefault */
+
+/** @typedef {import('../slide/slide.js').default} Slide */
+
+/** @typedef {import('../slide/slide.js').SlideData} SlideData */
+
+/** @typedef {import('../slide/zoom-level.js').default} ZoomLevel */
+
+/** @typedef {import('../slide/get-thumb-bounds.js').Bounds} Bounds */
+
+/**
+ * Allow adding an arbitrary props to the Content
+ * https://photoswipe.com/custom-content/#using-webp-image-format
+ * @typedef {ContentDefault & Record<string, any>} Content
+ */
+
+/** @typedef {{ x?: number; y?: number }} Point */
+
+/**
+ * @typedef {Object} PhotoSwipeEventsMap https://photoswipe.com/events/
+ *
+ *
+ * https://photoswipe.com/adding-ui-elements/
+ *
+ * @prop {undefined} uiRegister
+ * @prop {{ data: UIElementData }} uiElementCreate
+ *
+ *
+ * https://photoswipe.com/events/#initialization-events
+ *
+ * @prop {undefined} beforeOpen
+ * @prop {undefined} firstUpdate
+ * @prop {undefined} initialLayout
+ * @prop {undefined} change
+ * @prop {undefined} afterInit
+ * @prop {undefined} bindEvents
+ *
+ *
+ * https://photoswipe.com/events/#opening-or-closing-transition-events
+ *
+ * @prop {undefined} openingAnimationStart
+ * @prop {undefined} openingAnimationEnd
+ * @prop {undefined} closingAnimationStart
+ * @prop {undefined} closingAnimationEnd
+ *
+ *
+ * https://photoswipe.com/events/#closing-events
+ *
+ * @prop {undefined} close
+ * @prop {undefined} destroy
+ *
+ *
+ * https://photoswipe.com/events/#pointer-and-gesture-events
+ *
+ * @prop {{ originalEvent: PointerEvent }} pointerDown
+ * @prop {{ originalEvent: PointerEvent }} pointerMove
+ * @prop {{ originalEvent: PointerEvent }} pointerUp
+ * @prop {{ bgOpacity: number }} pinchClose can be default prevented
+ * @prop {{ panY: number }} verticalDrag can be default prevented
+ *
+ *
+ * https://photoswipe.com/events/#slide-content-events
+ *
+ * @prop {{ content: Content }} contentInit
+ * @prop {{ content: Content; isLazy: boolean }} contentLoad can be default prevented
+ * @prop {{ content: Content; isLazy: boolean }} contentLoadImage can be default prevented
+ * @prop {{ content: Content; slide: Slide; isError?: boolean }} loadComplete
+ * @prop {{ content: Content; slide: Slide }} loadError
+ * @prop {{ content: Content; width: number; height: number }} contentResize can be default prevented
+ * @prop {{ content: Content; width: number; height: number; slide: Slide }} imageSizeChange
+ * @prop {{ content: Content }} contentLazyLoad can be default prevented
+ * @prop {{ content: Content }} contentAppend can be default prevented
+ * @prop {{ content: Content }} contentActivate can be default prevented
+ * @prop {{ content: Content }} contentDeactivate can be default prevented
+ * @prop {{ content: Content }} contentRemove can be default prevented
+ * @prop {{ content: Content }} contentDestroy can be default prevented
+ *
+ *
+ * undocumented
+ *
+ * @prop {{ point: Point; originalEvent: PointerEvent }} imageClickAction can be default prevented
+ * @prop {{ point: Point; originalEvent: PointerEvent }} bgClickAction can be default prevented
+ * @prop {{ point: Point; originalEvent: PointerEvent }} tapAction can be default prevented
+ * @prop {{ point: Point; originalEvent: PointerEvent }} doubleTapAction can be default prevented
+ *
+ * @prop {{ originalEvent: KeyboardEvent }} keydown can be default prevented
+ * @prop {{ x: number; dragging: boolean }} moveMainScroll
+ * @prop {{ slide: Slide }} firstZoomPan
+ * @prop {{ slide: Slide | undefined, data: SlideData, index: number }} gettingData
+ * @prop {undefined} beforeResize
+ * @prop {undefined} resize
+ * @prop {undefined} viewportSize
+ * @prop {undefined} updateScrollOffset
+ * @prop {{ slide: Slide }} slideInit
+ * @prop {{ slide: Slide }} afterSetContent
+ * @prop {{ slide: Slide }} slideLoad
+ * @prop {{ slide: Slide }} appendHeavy can be default prevented
+ * @prop {{ slide: Slide }} appendHeavyContent
+ * @prop {{ slide: Slide }} slideActivate
+ * @prop {{ slide: Slide }} slideDeactivate
+ * @prop {{ slide: Slide }} slideDestroy
+ * @prop {{ destZoomLevel: number, centerPoint: Point | undefined, transitionDuration: number | false | undefined }} beforeZoomTo
+ * @prop {{ slide: Slide }} zoomPanUpdate
+ * @prop {{ slide: Slide }} initialZoomPan
+ * @prop {{ slide: Slide }} calcSlideSize
+ * @prop {undefined} resolutionChanged
+ * @prop {{ originalEvent: WheelEvent }} wheel can be default prevented
+ * @prop {{ content: Content }} contentAppendImage can be default prevented
+ * @prop {{ index: number; itemData: SlideData }} lazyLoadSlide can be default prevented
+ * @prop {undefined} lazyLoad
+ * @prop {{ slide: Slide }} calcBounds
+ * @prop {{ zoomLevels: ZoomLevel, slideData: SlideData }} zoomLevelsUpdate
+ *
+ *
+ * legacy
+ *
+ * @prop {undefined} init
+ * @prop {undefined} initialZoomIn
+ * @prop {undefined} initialZoomOut
+ * @prop {undefined} initialZoomInEnd
+ * @prop {undefined} initialZoomOutEnd
+ * @prop {{ dataSource: DataSource | undefined, numItems: number }} numItems
+ * @prop {{ itemData: SlideData; index: number }} itemData
+ * @prop {{ index: number, itemData: SlideData, instance: PhotoSwipe }} thumbBounds
+ */
+
+/**
+ * @typedef {Object} PhotoSwipeFiltersMap https://photoswipe.com/filters/
+ *
+ * @prop {(numItems: number, dataSource: DataSource | undefined) => number} numItems
+ * Modify the total amount of slides. Example on Data sources page.
+ * https://photoswipe.com/filters/#numitems
+ *
+ * @prop {(itemData: SlideData, index: number) => SlideData} itemData
+ * Modify slide item data. Example on Data sources page.
+ * https://photoswipe.com/filters/#itemdata
+ *
+ * @prop {(itemData: SlideData, element: HTMLElement, linkEl: HTMLAnchorElement) => SlideData} domItemData
+ * Modify item data when it's parsed from DOM element. Example on Data sources page.
+ * https://photoswipe.com/filters/#domitemdata
+ *
+ * @prop {(clickedIndex: number, e: MouseEvent, instance: PhotoSwipeLightbox) => number} clickedIndex
+ * Modify clicked gallery item index.
+ * https://photoswipe.com/filters/#clickedindex
+ *
+ * @prop {(placeholderSrc: string | false, content: Content) => string | false} placeholderSrc
+ * Modify placeholder image source.
+ * https://photoswipe.com/filters/#placeholdersrc
+ *
+ * @prop {(isContentLoading: boolean, content: Content) => boolean} isContentLoading
+ * Modify if the content is currently loading.
+ * https://photoswipe.com/filters/#iscontentloading
+ *
+ * @prop {(isContentZoomable: boolean, content: Content) => boolean} isContentZoomable
+ * Modify if the content can be zoomed.
+ * https://photoswipe.com/filters/#iscontentzoomable
+ *
+ * @prop {(useContentPlaceholder: boolean, content: Content) => boolean} useContentPlaceholder
+ * Modify if the placeholder should be used for the content.
+ * https://photoswipe.com/filters/#usecontentplaceholder
+ *
+ * @prop {(isKeepingPlaceholder: boolean, content: Content) => boolean} isKeepingPlaceholder
+ * Modify if the placeholder should be kept after the content is loaded.
+ * https://photoswipe.com/filters/#iskeepingplaceholder
+ *
+ *
+ * @prop {(contentErrorElement: HTMLElement, content: Content) => HTMLElement} contentErrorElement
+ * Modify an element when the content has error state (for example, if image cannot be loaded).
+ * https://photoswipe.com/filters/#contenterrorelement
+ *
+ * @prop {(element: HTMLElement, data: UIElementData) => HTMLElement} uiElement
+ * Modify a UI element that's being created.
+ * https://photoswipe.com/filters/#uielement
+ *
+ * @prop {(thumbnail: HTMLElement | null | undefined, itemData: SlideData, index: number) => HTMLElement} thumbEl
+ * Modify the thumbnail element from which opening zoom animation starts or ends.
+ * https://photoswipe.com/filters/#thumbel
+ *
+ * @prop {(thumbBounds: Bounds | undefined, itemData: SlideData, index: number) => Bounds} thumbBounds
+ * Modify the thumbnail bounds from which opening zoom animation starts or ends.
+ * https://photoswipe.com/filters/#thumbbounds
+ *
+ * @prop {(srcsetSizesWidth: number, content: Content) => number} srcsetSizesWidth
+ *
+ * @prop {(preventPointerEvent: boolean, event: PointerEvent, pointerType: string) => boolean} preventPointerEvent
+ *
+ */
+
+/**
+ * @template {keyof PhotoSwipeFiltersMap} T
+ * @typedef {{ fn: PhotoSwipeFiltersMap[T], priority: number }} Filter
+ */
+
+/**
+ * @template {keyof PhotoSwipeEventsMap} T
+ * @typedef {PhotoSwipeEventsMap[T] extends undefined ? PhotoSwipeEvent<T> : PhotoSwipeEvent<T> & PhotoSwipeEventsMap[T]} AugmentedEvent
+ */
+
+/**
+ * @template {keyof PhotoSwipeEventsMap} T
+ * @typedef {(event: AugmentedEvent<T>) => void} EventCallback
+ */
+
+/**
+ * Base PhotoSwipe event object
+ *
+ * @template {keyof PhotoSwipeEventsMap} T
+ */
+class PhotoSwipeEvent {
+  /**
+   * @param {T} type
+   * @param {PhotoSwipeEventsMap[T]} [details]
+   */
+  constructor(type, details) {
+    this.type = type;
+    this.defaultPrevented = false;
+
+    if (details) {
+      Object.assign(this, details);
+    }
+  }
+
+  preventDefault() {
+    this.defaultPrevented = true;
+  }
+
+}
+/**
+ * PhotoSwipe base class that can listen and dispatch for events.
+ * Shared by PhotoSwipe Core and PhotoSwipe Lightbox, extended by base.js
+ */
+
+
+class Eventable {
+  constructor() {
+    /**
+     * @type {{ [T in keyof PhotoSwipeEventsMap]?: ((event: AugmentedEvent<T>) => void)[] }}
+     */
+    this._listeners = {};
+    /**
+     * @type {{ [T in keyof PhotoSwipeFiltersMap]?: Filter<T>[] }}
+     */
+
+    this._filters = {};
+    /** @type {PhotoSwipe | undefined} */
+
+    this.pswp = undefined;
+    /** @type {PhotoSwipeOptions | undefined} */
+
+    this.options = undefined;
+  }
+  /**
+   * @template {keyof PhotoSwipeFiltersMap} T
+   * @param {T} name
+   * @param {PhotoSwipeFiltersMap[T]} fn
+   * @param {number} priority
+   */
+
+
+  addFilter(name, fn, priority = 100) {
+    var _this$_filters$name, _this$_filters$name2, _this$pswp;
+
+    if (!this._filters[name]) {
+      this._filters[name] = [];
+    }
+
+    (_this$_filters$name = this._filters[name]) === null || _this$_filters$name === void 0 || _this$_filters$name.push({
+      fn,
+      priority
+    });
+    (_this$_filters$name2 = this._filters[name]) === null || _this$_filters$name2 === void 0 || _this$_filters$name2.sort((f1, f2) => f1.priority - f2.priority);
+    (_this$pswp = this.pswp) === null || _this$pswp === void 0 || _this$pswp.addFilter(name, fn, priority);
+  }
+  /**
+   * @template {keyof PhotoSwipeFiltersMap} T
+   * @param {T} name
+   * @param {PhotoSwipeFiltersMap[T]} fn
+   */
+
+
+  removeFilter(name, fn) {
+    if (this._filters[name]) {
+      // @ts-expect-error
+      this._filters[name] = this._filters[name].filter(filter => filter.fn !== fn);
+    }
+
+    if (this.pswp) {
+      this.pswp.removeFilter(name, fn);
+    }
+  }
+  /**
+   * @template {keyof PhotoSwipeFiltersMap} T
+   * @param {T} name
+   * @param {Parameters<PhotoSwipeFiltersMap[T]>} args
+   * @returns {Parameters<PhotoSwipeFiltersMap[T]>[0]}
+   */
+
+
+  applyFilters(name, ...args) {
+    var _this$_filters$name3;
+
+    (_this$_filters$name3 = this._filters[name]) === null || _this$_filters$name3 === void 0 || _this$_filters$name3.forEach(filter => {
+      // @ts-expect-error
+      args[0] = filter.fn.apply(this, args);
+    });
+    return args[0];
+  }
+  /**
+   * @template {keyof PhotoSwipeEventsMap} T
+   * @param {T} name
+   * @param {EventCallback<T>} fn
+   */
+
+
+  on(name, fn) {
+    var _this$_listeners$name, _this$pswp2;
+
+    if (!this._listeners[name]) {
+      this._listeners[name] = [];
+    }
+
+    (_this$_listeners$name = this._listeners[name]) === null || _this$_listeners$name === void 0 || _this$_listeners$name.push(fn); // When binding events to lightbox,
+    // also bind events to PhotoSwipe Core,
+    // if it's open.
+
+    (_this$pswp2 = this.pswp) === null || _this$pswp2 === void 0 || _this$pswp2.on(name, fn);
+  }
+  /**
+   * @template {keyof PhotoSwipeEventsMap} T
+   * @param {T} name
+   * @param {EventCallback<T>} fn
+   */
+
+
+  off(name, fn) {
+    var _this$pswp3;
+
+    if (this._listeners[name]) {
+      // @ts-expect-error
+      this._listeners[name] = this._listeners[name].filter(listener => fn !== listener);
+    }
+
+    (_this$pswp3 = this.pswp) === null || _this$pswp3 === void 0 || _this$pswp3.off(name, fn);
+  }
+  /**
+   * @template {keyof PhotoSwipeEventsMap} T
+   * @param {T} name
+   * @param {PhotoSwipeEventsMap[T]} [details]
+   * @returns {AugmentedEvent<T>}
+   */
+
+
+  dispatch(name, details) {
+    var _this$_listeners$name2;
+
+    if (this.pswp) {
+      return this.pswp.dispatch(name, details);
+    }
+
+    const event =
+    /** @type {AugmentedEvent<T>} */
+    new PhotoSwipeEvent(name, details);
+    (_this$_listeners$name2 = this._listeners[name]) === null || _this$_listeners$name2 === void 0 || _this$_listeners$name2.forEach(listener => {
+      listener.call(this, event);
+    });
+    return event;
+  }
+
+}
+
+class Placeholder {
+  /**
+   * @param {string | false} imageSrc
+   * @param {HTMLElement} container
+   */
+  constructor(imageSrc, container) {
+    // Create placeholder
+    // (stretched thumbnail or simple div behind the main image)
+
+    /** @type {HTMLImageElement | HTMLDivElement | null} */
+    this.element = createElement('pswp__img pswp__img--placeholder', imageSrc ? 'img' : 'div', container);
+
+    if (imageSrc) {
+      const imgEl =
+      /** @type {HTMLImageElement} */
+      this.element;
+      imgEl.decoding = 'async';
+      imgEl.alt = '';
+      imgEl.src = imageSrc;
+      imgEl.setAttribute('role', 'presentation');
+    }
+
+    this.element.setAttribute('aria-hidden', 'true');
+  }
+  /**
+   * @param {number} width
+   * @param {number} height
+   */
+
+
+  setDisplayedSize(width, height) {
+    if (!this.element) {
+      return;
+    }
+
+    if (this.element.tagName === 'IMG') {
+      // Use transform scale() to modify img placeholder size
+      // (instead of changing width/height directly).
+      // This helps with performance, specifically in iOS15 Safari.
+      setWidthHeight(this.element, 250, 'auto');
+      this.element.style.transformOrigin = '0 0';
+      this.element.style.transform = toTransformString(0, 0, width / 250);
+    } else {
+      setWidthHeight(this.element, width, height);
+    }
+  }
+
+  destroy() {
+    var _this$element;
+
+    if ((_this$element = this.element) !== null && _this$element !== void 0 && _this$element.parentNode) {
+      this.element.remove();
+    }
+
+    this.element = null;
+  }
+
+}
+
+/** @typedef {import('./slide.js').default} Slide */
+
+/** @typedef {import('./slide.js').SlideData} SlideData */
+
+/** @typedef {import('../core/base.js').default} PhotoSwipeBase */
+
+/** @typedef {import('../util/util.js').LoadState} LoadState */
+
+class Content {
+  /**
+   * @param {SlideData} itemData Slide data
+   * @param {PhotoSwipeBase} instance PhotoSwipe or PhotoSwipeLightbox instance
+   * @param {number} index
+   */
+  constructor(itemData, instance, index) {
+    this.instance = instance;
+    this.data = itemData;
+    this.index = index;
+    /** @type {HTMLImageElement | HTMLDivElement | undefined} */
+
+    this.element = undefined;
+    /** @type {Placeholder | undefined} */
+
+    this.placeholder = undefined;
+    /** @type {Slide | undefined} */
+
+    this.slide = undefined;
+    this.displayedImageWidth = 0;
+    this.displayedImageHeight = 0;
+    this.width = Number(this.data.w) || Number(this.data.width) || 0;
+    this.height = Number(this.data.h) || Number(this.data.height) || 0;
+    this.isAttached = false;
+    this.hasSlide = false;
+    this.isDecoding = false;
+    /** @type {LoadState} */
+
+    this.state = LOAD_STATE.IDLE;
+
+    if (this.data.type) {
+      this.type = this.data.type;
+    } else if (this.data.src) {
+      this.type = 'image';
+    } else {
+      this.type = 'html';
+    }
+
+    this.instance.dispatch('contentInit', {
+      content: this
+    });
+  }
+
+  removePlaceholder() {
+    if (this.placeholder && !this.keepPlaceholder()) {
+      // With delay, as image might be loaded, but not rendered
+      setTimeout(() => {
+        if (this.placeholder) {
+          this.placeholder.destroy();
+          this.placeholder = undefined;
+        }
+      }, 1000);
+    }
+  }
+  /**
+   * Preload content
+   *
+   * @param {boolean} isLazy
+   * @param {boolean} [reload]
+   */
+
+
+  load(isLazy, reload) {
+    if (this.slide && this.usePlaceholder()) {
+      if (!this.placeholder) {
+        const placeholderSrc = this.instance.applyFilters('placeholderSrc', // use  image-based placeholder only for the first slide,
+        // as rendering (even small stretched thumbnail) is an expensive operation
+        this.data.msrc && this.slide.isFirstSlide ? this.data.msrc : false, this);
+        this.placeholder = new Placeholder(placeholderSrc, this.slide.container);
+      } else {
+        const placeholderEl = this.placeholder.element; // Add placeholder to DOM if it was already created
+
+        if (placeholderEl && !placeholderEl.parentElement) {
+          this.slide.container.prepend(placeholderEl);
+        }
+      }
+    }
+
+    if (this.element && !reload) {
+      return;
+    }
+
+    if (this.instance.dispatch('contentLoad', {
+      content: this,
+      isLazy
+    }).defaultPrevented) {
+      return;
+    }
+
+    if (this.isImageContent()) {
+      this.element = createElement('pswp__img', 'img'); // Start loading only after width is defined, as sizes might depend on it.
+      // Due to Safari feature, we must define sizes before srcset.
+
+      if (this.displayedImageWidth) {
+        this.loadImage(isLazy);
+      }
+    } else {
+      this.element = createElement('pswp__content', 'div');
+      this.element.innerHTML = this.data.html || '';
+    }
+
+    if (reload && this.slide) {
+      this.slide.updateContentSize(true);
+    }
+  }
+  /**
+   * Preload image
+   *
+   * @param {boolean} isLazy
+   */
+
+
+  loadImage(isLazy) {
+    var _this$data$src, _this$data$alt;
+
+    if (!this.isImageContent() || !this.element || this.instance.dispatch('contentLoadImage', {
+      content: this,
+      isLazy
+    }).defaultPrevented) {
+      return;
+    }
+
+    const imageElement =
+    /** @type HTMLImageElement */
+    this.element;
+    this.updateSrcsetSizes();
+
+    if (this.data.srcset) {
+      imageElement.srcset = this.data.srcset;
+    }
+
+    imageElement.src = (_this$data$src = this.data.src) !== null && _this$data$src !== void 0 ? _this$data$src : '';
+    imageElement.alt = (_this$data$alt = this.data.alt) !== null && _this$data$alt !== void 0 ? _this$data$alt : '';
+    this.state = LOAD_STATE.LOADING;
+
+    if (imageElement.complete) {
+      this.onLoaded();
+    } else {
+      imageElement.onload = () => {
+        this.onLoaded();
+      };
+
+      imageElement.onerror = () => {
+        this.onError();
+      };
+    }
+  }
+  /**
+   * Assign slide to content
+   *
+   * @param {Slide} slide
+   */
+
+
+  setSlide(slide) {
+    this.slide = slide;
+    this.hasSlide = true;
+    this.instance = slide.pswp; // todo: do we need to unset slide?
+  }
+  /**
+   * Content load success handler
+   */
+
+
+  onLoaded() {
+    this.state = LOAD_STATE.LOADED;
+
+    if (this.slide && this.element) {
+      this.instance.dispatch('loadComplete', {
+        slide: this.slide,
+        content: this
+      }); // if content is reloaded
+
+      if (this.slide.isActive && this.slide.heavyAppended && !this.element.parentNode) {
+        this.append();
+        this.slide.updateContentSize(true);
+      }
+
+      if (this.state === LOAD_STATE.LOADED || this.state === LOAD_STATE.ERROR) {
+        this.removePlaceholder();
+      }
+    }
+  }
+  /**
+   * Content load error handler
+   */
+
+
+  onError() {
+    this.state = LOAD_STATE.ERROR;
+
+    if (this.slide) {
+      this.displayError();
+      this.instance.dispatch('loadComplete', {
+        slide: this.slide,
+        isError: true,
+        content: this
+      });
+      this.instance.dispatch('loadError', {
+        slide: this.slide,
+        content: this
+      });
+    }
+  }
+  /**
+   * @returns {Boolean} If the content is currently loading
+   */
+
+
+  isLoading() {
+    return this.instance.applyFilters('isContentLoading', this.state === LOAD_STATE.LOADING, this);
+  }
+  /**
+   * @returns {Boolean} If the content is in error state
+   */
+
+
+  isError() {
+    return this.state === LOAD_STATE.ERROR;
+  }
+  /**
+   * @returns {boolean} If the content is image
+   */
+
+
+  isImageContent() {
+    return this.type === 'image';
+  }
+  /**
+   * Update content size
+   *
+   * @param {Number} width
+   * @param {Number} height
+   */
+
+
+  setDisplayedSize(width, height) {
+    if (!this.element) {
+      return;
+    }
+
+    if (this.placeholder) {
+      this.placeholder.setDisplayedSize(width, height);
+    }
+
+    if (this.instance.dispatch('contentResize', {
+      content: this,
+      width,
+      height
+    }).defaultPrevented) {
+      return;
+    }
+
+    setWidthHeight(this.element, width, height);
+
+    if (this.isImageContent() && !this.isError()) {
+      const isInitialSizeUpdate = !this.displayedImageWidth && width;
+      this.displayedImageWidth = width;
+      this.displayedImageHeight = height;
+
+      if (isInitialSizeUpdate) {
+        this.loadImage(false);
+      } else {
+        this.updateSrcsetSizes();
+      }
+
+      if (this.slide) {
+        this.instance.dispatch('imageSizeChange', {
+          slide: this.slide,
+          width,
+          height,
+          content: this
+        });
+      }
+    }
+  }
+  /**
+   * @returns {boolean} If the content can be zoomed
+   */
+
+
+  isZoomable() {
+    return this.instance.applyFilters('isContentZoomable', this.isImageContent() && this.state !== LOAD_STATE.ERROR, this);
+  }
+  /**
+   * Update image srcset sizes attribute based on width and height
+   */
+
+
+  updateSrcsetSizes() {
+    // Handle srcset sizes attribute.
+    //
+    // Never lower quality, if it was increased previously.
+    // Chrome does this automatically, Firefox and Safari do not,
+    // so we store largest used size in dataset.
+    if (!this.isImageContent() || !this.element || !this.data.srcset) {
+      return;
+    }
+
+    const image =
+    /** @type HTMLImageElement */
+    this.element;
+    const sizesWidth = this.instance.applyFilters('srcsetSizesWidth', this.displayedImageWidth, this);
+
+    if (!image.dataset.largestUsedSize || sizesWidth > parseInt(image.dataset.largestUsedSize, 10)) {
+      image.sizes = sizesWidth + 'px';
+      image.dataset.largestUsedSize = String(sizesWidth);
+    }
+  }
+  /**
+   * @returns {boolean} If content should use a placeholder (from msrc by default)
+   */
+
+
+  usePlaceholder() {
+    return this.instance.applyFilters('useContentPlaceholder', this.isImageContent(), this);
+  }
+  /**
+   * Preload content with lazy-loading param
+   */
+
+
+  lazyLoad() {
+    if (this.instance.dispatch('contentLazyLoad', {
+      content: this
+    }).defaultPrevented) {
+      return;
+    }
+
+    this.load(true);
+  }
+  /**
+   * @returns {boolean} If placeholder should be kept after content is loaded
+   */
+
+
+  keepPlaceholder() {
+    return this.instance.applyFilters('isKeepingPlaceholder', this.isLoading(), this);
+  }
+  /**
+   * Destroy the content
+   */
+
+
+  destroy() {
+    this.hasSlide = false;
+    this.slide = undefined;
+
+    if (this.instance.dispatch('contentDestroy', {
+      content: this
+    }).defaultPrevented) {
+      return;
+    }
+
+    this.remove();
+
+    if (this.placeholder) {
+      this.placeholder.destroy();
+      this.placeholder = undefined;
+    }
+
+    if (this.isImageContent() && this.element) {
+      this.element.onload = null;
+      this.element.onerror = null;
+      this.element = undefined;
+    }
+  }
+  /**
+   * Display error message
+   */
+
+
+  displayError() {
+    if (this.slide) {
+      var _this$instance$option, _this$instance$option2;
+
+      let errorMsgEl = createElement('pswp__error-msg', 'div');
+      errorMsgEl.innerText = (_this$instance$option = (_this$instance$option2 = this.instance.options) === null || _this$instance$option2 === void 0 ? void 0 : _this$instance$option2.errorMsg) !== null && _this$instance$option !== void 0 ? _this$instance$option : '';
+      errorMsgEl =
+      /** @type {HTMLDivElement} */
+      this.instance.applyFilters('contentErrorElement', errorMsgEl, this);
+      this.element = createElement('pswp__content pswp__error-msg-container', 'div');
+      this.element.appendChild(errorMsgEl);
+      this.slide.container.innerText = '';
+      this.slide.container.appendChild(this.element);
+      this.slide.updateContentSize(true);
+      this.removePlaceholder();
+    }
+  }
+  /**
+   * Append the content
+   */
+
+
+  append() {
+    if (this.isAttached || !this.element) {
+      return;
+    }
+
+    this.isAttached = true;
+
+    if (this.state === LOAD_STATE.ERROR) {
+      this.displayError();
+      return;
+    }
+
+    if (this.instance.dispatch('contentAppend', {
+      content: this
+    }).defaultPrevented) {
+      return;
+    }
+
+    const supportsDecode = ('decode' in this.element);
+
+    if (this.isImageContent()) {
+      // Use decode() on nearby slides
+      //
+      // Nearby slide images are in DOM and not hidden via display:none.
+      // However, they are placed offscreen (to the left and right side).
+      //
+      // Some browsers do not composite the image until it's actually visible,
+      // using decode() helps.
+      //
+      // You might ask "why dont you just decode() and then append all images",
+      // that's because I want to show image before it's fully loaded,
+      // as browser can render parts of image while it is loading.
+      // We do not do this in Safari due to partial loading bug.
+      if (supportsDecode && this.slide && (!this.slide.isActive || isSafari())) {
+        this.isDecoding = true; // purposefully using finally instead of then,
+        // as if srcset sizes changes dynamically - it may cause decode error
+
+        /** @type {HTMLImageElement} */
+
+        this.element.decode().catch(() => {}).finally(() => {
+          this.isDecoding = false;
+          this.appendImage();
+        });
+      } else {
+        this.appendImage();
+      }
+    } else if (this.slide && !this.element.parentNode) {
+      this.slide.container.appendChild(this.element);
+    }
+  }
+  /**
+   * Activate the slide,
+   * active slide is generally the current one,
+   * meaning the user can see it.
+   */
+
+
+  activate() {
+    if (this.instance.dispatch('contentActivate', {
+      content: this
+    }).defaultPrevented || !this.slide) {
+      return;
+    }
+
+    if (this.isImageContent() && this.isDecoding && !isSafari()) {
+      // add image to slide when it becomes active,
+      // even if it's not finished decoding
+      this.appendImage();
+    } else if (this.isError()) {
+      this.load(false, true); // try to reload
+    }
+
+    if (this.slide.holderElement) {
+      this.slide.holderElement.setAttribute('aria-hidden', 'false');
+    }
+  }
+  /**
+   * Deactivate the content
+   */
+
+
+  deactivate() {
+    this.instance.dispatch('contentDeactivate', {
+      content: this
+    });
+
+    if (this.slide && this.slide.holderElement) {
+      this.slide.holderElement.setAttribute('aria-hidden', 'true');
+    }
+  }
+  /**
+   * Remove the content from DOM
+   */
+
+
+  remove() {
+    this.isAttached = false;
+
+    if (this.instance.dispatch('contentRemove', {
+      content: this
+    }).defaultPrevented) {
+      return;
+    }
+
+    if (this.element && this.element.parentNode) {
+      this.element.remove();
+    }
+
+    if (this.placeholder && this.placeholder.element) {
+      this.placeholder.element.remove();
+    }
+  }
+  /**
+   * Append the image content to slide container
+   */
+
+
+  appendImage() {
+    if (!this.isAttached) {
+      return;
+    }
+
+    if (this.instance.dispatch('contentAppendImage', {
+      content: this
+    }).defaultPrevented) {
+      return;
+    } // ensure that element exists and is not already appended
+
+
+    if (this.slide && this.element && !this.element.parentNode) {
+      this.slide.container.appendChild(this.element);
+    }
+
+    if (this.state === LOAD_STATE.LOADED || this.state === LOAD_STATE.ERROR) {
+      this.removePlaceholder();
+    }
+  }
+
+}
+
+/** @typedef {import('./content.js').default} Content */
+
+/** @typedef {import('./slide.js').default} Slide */
+
+/** @typedef {import('./slide.js').SlideData} SlideData */
+
+/** @typedef {import('../core/base.js').default} PhotoSwipeBase */
+
+/** @typedef {import('../photoswipe.js').default} PhotoSwipe */
+
+const MIN_SLIDES_TO_CACHE = 5;
+/**
+ * Lazy-load an image
+ * This function is used both by Lightbox and PhotoSwipe core,
+ * thus it can be called before dialog is opened.
+ *
+ * @param {SlideData} itemData Data about the slide
+ * @param {PhotoSwipeBase} instance PhotoSwipe or PhotoSwipeLightbox instance
+ * @param {number} index
+ * @returns {Content} Image that is being decoded or false.
+ */
+
+function lazyLoadData(itemData, instance, index) {
+  const content = instance.createContentFromData(itemData, index);
+  /** @type {ZoomLevel | undefined} */
+
+  let zoomLevel;
+  const {
+    options
+  } = instance; // We need to know dimensions of the image to preload it,
+  // as it might use srcset, and we need to define sizes
+
+  if (options) {
+    zoomLevel = new ZoomLevel(options, itemData, -1);
+    let viewportSize;
+
+    if (instance.pswp) {
+      viewportSize = instance.pswp.viewportSize;
+    } else {
+      viewportSize = getViewportSize(options, instance);
+    }
+
+    const panAreaSize = getPanAreaSize(options, viewportSize, itemData, index);
+    zoomLevel.update(content.width, content.height, panAreaSize);
+  }
+
+  content.lazyLoad();
+
+  if (zoomLevel) {
+    content.setDisplayedSize(Math.ceil(content.width * zoomLevel.initial), Math.ceil(content.height * zoomLevel.initial));
+  }
+
+  return content;
+}
+/**
+ * Lazy-loads specific slide.
+ * This function is used both by Lightbox and PhotoSwipe core,
+ * thus it can be called before dialog is opened.
+ *
+ * By default, it loads image based on viewport size and initial zoom level.
+ *
+ * @param {number} index Slide index
+ * @param {PhotoSwipeBase} instance PhotoSwipe or PhotoSwipeLightbox eventable instance
+ * @returns {Content | undefined}
+ */
+
+function lazyLoadSlide(index, instance) {
+  const itemData = instance.getItemData(index);
+
+  if (instance.dispatch('lazyLoadSlide', {
+    index,
+    itemData
+  }).defaultPrevented) {
+    return;
+  }
+
+  return lazyLoadData(itemData, instance, index);
+}
+
+class ContentLoader {
+  /**
+   * @param {PhotoSwipe} pswp
+   */
+  constructor(pswp) {
+    this.pswp = pswp; // Total amount of cached images
+
+    this.limit = Math.max(pswp.options.preload[0] + pswp.options.preload[1] + 1, MIN_SLIDES_TO_CACHE);
+    /** @type {Content[]} */
+
+    this._cachedItems = [];
+  }
+  /**
+   * Lazy load nearby slides based on `preload` option.
+   *
+   * @param {number} [diff] Difference between slide indexes that was changed recently, or 0.
+   */
+
+
+  updateLazy(diff) {
+    const {
+      pswp
+    } = this;
+
+    if (pswp.dispatch('lazyLoad').defaultPrevented) {
+      return;
+    }
+
+    const {
+      preload
+    } = pswp.options;
+    const isForward = diff === undefined ? true : diff >= 0;
+    let i; // preload[1] - num items to preload in forward direction
+
+    for (i = 0; i <= preload[1]; i++) {
+      this.loadSlideByIndex(pswp.currIndex + (isForward ? i : -i));
+    } // preload[0] - num items to preload in backward direction
+
+
+    for (i = 1; i <= preload[0]; i++) {
+      this.loadSlideByIndex(pswp.currIndex + (isForward ? -i : i));
+    }
+  }
+  /**
+   * @param {number} initialIndex
+   */
+
+
+  loadSlideByIndex(initialIndex) {
+    const index = this.pswp.getLoopedIndex(initialIndex); // try to get cached content
+
+    let content = this.getContentByIndex(index);
+
+    if (!content) {
+      // no cached content, so try to load from scratch:
+      content = lazyLoadSlide(index, this.pswp); // if content can be loaded, add it to cache:
+
+      if (content) {
+        this.addToCache(content);
+      }
+    }
+  }
+  /**
+   * @param {Slide} slide
+   * @returns {Content}
+   */
+
+
+  getContentBySlide(slide) {
+    let content = this.getContentByIndex(slide.index);
+
+    if (!content) {
+      // create content if not found in cache
+      content = this.pswp.createContentFromData(slide.data, slide.index);
+      this.addToCache(content);
+    } // assign slide to content
+
+
+    content.setSlide(slide);
+    return content;
+  }
+  /**
+   * @param {Content} content
+   */
+
+
+  addToCache(content) {
+    // move to the end of array
+    this.removeByIndex(content.index);
+
+    this._cachedItems.push(content);
+
+    if (this._cachedItems.length > this.limit) {
+      // Destroy the first content that's not attached
+      const indexToRemove = this._cachedItems.findIndex(item => {
+        return !item.isAttached && !item.hasSlide;
+      });
+
+      if (indexToRemove !== -1) {
+        const removedItem = this._cachedItems.splice(indexToRemove, 1)[0];
+
+        removedItem.destroy();
+      }
+    }
+  }
+  /**
+   * Removes an image from cache, does not destroy() it, just removes.
+   *
+   * @param {number} index
+   */
+
+
+  removeByIndex(index) {
+    const indexToRemove = this._cachedItems.findIndex(item => item.index === index);
+
+    if (indexToRemove !== -1) {
+      this._cachedItems.splice(indexToRemove, 1);
+    }
+  }
+  /**
+   * @param {number} index
+   * @returns {Content | undefined}
+   */
+
+
+  getContentByIndex(index) {
+    return this._cachedItems.find(content => content.index === index);
+  }
+
+  destroy() {
+    this._cachedItems.forEach(content => content.destroy());
+
+    this._cachedItems = [];
+  }
+
+}
+
+/** @typedef {import("../photoswipe.js").default} PhotoSwipe */
+
+/** @typedef {import("../slide/slide.js").SlideData} SlideData */
+
+/**
+ * PhotoSwipe base class that can retrieve data about every slide.
+ * Shared by PhotoSwipe Core and PhotoSwipe Lightbox
+ */
+
+class PhotoSwipeBase extends Eventable {
+  /**
+   * Get total number of slides
+   *
+   * @returns {number}
+   */
+  getNumItems() {
+    var _this$options;
+
+    let numItems = 0;
+    const dataSource = (_this$options = this.options) === null || _this$options === void 0 ? void 0 : _this$options.dataSource;
+
+    if (dataSource && 'length' in dataSource) {
+      // may be an array or just object with length property
+      numItems = dataSource.length;
+    } else if (dataSource && 'gallery' in dataSource) {
+      // query DOM elements
+      if (!dataSource.items) {
+        dataSource.items = this._getGalleryDOMElements(dataSource.gallery);
+      }
+
+      if (dataSource.items) {
+        numItems = dataSource.items.length;
+      }
+    } // legacy event, before filters were introduced
+
+
+    const event = this.dispatch('numItems', {
+      dataSource,
+      numItems
+    });
+    return this.applyFilters('numItems', event.numItems, dataSource);
+  }
+  /**
+   * @param {SlideData} slideData
+   * @param {number} index
+   * @returns {Content}
+   */
+
+
+  createContentFromData(slideData, index) {
+    return new Content(slideData, this, index);
+  }
+  /**
+   * Get item data by index.
+   *
+   * "item data" should contain normalized information that PhotoSwipe needs to generate a slide.
+   * For example, it may contain properties like
+   * `src`, `srcset`, `w`, `h`, which will be used to generate a slide with image.
+   *
+   * @param {number} index
+   * @returns {SlideData}
+   */
+
+
+  getItemData(index) {
+    var _this$options2;
+
+    const dataSource = (_this$options2 = this.options) === null || _this$options2 === void 0 ? void 0 : _this$options2.dataSource;
+    /** @type {SlideData | HTMLElement} */
+
+    let dataSourceItem = {};
+
+    if (Array.isArray(dataSource)) {
+      // Datasource is an array of elements
+      dataSourceItem = dataSource[index];
+    } else if (dataSource && 'gallery' in dataSource) {
+      // dataSource has gallery property,
+      // thus it was created by Lightbox, based on
+      // gallery and children options
+      // query DOM elements
+      if (!dataSource.items) {
+        dataSource.items = this._getGalleryDOMElements(dataSource.gallery);
+      }
+
+      dataSourceItem = dataSource.items[index];
+    }
+
+    let itemData = dataSourceItem;
+
+    if (itemData instanceof Element) {
+      itemData = this._domElementToItemData(itemData);
+    } // Dispatching the itemData event,
+    // it's a legacy verion before filters were introduced
+
+
+    const event = this.dispatch('itemData', {
+      itemData: itemData || {},
+      index
+    });
+    return this.applyFilters('itemData', event.itemData, index);
+  }
+  /**
+   * Get array of gallery DOM elements,
+   * based on childSelector and gallery element.
+   *
+   * @param {HTMLElement} galleryElement
+   * @returns {HTMLElement[]}
+   */
+
+
+  _getGalleryDOMElements(galleryElement) {
+    var _this$options3, _this$options4;
+
+    if ((_this$options3 = this.options) !== null && _this$options3 !== void 0 && _this$options3.children || (_this$options4 = this.options) !== null && _this$options4 !== void 0 && _this$options4.childSelector) {
+      return getElementsFromOption(this.options.children, this.options.childSelector, galleryElement) || [];
+    }
+
+    return [galleryElement];
+  }
+  /**
+   * Converts DOM element to item data object.
+   *
+   * @param {HTMLElement} element DOM element
+   * @returns {SlideData}
+   */
+
+
+  _domElementToItemData(element) {
+    /** @type {SlideData} */
+    const itemData = {
+      element
+    };
+    const linkEl =
+    /** @type {HTMLAnchorElement} */
+    element.tagName === 'A' ? element : element.querySelector('a');
+
+    if (linkEl) {
+      // src comes from data-pswp-src attribute,
+      // if it's empty link href is used
+      itemData.src = linkEl.dataset.pswpSrc || linkEl.href;
+
+      if (linkEl.dataset.pswpSrcset) {
+        itemData.srcset = linkEl.dataset.pswpSrcset;
+      }
+
+      itemData.width = linkEl.dataset.pswpWidth ? parseInt(linkEl.dataset.pswpWidth, 10) : 0;
+      itemData.height = linkEl.dataset.pswpHeight ? parseInt(linkEl.dataset.pswpHeight, 10) : 0; // support legacy w & h properties
+
+      itemData.w = itemData.width;
+      itemData.h = itemData.height;
+
+      if (linkEl.dataset.pswpType) {
+        itemData.type = linkEl.dataset.pswpType;
+      }
+
+      const thumbnailEl = element.querySelector('img');
+
+      if (thumbnailEl) {
+        var _thumbnailEl$getAttri;
+
+        // msrc is URL to placeholder image that's displayed before large image is loaded
+        // by default it's displayed only for the first slide
+        itemData.msrc = thumbnailEl.currentSrc || thumbnailEl.src;
+        itemData.alt = (_thumbnailEl$getAttri = thumbnailEl.getAttribute('alt')) !== null && _thumbnailEl$getAttri !== void 0 ? _thumbnailEl$getAttri : '';
+      }
+
+      if (linkEl.dataset.pswpCropped || linkEl.dataset.cropped) {
+        itemData.thumbCropped = true;
+      }
+    }
+
+    return this.applyFilters('domItemData', itemData, element, linkEl);
+  }
+  /**
+   * Lazy-load by slide data
+   *
+   * @param {SlideData} itemData Data about the slide
+   * @param {number} index
+   * @returns {Content} Image that is being decoded or false.
+   */
+
+
+  lazyLoadData(itemData, index) {
+    return lazyLoadData(itemData, this, index);
+  }
+
+}
+
+/** @typedef {import('./photoswipe.js').default} PhotoSwipe */
+
+/** @typedef {import('./slide/get-thumb-bounds.js').Bounds} Bounds */
+
+/** @typedef {import('./util/animations.js').AnimationProps} AnimationProps */
+// some browsers do not paint
+// elements which opacity is set to 0,
+// since we need to pre-render elements for the animation -
+// we set it to the minimum amount
+
+const MIN_OPACITY = 0.003;
+/**
+ * Manages opening and closing transitions of the PhotoSwipe.
+ *
+ * It can perform zoom, fade or no transition.
+ */
+
+class Opener {
+  /**
+   * @param {PhotoSwipe} pswp
+   */
+  constructor(pswp) {
+    this.pswp = pswp;
+    this.isClosed = true;
+    this.isOpen = false;
+    this.isClosing = false;
+    this.isOpening = false;
+    /**
+     * @private
+     * @type {number | false | undefined}
+     */
+
+    this._duration = undefined;
+    /** @private */
+
+    this._useAnimation = false;
+    /** @private */
+
+    this._croppedZoom = false;
+    /** @private */
+
+    this._animateRootOpacity = false;
+    /** @private */
+
+    this._animateBgOpacity = false;
+    /**
+     * @private
+     * @type { HTMLDivElement | HTMLImageElement | null | undefined }
+     */
+
+    this._placeholder = undefined;
+    /**
+     * @private
+     * @type { HTMLDivElement | undefined }
+     */
+
+    this._opacityElement = undefined;
+    /**
+     * @private
+     * @type { HTMLDivElement | undefined }
+     */
+
+    this._cropContainer1 = undefined;
+    /**
+     * @private
+     * @type { HTMLElement | null | undefined }
+     */
+
+    this._cropContainer2 = undefined;
+    /**
+     * @private
+     * @type {Bounds | undefined}
+     */
+
+    this._thumbBounds = undefined;
+    this._prepareOpen = this._prepareOpen.bind(this); // Override initial zoom and pan position
+
+    pswp.on('firstZoomPan', this._prepareOpen);
+  }
+
+  open() {
+    this._prepareOpen();
+
+    this._start();
+  }
+
+  close() {
+    if (this.isClosed || this.isClosing || this.isOpening) {
+      // if we close during opening animation
+      // for now do nothing,
+      // browsers aren't good at changing the direction of the CSS transition
+      return;
+    }
+
+    const slide = this.pswp.currSlide;
+    this.isOpen = false;
+    this.isOpening = false;
+    this.isClosing = true;
+    this._duration = this.pswp.options.hideAnimationDuration;
+
+    if (slide && slide.currZoomLevel * slide.width >= this.pswp.options.maxWidthToAnimate) {
+      this._duration = 0;
+    }
+
+    this._applyStartProps();
+
+    setTimeout(() => {
+      this._start();
+    }, this._croppedZoom ? 30 : 0);
+  }
+  /** @private */
+
+
+  _prepareOpen() {
+    this.pswp.off('firstZoomPan', this._prepareOpen);
+
+    if (!this.isOpening) {
+      const slide = this.pswp.currSlide;
+      this.isOpening = true;
+      this.isClosing = false;
+      this._duration = this.pswp.options.showAnimationDuration;
+
+      if (slide && slide.zoomLevels.initial * slide.width >= this.pswp.options.maxWidthToAnimate) {
+        this._duration = 0;
+      }
+
+      this._applyStartProps();
+    }
+  }
+  /** @private */
+
+
+  _applyStartProps() {
+    const {
+      pswp
+    } = this;
+    const slide = this.pswp.currSlide;
+    const {
+      options
+    } = pswp;
+
+    if (options.showHideAnimationType === 'fade') {
+      options.showHideOpacity = true;
+      this._thumbBounds = undefined;
+    } else if (options.showHideAnimationType === 'none') {
+      options.showHideOpacity = false;
+      this._duration = 0;
+      this._thumbBounds = undefined;
+    } else if (this.isOpening && pswp._initialThumbBounds) {
+      // Use initial bounds if defined
+      this._thumbBounds = pswp._initialThumbBounds;
+    } else {
+      this._thumbBounds = this.pswp.getThumbBounds();
+    }
+
+    this._placeholder = slide === null || slide === void 0 ? void 0 : slide.getPlaceholderElement();
+    pswp.animations.stopAll(); // Discard animations when duration is less than 50ms
+
+    this._useAnimation = Boolean(this._duration && this._duration > 50);
+    this._animateZoom = Boolean(this._thumbBounds) && (slide === null || slide === void 0 ? void 0 : slide.content.usePlaceholder()) && (!this.isClosing || !pswp.mainScroll.isShifted());
+
+    if (!this._animateZoom) {
+      this._animateRootOpacity = true;
+
+      if (this.isOpening && slide) {
+        slide.zoomAndPanToInitial();
+        slide.applyCurrentZoomPan();
+      }
+    } else {
+      var _options$showHideOpac;
+
+      this._animateRootOpacity = (_options$showHideOpac = options.showHideOpacity) !== null && _options$showHideOpac !== void 0 ? _options$showHideOpac : false;
+    }
+
+    this._animateBgOpacity = !this._animateRootOpacity && this.pswp.options.bgOpacity > MIN_OPACITY;
+    this._opacityElement = this._animateRootOpacity ? pswp.element : pswp.bg;
+
+    if (!this._useAnimation) {
+      this._duration = 0;
+      this._animateZoom = false;
+      this._animateBgOpacity = false;
+      this._animateRootOpacity = true;
+
+      if (this.isOpening) {
+        if (pswp.element) {
+          pswp.element.style.opacity = String(MIN_OPACITY);
+        }
+
+        pswp.applyBgOpacity(1);
+      }
+
+      return;
+    }
+
+    if (this._animateZoom && this._thumbBounds && this._thumbBounds.innerRect) {
+      var _this$pswp$currSlide;
+
+      // Properties are used when animation from cropped thumbnail
+      this._croppedZoom = true;
+      this._cropContainer1 = this.pswp.container;
+      this._cropContainer2 = (_this$pswp$currSlide = this.pswp.currSlide) === null || _this$pswp$currSlide === void 0 ? void 0 : _this$pswp$currSlide.holderElement;
+
+      if (pswp.container) {
+        pswp.container.style.overflow = 'hidden';
+        pswp.container.style.width = pswp.viewportSize.x + 'px';
+      }
+    } else {
+      this._croppedZoom = false;
+    }
+
+    if (this.isOpening) {
+      // Apply styles before opening transition
+      if (this._animateRootOpacity) {
+        if (pswp.element) {
+          pswp.element.style.opacity = String(MIN_OPACITY);
+        }
+
+        pswp.applyBgOpacity(1);
+      } else {
+        if (this._animateBgOpacity && pswp.bg) {
+          pswp.bg.style.opacity = String(MIN_OPACITY);
+        }
+
+        if (pswp.element) {
+          pswp.element.style.opacity = '1';
+        }
+      }
+
+      if (this._animateZoom) {
+        this._setClosedStateZoomPan();
+
+        if (this._placeholder) {
+          // tell browser that we plan to animate the placeholder
+          this._placeholder.style.willChange = 'transform'; // hide placeholder to allow hiding of
+          // elements that overlap it (such as icons over the thumbnail)
+
+          this._placeholder.style.opacity = String(MIN_OPACITY);
+        }
+      }
+    } else if (this.isClosing) {
+      // hide nearby slides to make sure that
+      // they are not painted during the transition
+      if (pswp.mainScroll.itemHolders[0]) {
+        pswp.mainScroll.itemHolders[0].el.style.display = 'none';
+      }
+
+      if (pswp.mainScroll.itemHolders[2]) {
+        pswp.mainScroll.itemHolders[2].el.style.display = 'none';
+      }
+
+      if (this._croppedZoom) {
+        if (pswp.mainScroll.x !== 0) {
+          // shift the main scroller to zero position
+          pswp.mainScroll.resetPosition();
+          pswp.mainScroll.resize();
+        }
+      }
+    }
+  }
+  /** @private */
+
+
+  _start() {
+    if (this.isOpening && this._useAnimation && this._placeholder && this._placeholder.tagName === 'IMG') {
+      // To ensure smooth animation
+      // we wait till the current slide image placeholder is decoded,
+      // but no longer than 250ms,
+      // and no shorter than 50ms
+      // (just using requestanimationframe is not enough in Firefox,
+      // for some reason)
+      new Promise(resolve => {
+        let decoded = false;
+        let isDelaying = true;
+        decodeImage(
+        /** @type {HTMLImageElement} */
+        this._placeholder).finally(() => {
+          decoded = true;
+
+          if (!isDelaying) {
+            resolve(true);
+          }
+        });
+        setTimeout(() => {
+          isDelaying = false;
+
+          if (decoded) {
+            resolve(true);
+          }
+        }, 50);
+        setTimeout(resolve, 250);
+      }).finally(() => this._initiate());
+    } else {
+      this._initiate();
+    }
+  }
+  /** @private */
+
+
+  _initiate() {
+    var _this$pswp$element, _this$pswp$element2;
+
+    (_this$pswp$element = this.pswp.element) === null || _this$pswp$element === void 0 || _this$pswp$element.style.setProperty('--pswp-transition-duration', this._duration + 'ms');
+    this.pswp.dispatch(this.isOpening ? 'openingAnimationStart' : 'closingAnimationStart'); // legacy event
+
+    this.pswp.dispatch(
+    /** @type {'initialZoomIn' | 'initialZoomOut'} */
+    'initialZoom' + (this.isOpening ? 'In' : 'Out'));
+    (_this$pswp$element2 = this.pswp.element) === null || _this$pswp$element2 === void 0 || _this$pswp$element2.classList.toggle('pswp--ui-visible', this.isOpening);
+
+    if (this.isOpening) {
+      if (this._placeholder) {
+        // unhide the placeholder
+        this._placeholder.style.opacity = '1';
+      }
+
+      this._animateToOpenState();
+    } else if (this.isClosing) {
+      this._animateToClosedState();
+    }
+
+    if (!this._useAnimation) {
+      this._onAnimationComplete();
+    }
+  }
+  /** @private */
+
+
+  _onAnimationComplete() {
+    const {
+      pswp
+    } = this;
+    this.isOpen = this.isOpening;
+    this.isClosed = this.isClosing;
+    this.isOpening = false;
+    this.isClosing = false;
+    pswp.dispatch(this.isOpen ? 'openingAnimationEnd' : 'closingAnimationEnd'); // legacy event
+
+    pswp.dispatch(
+    /** @type {'initialZoomInEnd' | 'initialZoomOutEnd'} */
+    'initialZoom' + (this.isOpen ? 'InEnd' : 'OutEnd'));
+
+    if (this.isClosed) {
+      pswp.destroy();
+    } else if (this.isOpen) {
+      var _pswp$currSlide;
+
+      if (this._animateZoom && pswp.container) {
+        pswp.container.style.overflow = 'visible';
+        pswp.container.style.width = '100%';
+      }
+
+      (_pswp$currSlide = pswp.currSlide) === null || _pswp$currSlide === void 0 || _pswp$currSlide.applyCurrentZoomPan();
+    }
+  }
+  /** @private */
+
+
+  _animateToOpenState() {
+    const {
+      pswp
+    } = this;
+
+    if (this._animateZoom) {
+      if (this._croppedZoom && this._cropContainer1 && this._cropContainer2) {
+        this._animateTo(this._cropContainer1, 'transform', 'translate3d(0,0,0)');
+
+        this._animateTo(this._cropContainer2, 'transform', 'none');
+      }
+
+      if (pswp.currSlide) {
+        pswp.currSlide.zoomAndPanToInitial();
+
+        this._animateTo(pswp.currSlide.container, 'transform', pswp.currSlide.getCurrentTransform());
+      }
+    }
+
+    if (this._animateBgOpacity && pswp.bg) {
+      this._animateTo(pswp.bg, 'opacity', String(pswp.options.bgOpacity));
+    }
+
+    if (this._animateRootOpacity && pswp.element) {
+      this._animateTo(pswp.element, 'opacity', '1');
+    }
+  }
+  /** @private */
+
+
+  _animateToClosedState() {
+    const {
+      pswp
+    } = this;
+
+    if (this._animateZoom) {
+      this._setClosedStateZoomPan(true);
+    } // do not animate opacity if it's already at 0
+
+
+    if (this._animateBgOpacity && pswp.bgOpacity > 0.01 && pswp.bg) {
+      this._animateTo(pswp.bg, 'opacity', '0');
+    }
+
+    if (this._animateRootOpacity && pswp.element) {
+      this._animateTo(pswp.element, 'opacity', '0');
+    }
+  }
+  /**
+   * @private
+   * @param {boolean} [animate]
+   */
+
+
+  _setClosedStateZoomPan(animate) {
+    if (!this._thumbBounds) return;
+    const {
+      pswp
+    } = this;
+    const {
+      innerRect
+    } = this._thumbBounds;
+    const {
+      currSlide,
+      viewportSize
+    } = pswp;
+
+    if (this._croppedZoom && innerRect && this._cropContainer1 && this._cropContainer2) {
+      const containerOnePanX = -viewportSize.x + (this._thumbBounds.x - innerRect.x) + innerRect.w;
+      const containerOnePanY = -viewportSize.y + (this._thumbBounds.y - innerRect.y) + innerRect.h;
+      const containerTwoPanX = viewportSize.x - innerRect.w;
+      const containerTwoPanY = viewportSize.y - innerRect.h;
+
+      if (animate) {
+        this._animateTo(this._cropContainer1, 'transform', toTransformString(containerOnePanX, containerOnePanY));
+
+        this._animateTo(this._cropContainer2, 'transform', toTransformString(containerTwoPanX, containerTwoPanY));
+      } else {
+        setTransform(this._cropContainer1, containerOnePanX, containerOnePanY);
+        setTransform(this._cropContainer2, containerTwoPanX, containerTwoPanY);
+      }
+    }
+
+    if (currSlide) {
+      equalizePoints(currSlide.pan, innerRect || this._thumbBounds);
+      currSlide.currZoomLevel = this._thumbBounds.w / currSlide.width;
+
+      if (animate) {
+        this._animateTo(currSlide.container, 'transform', currSlide.getCurrentTransform());
+      } else {
+        currSlide.applyCurrentZoomPan();
+      }
+    }
+  }
+  /**
+   * @private
+   * @param {HTMLElement} target
+   * @param {'transform' | 'opacity'} prop
+   * @param {string} propValue
+   */
+
+
+  _animateTo(target, prop, propValue) {
+    if (!this._duration) {
+      target.style[prop] = propValue;
+      return;
+    }
+
+    const {
+      animations
+    } = this.pswp;
+    /** @type {AnimationProps} */
+
+    const animProps = {
+      duration: this._duration,
+      easing: this.pswp.options.easing,
+      onComplete: () => {
+        if (!animations.activeAnimations.length) {
+          this._onAnimationComplete();
+        }
+      },
+      target
+    };
+    animProps[prop] = propValue;
+    animations.startTransition(animProps);
+  }
+
+}
+
+/**
+ * @template T
+ * @typedef {import('./types.js').Type<T>} Type<T>
+ */
+
+/** @typedef {import('./slide/slide.js').SlideData} SlideData */
+
+/** @typedef {import('./slide/zoom-level.js').ZoomLevelOption} ZoomLevelOption */
+
+/** @typedef {import('./ui/ui-element.js').UIElementData} UIElementData */
+
+/** @typedef {import('./main-scroll.js').ItemHolder} ItemHolder */
+
+/** @typedef {import('./core/eventable.js').PhotoSwipeEventsMap} PhotoSwipeEventsMap */
+
+/** @typedef {import('./core/eventable.js').PhotoSwipeFiltersMap} PhotoSwipeFiltersMap */
+
+/** @typedef {import('./slide/get-thumb-bounds').Bounds} Bounds */
+
+/**
+ * @template {keyof PhotoSwipeEventsMap} T
+ * @typedef {import('./core/eventable.js').EventCallback<T>} EventCallback<T>
+ */
+
+/**
+ * @template {keyof PhotoSwipeEventsMap} T
+ * @typedef {import('./core/eventable.js').AugmentedEvent<T>} AugmentedEvent<T>
+ */
+
+/** @typedef {{ x: number; y: number; id?: string | number }} Point */
+
+/** @typedef {{ top: number; bottom: number; left: number; right: number }} Padding */
+
+/** @typedef {SlideData[]} DataSourceArray */
+
+/** @typedef {{ gallery: HTMLElement; items?: HTMLElement[] }} DataSourceObject */
+
+/** @typedef {DataSourceArray | DataSourceObject} DataSource */
+
+/** @typedef {(point: Point, originalEvent: PointerEvent) => void} ActionFn */
+
+/** @typedef {'close' | 'next' | 'zoom' | 'zoom-or-close' | 'toggle-controls'} ActionType */
+
+/** @typedef {Type<PhotoSwipe> | { default: Type<PhotoSwipe> }} PhotoSwipeModule */
+
+/** @typedef {PhotoSwipeModule | Promise<PhotoSwipeModule> | (() => Promise<PhotoSwipeModule>)} PhotoSwipeModuleOption */
+
+/**
+ * @typedef {string | NodeListOf<HTMLElement> | HTMLElement[] | HTMLElement} ElementProvider
+ */
+
+/** @typedef {Partial<PreparedPhotoSwipeOptions>} PhotoSwipeOptions https://photoswipe.com/options/ */
+
+/**
+ * @typedef {Object} PreparedPhotoSwipeOptions
+ *
+ * @prop {DataSource} [dataSource]
+ * Pass an array of any items via dataSource option. Its length will determine amount of slides
+ * (which may be modified further from numItems event).
+ *
+ * Each item should contain data that you need to generate slide
+ * (for image slide it would be src (image URL), width (image width), height, srcset, alt).
+ *
+ * If these properties are not present in your initial array, you may "pre-parse" each item from itemData filter.
+ *
+ * @prop {number} bgOpacity
+ * Background backdrop opacity, always define it via this option and not via CSS rgba color.
+ *
+ * @prop {number} spacing
+ * Spacing between slides. Defined as ratio relative to the viewport width (0.1 = 10% of viewport).
+ *
+ * @prop {boolean} allowPanToNext
+ * Allow swipe navigation to the next slide when the current slide is zoomed. Does not apply to mouse events.
+ *
+ * @prop {boolean} loop
+ * If set to true you'll be able to swipe from the last to the first image.
+ * Option is always false when there are less than 3 slides.
+ *
+ * @prop {boolean} [wheelToZoom]
+ * By default PhotoSwipe zooms image with ctrl-wheel, if you enable this option - image will zoom just via wheel.
+ *
+ * @prop {boolean} pinchToClose
+ * Pinch touch gesture to close the gallery.
+ *
+ * @prop {boolean} closeOnVerticalDrag
+ * Vertical drag gesture to close the PhotoSwipe.
+ *
+ * @prop {Padding} [padding]
+ * Slide area padding (in pixels).
+ *
+ * @prop {(viewportSize: Point, itemData: SlideData, index: number) => Padding} [paddingFn]
+ * The option is checked frequently, so make sure it's performant. Overrides padding option if defined. For example:
+ *
+ * @prop {number | false} hideAnimationDuration
+ * Transition duration in milliseconds, can be 0.
+ *
+ * @prop {number | false} showAnimationDuration
+ * Transition duration in milliseconds, can be 0.
+ *
+ * @prop {number | false} zoomAnimationDuration
+ * Transition duration in milliseconds, can be 0.
+ *
+ * @prop {string} easing
+ * String, 'cubic-bezier(.4,0,.22,1)'. CSS easing function for open/close/zoom transitions.
+ *
+ * @prop {boolean} escKey
+ * Esc key to close.
+ *
+ * @prop {boolean} arrowKeys
+ * Left/right arrow keys for navigation.
+ *
+ * @prop {boolean} trapFocus
+ * Trap focus within PhotoSwipe element while it's open.
+ *
+ * @prop {boolean} returnFocus
+ * Restore focus the last active element after PhotoSwipe is closed.
+ *
+ * @prop {boolean} clickToCloseNonZoomable
+ * If image is not zoomable (for example, smaller than viewport) it can be closed by clicking on it.
+ *
+ * @prop {ActionType | ActionFn | false} imageClickAction
+ * Refer to click and tap actions page.
+ *
+ * @prop {ActionType | ActionFn | false} bgClickAction
+ * Refer to click and tap actions page.
+ *
+ * @prop {ActionType | ActionFn | false} tapAction
+ * Refer to click and tap actions page.
+ *
+ * @prop {ActionType | ActionFn | false} doubleTapAction
+ * Refer to click and tap actions page.
+ *
+ * @prop {number} preloaderDelay
+ * Delay before the loading indicator will be displayed,
+ * if image is loaded during it - the indicator will not be displayed at all. Can be zero.
+ *
+ * @prop {string} indexIndicatorSep
+ * Used for slide count indicator ("1 of 10 ").
+ *
+ * @prop {(options: PhotoSwipeOptions, pswp: PhotoSwipeBase) => Point} [getViewportSizeFn]
+ * A function that should return slide viewport width and height, in format {x: 100, y: 100}.
+ *
+ * @prop {string} errorMsg
+ * Message to display when the image wasn't able to load. If you need to display HTML - use contentErrorElement filter.
+ *
+ * @prop {[number, number]} preload
+ * Lazy loading of nearby slides based on direction of movement. Should be an array with two integers,
+ * first one - number of items to preload before the current image, second one - after the current image.
+ * Two nearby images are always loaded.
+ *
+ * @prop {string} [mainClass]
+ * Class that will be added to the root element of PhotoSwipe, may contain multiple separated by space.
+ * Example on Styling page.
+ *
+ * @prop {HTMLElement} [appendToEl]
+ * Element to which PhotoSwipe dialog will be appended when it opens.
+ *
+ * @prop {number} maxWidthToAnimate
+ * Maximum width of image to animate, if initial rendered image width
+ * is larger than this value - the opening/closing transition will be automatically disabled.
+ *
+ * @prop {string} [closeTitle]
+ * Translating
+ *
+ * @prop {string} [zoomTitle]
+ * Translating
+ *
+ * @prop {string} [arrowPrevTitle]
+ * Translating
+ *
+ * @prop {string} [arrowNextTitle]
+ * Translating
+ *
+ * @prop {'zoom' | 'fade' | 'none'} [showHideAnimationType]
+ * To adjust opening or closing transition type use lightbox option `showHideAnimationType` (`String`).
+ * It supports three values - `zoom` (default), `fade` (default if there is no thumbnail) and `none`.
+ *
+ * Animations are automatically disabled if user `(prefers-reduced-motion: reduce)`.
+ *
+ * @prop {number} index
+ * Defines start slide index.
+ *
+ * @prop {(e: MouseEvent) => number} [getClickedIndexFn]
+ *
+ * @prop {boolean} [arrowPrev]
+ * @prop {boolean} [arrowNext]
+ * @prop {boolean} [zoom]
+ * @prop {boolean} [close]
+ * @prop {boolean} [counter]
+ *
+ * @prop {string} [arrowPrevSVG]
+ * @prop {string} [arrowNextSVG]
+ * @prop {string} [zoomSVG]
+ * @prop {string} [closeSVG]
+ * @prop {string} [counterSVG]
+ *
+ * @prop {string} [arrowPrevTitle]
+ * @prop {string} [arrowNextTitle]
+ * @prop {string} [zoomTitle]
+ * @prop {string} [closeTitle]
+ * @prop {string} [counterTitle]
+ *
+ * @prop {ZoomLevelOption} [initialZoomLevel]
+ * @prop {ZoomLevelOption} [secondaryZoomLevel]
+ * @prop {ZoomLevelOption} [maxZoomLevel]
+ *
+ * @prop {boolean} [mouseMovePan]
+ * @prop {Point | null} [initialPointerPos]
+ * @prop {boolean} [showHideOpacity]
+ *
+ * @prop {PhotoSwipeModuleOption} [pswpModule]
+ * @prop {() => Promise<any>} [openPromise]
+ * @prop {boolean} [preloadFirstSlide]
+ * @prop {ElementProvider} [gallery]
+ * @prop {string} [gallerySelector]
+ * @prop {ElementProvider} [children]
+ * @prop {string} [childSelector]
+ * @prop {string | false} [thumbSelector]
+ */
+
+/** @type {PreparedPhotoSwipeOptions} */
+
+const defaultOptions = {
+  allowPanToNext: true,
+  spacing: 0.1,
+  loop: true,
+  pinchToClose: true,
+  closeOnVerticalDrag: true,
+  hideAnimationDuration: 333,
+  showAnimationDuration: 333,
+  zoomAnimationDuration: 333,
+  escKey: true,
+  arrowKeys: true,
+  trapFocus: true,
+  returnFocus: true,
+  maxWidthToAnimate: 4000,
+  clickToCloseNonZoomable: true,
+  imageClickAction: 'zoom-or-close',
+  bgClickAction: 'close',
+  tapAction: 'toggle-controls',
+  doubleTapAction: 'zoom',
+  indexIndicatorSep: ' / ',
+  preloaderDelay: 2000,
+  bgOpacity: 0.8,
+  index: 0,
+  errorMsg: 'The image cannot be loaded',
+  preload: [1, 2],
+  easing: 'cubic-bezier(.4,0,.22,1)'
+};
+/**
+ * PhotoSwipe Core
+ */
+
+class PhotoSwipe extends PhotoSwipeBase {
+  /**
+   * @param {PhotoSwipeOptions} [options]
+   */
+  constructor(options) {
+    super();
+    this.options = this._prepareOptions(options || {});
+    /**
+     * offset of viewport relative to document
+     *
+     * @type {Point}
+     */
+
+    this.offset = {
+      x: 0,
+      y: 0
+    };
+    /**
+     * @type {Point}
+     * @private
+     */
+
+    this._prevViewportSize = {
+      x: 0,
+      y: 0
+    };
+    /**
+     * Size of scrollable PhotoSwipe viewport
+     *
+     * @type {Point}
+     */
+
+    this.viewportSize = {
+      x: 0,
+      y: 0
+    };
+    /**
+     * background (backdrop) opacity
+     */
+
+    this.bgOpacity = 1;
+    this.currIndex = 0;
+    this.potentialIndex = 0;
+    this.isOpen = false;
+    this.isDestroying = false;
+    this.hasMouse = false;
+    /**
+     * @private
+     * @type {SlideData}
+     */
+
+    this._initialItemData = {};
+    /** @type {Bounds | undefined} */
+
+    this._initialThumbBounds = undefined;
+    /** @type {HTMLDivElement | undefined} */
+
+    this.topBar = undefined;
+    /** @type {HTMLDivElement | undefined} */
+
+    this.element = undefined;
+    /** @type {HTMLDivElement | undefined} */
+
+    this.template = undefined;
+    /** @type {HTMLDivElement | undefined} */
+
+    this.container = undefined;
+    /** @type {HTMLElement | undefined} */
+
+    this.scrollWrap = undefined;
+    /** @type {Slide | undefined} */
+
+    this.currSlide = undefined;
+    this.events = new DOMEvents();
+    this.animations = new Animations();
+    this.mainScroll = new MainScroll(this);
+    this.gestures = new Gestures(this);
+    this.opener = new Opener(this);
+    this.keyboard = new Keyboard(this);
+    this.contentLoader = new ContentLoader(this);
+  }
+  /** @returns {boolean} */
+
+
+  init() {
+    if (this.isOpen || this.isDestroying) {
+      return false;
+    }
+
+    this.isOpen = true;
+    this.dispatch('init'); // legacy
+
+    this.dispatch('beforeOpen');
+
+    this._createMainStructure(); // add classes to the root element of PhotoSwipe
+
+
+    let rootClasses = 'pswp--open';
+
+    if (this.gestures.supportsTouch) {
+      rootClasses += ' pswp--touch';
+    }
+
+    if (this.options.mainClass) {
+      rootClasses += ' ' + this.options.mainClass;
+    }
+
+    if (this.element) {
+      this.element.className += ' ' + rootClasses;
+    }
+
+    this.currIndex = this.options.index || 0;
+    this.potentialIndex = this.currIndex;
+    this.dispatch('firstUpdate'); // starting index can be modified here
+    // initialize scroll wheel handler to block the scroll
+
+    this.scrollWheel = new ScrollWheel(this); // sanitize index
+
+    if (Number.isNaN(this.currIndex) || this.currIndex < 0 || this.currIndex >= this.getNumItems()) {
+      this.currIndex = 0;
+    }
+
+    if (!this.gestures.supportsTouch) {
+      // enable mouse features if no touch support detected
+      this.mouseDetected();
+    } // causes forced synchronous layout
+
+
+    this.updateSize();
+    this.offset.y = window.pageYOffset;
+    this._initialItemData = this.getItemData(this.currIndex);
+    this.dispatch('gettingData', {
+      index: this.currIndex,
+      data: this._initialItemData,
+      slide: undefined
+    }); // *Layout* - calculate size and position of elements here
+
+    this._initialThumbBounds = this.getThumbBounds();
+    this.dispatch('initialLayout');
+    this.on('openingAnimationEnd', () => {
+      const {
+        itemHolders
+      } = this.mainScroll; // Add content to the previous and next slide
+
+      if (itemHolders[0]) {
+        itemHolders[0].el.style.display = 'block';
+        this.setContent(itemHolders[0], this.currIndex - 1);
+      }
+
+      if (itemHolders[2]) {
+        itemHolders[2].el.style.display = 'block';
+        this.setContent(itemHolders[2], this.currIndex + 1);
+      }
+
+      this.appendHeavy();
+      this.contentLoader.updateLazy();
+      this.events.add(window, 'resize', this._handlePageResize.bind(this));
+      this.events.add(window, 'scroll', this._updatePageScrollOffset.bind(this));
+      this.dispatch('bindEvents');
+    }); // set content for center slide (first time)
+
+    if (this.mainScroll.itemHolders[1]) {
+      this.setContent(this.mainScroll.itemHolders[1], this.currIndex);
+    }
+
+    this.dispatch('change');
+    this.opener.open();
+    this.dispatch('afterInit');
+    return true;
+  }
+  /**
+   * Get looped slide index
+   * (for example, -1 will return the last slide)
+   *
+   * @param {number} index
+   * @returns {number}
+   */
+
+
+  getLoopedIndex(index) {
+    const numSlides = this.getNumItems();
+
+    if (this.options.loop) {
+      if (index > numSlides - 1) {
+        index -= numSlides;
+      }
+
+      if (index < 0) {
+        index += numSlides;
+      }
+    }
+
+    return clamp(index, 0, numSlides - 1);
+  }
+
+  appendHeavy() {
+    this.mainScroll.itemHolders.forEach(itemHolder => {
+      var _itemHolder$slide;
+
+      (_itemHolder$slide = itemHolder.slide) === null || _itemHolder$slide === void 0 || _itemHolder$slide.appendHeavy();
+    });
+  }
+  /**
+   * Change the slide
+   * @param {number} index New index
+   */
+
+
+  goTo(index) {
+    this.mainScroll.moveIndexBy(this.getLoopedIndex(index) - this.potentialIndex);
+  }
+  /**
+   * Go to the next slide.
+   */
+
+
+  next() {
+    this.goTo(this.potentialIndex + 1);
+  }
+  /**
+   * Go to the previous slide.
+   */
+
+
+  prev() {
+    this.goTo(this.potentialIndex - 1);
+  }
+  /**
+   * @see slide/slide.js zoomTo
+   *
+   * @param {Parameters<Slide['zoomTo']>} args
+   */
+
+
+  zoomTo(...args) {
+    var _this$currSlide;
+
+    (_this$currSlide = this.currSlide) === null || _this$currSlide === void 0 || _this$currSlide.zoomTo(...args);
+  }
+  /**
+   * @see slide/slide.js toggleZoom
+   */
+
+
+  toggleZoom() {
+    var _this$currSlide2;
+
+    (_this$currSlide2 = this.currSlide) === null || _this$currSlide2 === void 0 || _this$currSlide2.toggleZoom();
+  }
+  /**
+   * Close the gallery.
+   * After closing transition ends - destroy it
+   */
+
+
+  close() {
+    if (!this.opener.isOpen || this.isDestroying) {
+      return;
+    }
+
+    this.isDestroying = true;
+    this.dispatch('close');
+    this.events.removeAll();
+    this.opener.close();
+  }
+  /**
+   * Destroys the gallery:
+   * - instantly closes the gallery
+   * - unbinds events,
+   * - cleans intervals and timeouts
+   * - removes elements from DOM
+   */
+
+
+  destroy() {
+    var _this$element;
+
+    if (!this.isDestroying) {
+      this.options.showHideAnimationType = 'none';
+      this.close();
+      return;
+    }
+
+    this.dispatch('destroy');
+    this._listeners = {};
+
+    if (this.scrollWrap) {
+      this.scrollWrap.ontouchmove = null;
+      this.scrollWrap.ontouchend = null;
+    }
+
+    (_this$element = this.element) === null || _this$element === void 0 || _this$element.remove();
+    this.mainScroll.itemHolders.forEach(itemHolder => {
+      var _itemHolder$slide2;
+
+      (_itemHolder$slide2 = itemHolder.slide) === null || _itemHolder$slide2 === void 0 || _itemHolder$slide2.destroy();
+    });
+    this.contentLoader.destroy();
+    this.events.removeAll();
+  }
+  /**
+   * Refresh/reload content of a slide by its index
+   *
+   * @param {number} slideIndex
+   */
+
+
+  refreshSlideContent(slideIndex) {
+    this.contentLoader.removeByIndex(slideIndex);
+    this.mainScroll.itemHolders.forEach((itemHolder, i) => {
+      var _this$currSlide$index, _this$currSlide3;
+
+      let potentialHolderIndex = ((_this$currSlide$index = (_this$currSlide3 = this.currSlide) === null || _this$currSlide3 === void 0 ? void 0 : _this$currSlide3.index) !== null && _this$currSlide$index !== void 0 ? _this$currSlide$index : 0) - 1 + i;
+
+      if (this.canLoop()) {
+        potentialHolderIndex = this.getLoopedIndex(potentialHolderIndex);
+      }
+
+      if (potentialHolderIndex === slideIndex) {
+        // set the new slide content
+        this.setContent(itemHolder, slideIndex, true); // activate the new slide if it's current
+
+        if (i === 1) {
+          var _itemHolder$slide3;
+
+          this.currSlide = itemHolder.slide;
+          (_itemHolder$slide3 = itemHolder.slide) === null || _itemHolder$slide3 === void 0 || _itemHolder$slide3.setIsActive(true);
+        }
+      }
+    });
+    this.dispatch('change');
+  }
+  /**
+   * Set slide content
+   *
+   * @param {ItemHolder} holder mainScroll.itemHolders array item
+   * @param {number} index Slide index
+   * @param {boolean} [force] If content should be set even if index wasn't changed
+   */
+
+
+  setContent(holder, index, force) {
+    if (this.canLoop()) {
+      index = this.getLoopedIndex(index);
+    }
+
+    if (holder.slide) {
+      if (holder.slide.index === index && !force) {
+        // exit if holder already contains this slide
+        // this could be common when just three slides are used
+        return;
+      } // destroy previous slide
+
+
+      holder.slide.destroy();
+      holder.slide = undefined;
+    } // exit if no loop and index is out of bounds
+
+
+    if (!this.canLoop() && (index < 0 || index >= this.getNumItems())) {
+      return;
+    }
+
+    const itemData = this.getItemData(index);
+    holder.slide = new Slide(itemData, index, this); // set current slide
+
+    if (index === this.currIndex) {
+      this.currSlide = holder.slide;
+    }
+
+    holder.slide.append(holder.el);
+  }
+  /** @returns {Point} */
+
+
+  getViewportCenterPoint() {
+    return {
+      x: this.viewportSize.x / 2,
+      y: this.viewportSize.y / 2
+    };
+  }
+  /**
+   * Update size of all elements.
+   * Executed on init and on page resize.
+   *
+   * @param {boolean} [force] Update size even if size of viewport was not changed.
+   */
+
+
+  updateSize(force) {
+    // let item;
+    // let itemIndex;
+    if (this.isDestroying) {
+      // exit if PhotoSwipe is closed or closing
+      // (to avoid errors, as resize event might be delayed)
+      return;
+    } //const newWidth = this.scrollWrap.clientWidth;
+    //const newHeight = this.scrollWrap.clientHeight;
+
+
+    const newViewportSize = getViewportSize(this.options, this);
+
+    if (!force && pointsEqual(newViewportSize, this._prevViewportSize)) {
+      // Exit if dimensions were not changed
+      return;
+    } //this._prevViewportSize.x = newWidth;
+    //this._prevViewportSize.y = newHeight;
+
+
+    equalizePoints(this._prevViewportSize, newViewportSize);
+    this.dispatch('beforeResize');
+    equalizePoints(this.viewportSize, this._prevViewportSize);
+
+    this._updatePageScrollOffset();
+
+    this.dispatch('viewportSize'); // Resize slides only after opener animation is finished
+    // and don't re-calculate size on inital size update
+
+    this.mainScroll.resize(this.opener.isOpen);
+
+    if (!this.hasMouse && window.matchMedia('(any-hover: hover)').matches) {
+      this.mouseDetected();
+    }
+
+    this.dispatch('resize');
+  }
+  /**
+   * @param {number} opacity
+   */
+
+
+  applyBgOpacity(opacity) {
+    this.bgOpacity = Math.max(opacity, 0);
+
+    if (this.bg) {
+      this.bg.style.opacity = String(this.bgOpacity * this.options.bgOpacity);
+    }
+  }
+  /**
+   * Whether mouse is detected
+   */
+
+
+  mouseDetected() {
+    if (!this.hasMouse) {
+      var _this$element2;
+
+      this.hasMouse = true;
+      (_this$element2 = this.element) === null || _this$element2 === void 0 || _this$element2.classList.add('pswp--has_mouse');
+    }
+  }
+  /**
+   * Page resize event handler
+   *
+   * @private
+   */
+
+
+  _handlePageResize() {
+    this.updateSize(); // In iOS webview, if element size depends on document size,
+    // it'll be measured incorrectly in resize event
+    //
+    // https://bugs.webkit.org/show_bug.cgi?id=170595
+    // https://hackernoon.com/onresize-event-broken-in-mobile-safari-d8469027bf4d
+
+    if (/iPhone|iPad|iPod/i.test(window.navigator.userAgent)) {
+      setTimeout(() => {
+        this.updateSize();
+      }, 500);
+    }
+  }
+  /**
+   * Page scroll offset is used
+   * to get correct coordinates
+   * relative to PhotoSwipe viewport.
+   *
+   * @private
+   */
+
+
+  _updatePageScrollOffset() {
+    this.setScrollOffset(0, window.pageYOffset);
+  }
+  /**
+   * @param {number} x
+   * @param {number} y
+   */
+
+
+  setScrollOffset(x, y) {
+    this.offset.x = x;
+    this.offset.y = y;
+    this.dispatch('updateScrollOffset');
+  }
+  /**
+   * Create main HTML structure of PhotoSwipe,
+   * and add it to DOM
+   *
+   * @private
+   */
+
+
+  _createMainStructure() {
+    // root DOM element of PhotoSwipe (.pswp)
+    this.element = createElement('pswp', 'div');
+    this.element.setAttribute('tabindex', '-1');
+    this.element.setAttribute('role', 'dialog'); // template is legacy prop
+
+    this.template = this.element; // Background is added as a separate element,
+    // as animating opacity is faster than animating rgba()
+
+    this.bg = createElement('pswp__bg', 'div', this.element);
+    this.scrollWrap = createElement('pswp__scroll-wrap', 'section', this.element);
+    this.container = createElement('pswp__container', 'div', this.scrollWrap); // aria pattern: carousel
+
+    this.scrollWrap.setAttribute('aria-roledescription', 'carousel');
+    this.container.setAttribute('aria-live', 'off');
+    this.container.setAttribute('id', 'pswp__items');
+    this.mainScroll.appendHolders();
+    this.ui = new UI(this);
+    this.ui.init(); // append to DOM
+
+    (this.options.appendToEl || document.body).appendChild(this.element);
+  }
+  /**
+   * Get position and dimensions of small thumbnail
+   *   {x:,y:,w:}
+   *
+   * Height is optional (calculated based on the large image)
+   *
+   * @returns {Bounds | undefined}
+   */
+
+
+  getThumbBounds() {
+    return getThumbBounds(this.currIndex, this.currSlide ? this.currSlide.data : this._initialItemData, this);
+  }
+  /**
+   * If the PhotoSwipe can have continuous loop
+   * @returns Boolean
+   */
+
+
+  canLoop() {
+    return this.options.loop && this.getNumItems() > 2;
+  }
+  /**
+   * @private
+   * @param {PhotoSwipeOptions} options
+   * @returns {PreparedPhotoSwipeOptions}
+   */
+
+
+  _prepareOptions(options) {
+    if (window.matchMedia('(prefers-reduced-motion), (update: slow)').matches) {
+      options.showHideAnimationType = 'none';
+      options.zoomAnimationDuration = 0;
+    }
+    /** @type {PreparedPhotoSwipeOptions} */
+
+
+    return { ...defaultOptions,
+      ...options
+    };
+  }
+
+}
+
+
+//# sourceMappingURL=photoswipe.esm.js.map
+
+
+/***/ })
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	(() => {
+/******/ 		// getDefaultExport function for compatibility with non-harmony modules
+/******/ 		__webpack_require__.n = (module) => {
+/******/ 			var getter = module && module.__esModule ?
+/******/ 				() => (module['default']) :
+/******/ 				() => (module);
+/******/ 			__webpack_require__.d(getter, { a: getter });
+/******/ 			return getter;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/************************************************************************/
+var __webpack_exports__ = {};
+// This entry needs to be wrapped in an IIFE because it needs to be in strict mode.
+(() => {
+"use strict";
+/*!*********************************************!*\
+  !*** ./public/src/trvlr-gallery-masonry.js ***!
+  \*********************************************/
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var masonry_layout__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! masonry-layout */ "./node_modules/masonry-layout/masonry.js");
+/* harmony import */ var masonry_layout__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(masonry_layout__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var photoswipe__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! photoswipe */ "./node_modules/photoswipe/dist/photoswipe.esm.js");
+/* harmony import */ var photoswipe_lightbox__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! photoswipe/lightbox */ "./node_modules/photoswipe/dist/photoswipe-lightbox.esm.js");
+/* harmony import */ var photoswipe_style_css__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! photoswipe/style.css */ "./node_modules/photoswipe/dist/photoswipe.css");
+
+
+
+
+const GAP = 15;
+const MIN_COL_WIDTH = 300;
+const MAX_COLS = 4;
+function getColumnCount(containerWidth) {
+  const cols = Math.floor((containerWidth + GAP) / (MIN_COL_WIDTH + GAP));
+  return Math.max(1, Math.min(MAX_COLS, cols));
+}
+function getColumnWidth(containerWidth, cols) {
+  if (cols <= 1) {
+    return containerWidth;
+  }
+  return (containerWidth - (cols - 1) * GAP) / cols;
+}
+function debounce(fn, ms) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), ms);
+  };
+}
+function initPhotoSwipe(galleryEl) {
+  const lightbox = new photoswipe_lightbox__WEBPACK_IMPORTED_MODULE_2__["default"]({
+    gallery: galleryEl,
+    children: 'a.trvlr-gallery__link',
+    pswpModule: photoswipe__WEBPACK_IMPORTED_MODULE_1__["default"]
+  });
+  lightbox.init();
+}
+function initMasonryLayout(galleryEl) {
+  const grid = galleryEl.querySelector('.trvlr-gallery__grid');
+  const sizer = galleryEl.querySelector('.trvlr-gallery__sizer');
+  if (!grid || !sizer) {
+    return null;
+  }
+  let masonry = null;
+  const applyColumnWidths = colWidthPx => {
+    sizer.style.width = colWidthPx;
+    grid.querySelectorAll('.trvlr-gallery__item').forEach(item => {
+      item.style.width = colWidthPx;
+    });
+  };
+  const layout = () => {
+    const width = galleryEl.offsetWidth;
+    if (width <= 0) {
+      return false;
+    }
+    const cols = getColumnCount(width);
+    const colWidth = getColumnWidth(width, cols);
+    const colWidthPx = `${colWidth}px`;
+    applyColumnWidths(colWidthPx);
+    if (!masonry) {
+      galleryEl.classList.add('is-masonry-ready');
+      masonry = new (masonry_layout__WEBPACK_IMPORTED_MODULE_0___default())(grid, {
+        itemSelector: '.trvlr-gallery__item',
+        columnWidth: '.trvlr-gallery__sizer',
+        gutter: GAP,
+        percentPosition: false,
+        transitionDuration: 0
+      });
+    }
+    masonry.layout();
+    return true;
+  };
+  const scheduleLayout = debounce(() => {
+    layout();
+  }, 80);
+  const startLayout = () => {
+    if (!layout()) {
+      return;
+    }
+    scheduleLayout();
+  };
+  grid.querySelectorAll('img').forEach(img => {
+    if (!img.complete) {
+      img.addEventListener('load', scheduleLayout, {
+        once: true
+      });
+      img.addEventListener('error', scheduleLayout, {
+        once: true
+      });
+    }
+  });
+  if (typeof ResizeObserver !== 'undefined') {
+    const resizeObserver = new ResizeObserver(scheduleLayout);
+    resizeObserver.observe(galleryEl);
+  } else {
+    window.addEventListener('resize', scheduleLayout);
+  }
+  document.querySelectorAll('input[name="trvlr_sa1_tab"]').forEach(input => {
+    input.addEventListener('change', () => {
+      if (input.id === 'trvlr_sa1_tab_gallery' && input.checked) {
+        requestAnimationFrame(() => {
+          layout();
+          scheduleLayout();
+        });
+      }
+    });
+  });
+  return {
+    layout,
+    scheduleLayout
+  };
+}
+function initMasonryGallery(galleryEl) {
+  initPhotoSwipe(galleryEl);
+  const runWhenMeasurable = () => {
+    if (galleryEl.offsetWidth <= 0) {
+      return false;
+    }
+    if (!galleryEl._trvlrMasonryController) {
+      galleryEl._trvlrMasonryController = initMasonryLayout(galleryEl);
+    } else {
+      galleryEl._trvlrMasonryController.layout();
+    }
+    return true;
+  };
+  if (runWhenMeasurable()) {
+    return;
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    const measureObserver = new ResizeObserver(() => {
+      if (runWhenMeasurable()) {
+        measureObserver.disconnect();
+      }
+    });
+    measureObserver.observe(galleryEl);
+  }
+  if (typeof IntersectionObserver !== 'undefined') {
+    const visibilityObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && runWhenMeasurable()) {
+          visibilityObserver.disconnect();
+        }
+      });
+    }, {
+      threshold: 0
+    });
+    visibilityObserver.observe(galleryEl);
+  }
+  document.querySelectorAll('input[name="trvlr_sa1_tab"]').forEach(input => {
+    input.addEventListener('change', () => {
+      if (input.id === 'trvlr_sa1_tab_gallery' && input.checked) {
+        requestAnimationFrame(runWhenMeasurable);
+      }
+    });
+  });
+}
+function initMasonryGalleries() {
+  document.querySelectorAll('.trvlr-gallery--masonry').forEach(initMasonryGallery);
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initMasonryGalleries);
+} else {
+  initMasonryGalleries();
+}
+})();
+
+/******/ })()
+;
+//# sourceMappingURL=trvlr-gallery-masonry.js.map

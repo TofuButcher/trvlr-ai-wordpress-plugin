@@ -168,7 +168,48 @@ class Trvlr_Theme_Config
 			}
 		}
 
+		$defaults = self::get_defaults();
+
+		if (isset($settings['primaryColor']) || isset($defaults['primaryColor'])) {
+			$primary_color = isset($settings['primaryColor']) ? $settings['primaryColor'] : $defaults['primaryColor'];
+			if (self::is_usable_color($primary_color)) {
+				$css .= '--trvlr-text-on-primary-color: ' . self::get_text_on_color($primary_color) . '; ';
+			}
+		}
+
+		if (isset($settings['accentColor']) || isset($defaults['accentColor'])) {
+			$accent_color = isset($settings['accentColor']) ? $settings['accentColor'] : $defaults['accentColor'];
+			if (self::is_usable_color($accent_color)) {
+				$css .= '--trvlr-text-on-accent-color: ' . self::get_text_on_color($accent_color) . '; ';
+			}
+		}
+
 		return $css;
+	}
+
+	/**
+	 * Pick black or white text for best contrast on a background color.
+	 *
+	 * @param string $color CSS color value (hsl, rgb, hex).
+	 * @return string hsl(0, 0%, 100%) or hsl(0, 0%, 0%)
+	 */
+	public static function get_text_on_color($color)
+	{
+		error_log('get_text_on_color: ' . $color);
+		$rgb = self::parse_color_to_rgb($color);
+		error_log('rgb: ' . print_r($rgb, true));
+		if ($rgb === null) {
+			return 'hsl(0, 0%, 0%)';
+		}
+
+		$background_luminance = self::relative_luminance($rgb[0], $rgb[1], $rgb[2]);
+		$white_contrast = self::contrast_ratio($background_luminance, 1);
+		$black_contrast = self::contrast_ratio($background_luminance, 0);
+		error_log('background_luminance: ' . $background_luminance);
+		error_log('white_contrast: ' . $white_contrast);
+		error_log('black_contrast: ' . $black_contrast);
+
+		return $white_contrast >= $black_contrast ? 'hsl(0, 0%, 100%)' : 'hsl(0, 0%, 0%)';
 	}
 
 	/**
@@ -212,5 +253,156 @@ class Trvlr_Theme_Config
 		}
 
 		return $all_fields;
+	}
+
+	private static function is_usable_color($color)
+	{
+		if (!is_string($color)) {
+			return false;
+		}
+
+		$color = trim(strtolower($color));
+
+		return $color !== '' && $color !== 'transparent';
+	}
+
+	private static function parse_color_to_rgb($color)
+	{
+		if (!self::is_usable_color($color)) {
+			return null;
+		}
+
+		$color = trim(strtolower($color));
+
+		if ($color[0] === '#') {
+			return self::hex_to_rgb($color);
+		}
+
+		if (preg_match('#^hsla?\(\s*([-\d.]+)(?:deg)?\s*[,/\s]\s*([-\d.]+%?)\s*[,/\s]\s*([-\d.]+%?)(?:\s*[,/\s]\s*([-\d.]+%?))?\s*\)$#i', $color, $matches)) {
+			$h = (float) $matches[1];
+			$s = self::normalize_percentage($matches[2]);
+			$l = self::normalize_percentage($matches[3]);
+
+			return self::hsl_to_rgb($h, $s, $l);
+		}
+
+		if (preg_match('#^rgba?\(\s*([-\d.]+%?)\s*[,/\s]\s*([-\d.]+%?)\s*[,/\s]\s*([-\d.]+%?)(?:\s*[,/\s]\s*([-\d.]+%?))?\s*\)$#i', $color, $matches)) {
+			return array(
+				self::normalize_rgb_channel($matches[1]),
+				self::normalize_rgb_channel($matches[2]),
+				self::normalize_rgb_channel($matches[3]),
+			);
+		}
+
+		return null;
+	}
+
+	private static function hex_to_rgb($hex)
+	{
+		$hex = ltrim($hex, '#');
+
+		if (strlen($hex) === 3) {
+			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+		}
+
+		if (strlen($hex) !== 6 || !ctype_xdigit($hex)) {
+			return null;
+		}
+
+		return array(
+			hexdec(substr($hex, 0, 2)),
+			hexdec(substr($hex, 2, 2)),
+			hexdec(substr($hex, 4, 2)),
+		);
+	}
+
+	private static function normalize_percentage($value)
+	{
+		$value = trim((string) $value);
+
+		if (substr($value, -1) === '%') {
+			return (float) substr($value, 0, -1);
+		}
+
+		return (float) $value;
+	}
+
+	private static function normalize_rgb_channel($value)
+	{
+		$value = trim((string) $value);
+
+		if (substr($value, -1) === '%') {
+			return (int) round((float) substr($value, 0, -1) * 255 / 100);
+		}
+
+		return (int) round((float) $value);
+	}
+
+	private static function hsl_to_rgb($h, $s, $l)
+	{
+		$h = fmod((float) $h, 360);
+		if ($h < 0) {
+			$h += 360;
+		}
+
+		$s = max(0, min(100, (float) $s)) / 100;
+		$l = max(0, min(100, (float) $l)) / 100;
+
+		$c = (1 - abs(2 * $l - 1)) * $s;
+		$x = $c * (1 - abs(fmod($h / 60, 2) - 1));
+		$m = $l - $c / 2;
+
+		if ($h < 60) {
+			$r = $c;
+			$g = $x;
+			$b = 0;
+		} elseif ($h < 120) {
+			$r = $x;
+			$g = $c;
+			$b = 0;
+		} elseif ($h < 180) {
+			$r = 0;
+			$g = $c;
+			$b = $x;
+		} elseif ($h < 240) {
+			$r = 0;
+			$g = $x;
+			$b = $c;
+		} elseif ($h < 300) {
+			$r = $x;
+			$g = 0;
+			$b = $c;
+		} else {
+			$r = $c;
+			$g = 0;
+			$b = $x;
+		}
+
+		return array(
+			(int) round(($r + $m) * 255),
+			(int) round(($g + $m) * 255),
+			(int) round(($b + $m) * 255),
+		);
+	}
+
+	private static function relative_luminance($red, $green, $blue)
+	{
+		$channels = array($red, $green, $blue);
+		$linear = array();
+
+		foreach ($channels as $channel) {
+			$value = max(0, min(255, (int) $channel)) / 255;
+			$linear[] = $value <= 0.03928 ? $value / 12.92 : pow(($value + 0.055) / 1.055, 2.4);
+		}
+
+		return 0.2126 * $linear[0] + 0.7152 * $linear[1] + 0.0722 * $linear[2];
+	}
+
+	private static function contrast_ratio($luminance_a, $luminance_b)
+	{
+		$lighter = max($luminance_a, $luminance_b);
+		$darker = min($luminance_a, $luminance_b);
+
+		return ($lighter + 0.05) / ($darker + 0.05);
 	}
 }
