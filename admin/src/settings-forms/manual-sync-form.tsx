@@ -5,8 +5,9 @@ import apiFetch from '@wordpress/api-fetch';
 import { useTrvlr } from '../context/TrvlrContext';
 
 export const ManualSyncForm = () => {
-   const { refreshSyncStats } = useTrvlr();
+   const { refreshSyncStats, cancelSync } = useTrvlr();
    const [syncing, setSyncing] = useState(false);
+   const [cancelling, setCancelling] = useState(false);
    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
    const [progress, setProgress] = useState<{ processed: number; total: number; percentage: number; message: string } | null>(null);
    const pollingInterval = useRef<number | null>(null);
@@ -29,6 +30,13 @@ export const ManualSyncForm = () => {
             setSyncing(false);
             setProgress(null);
             setMessage({ type: 'error', text: __('Sync appears to have stalled. Please try again.', 'trvlr') });
+         } else if (response.status === 'cancelled') {
+            stopPolling();
+            setSyncing(false);
+            setCancelling(false);
+            setProgress(null);
+            setMessage({ type: 'error', text: __('Sync was cancelled.', 'trvlr') });
+            await refreshSyncStats();
          } else {
             stopPolling();
             setSyncing(false);
@@ -85,6 +93,40 @@ export const ManualSyncForm = () => {
          const errorMessage = error?.message || error?.data?.message || __('Sync failed. Please check logs.', 'trvlr');
          setMessage({ type: 'error', text: errorMessage });
          console.error('Sync error:', error);
+      }
+   };
+
+   const handleManualSyncNoMedia = async () => {
+      setSyncing(true);
+      setMessage(null);
+      setProgress(null);
+
+      try {
+         const response: any = await apiFetch({
+            path: '/trvlr/v1/sync/manual-no-media',
+            method: 'POST'
+         });
+
+         if (response.total) {
+            setProgress({ processed: 0, total: response.total, percentage: 0, message: __('Starting sync (no media)...', 'trvlr') });
+         }
+
+         startPolling();
+      } catch (error) {
+         setSyncing(false);
+         const errorMessage = error?.message || error?.data?.message || __('Sync failed. Please check logs.', 'trvlr');
+         setMessage({ type: 'error', text: errorMessage });
+         console.error('Sync (no media) error:', error);
+      }
+   };
+
+   const handleCancel = async () => {
+      setCancelling(true);
+      try {
+         await cancelSync();
+      } catch (error) {
+         console.error('Cancel sync error:', error);
+         setCancelling(false);
       }
    };
 
@@ -148,14 +190,37 @@ export const ManualSyncForm = () => {
             </div>
          )}
 
-         <Button
-            variant="primary"
-            onClick={handleManualSync}
-            isBusy={syncing}
-            disabled={syncing}
-         >
-            {syncing ? __('Syncing...', 'trvlr') : __('Sync Now', 'trvlr')}
-         </Button>
+         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <Button
+               variant="primary"
+               onClick={handleManualSync}
+               isBusy={syncing}
+               disabled={syncing}
+            >
+               {syncing ? __('Syncing...', 'trvlr') : __('Sync Now', 'trvlr')}
+            </Button>
+
+            <Button
+               variant="secondary"
+               onClick={handleManualSyncNoMedia}
+               isBusy={syncing}
+               disabled={syncing}
+            >
+               {__('Sync ( no media )', 'trvlr')}
+            </Button>
+
+            {syncing && (
+               <Button
+                  variant="tertiary"
+                  isDestructive
+                  onClick={handleCancel}
+                  isBusy={cancelling}
+                  disabled={cancelling}
+               >
+                  {cancelling ? __('Cancelling...', 'trvlr') : __('Cancel', 'trvlr')}
+               </Button>
+            )}
+         </div>
       </div>
    );
 };

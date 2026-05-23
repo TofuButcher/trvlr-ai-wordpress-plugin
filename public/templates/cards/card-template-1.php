@@ -22,7 +22,7 @@ if ($duration) {
 }
 
 ?>
-<div class="trvlr-card trvlr-card--attraction trvlr-card--template-<?php echo esc_attr($trvlr_card_template_slug); ?>" data-trvlr-card-template="<?php echo esc_attr($trvlr_card_template_slug); ?>">
+<div class="trvlr-card trvlr-card--attraction">
 	<div class="trvlr-card__image-wrap">
 		<?php if (has_post_thumbnail($post_id)) : ?>
 			<?php echo get_the_post_thumbnail($post_id, 'medium', array('class' => 'trvlr-card__image')); ?>

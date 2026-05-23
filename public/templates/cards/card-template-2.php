@@ -10,14 +10,14 @@ $trvlr_id = get_trvlr_id($post_id);
 $duration_raw = get_trvlr_duration($post_id);
 $duration_display = apply_filters('trvlr_duration', $duration_raw, $post_id);
 $is_on_sale = get_trvlr_is_on_sale($post_id);
-$tag = get_trvlr_main_tag($post_id);
+$category = get_trvlr_primary_term($post_id);
 $price = get_trvlr_advertised_price_value($post_id);
 $short_raw = get_trvlr_short_description($post_id);
 $has_excerpt = $short_raw !== '' && $short_raw !== null;
 $popular_markup = trvlr_popular_badge($post_id);
 
 ?>
-<div class="trvlr-card trvlr-card--attraction trvlr-card--template-<?php echo esc_attr($trvlr_card_template_slug); ?>" data-trvlr-card-template="<?php echo esc_attr($trvlr_card_template_slug); ?>">
+<div class="trvlr-card trvlr-card--attraction">
 	<div class="trvlr-card__image-wrap">
 		<?php if (has_post_thumbnail($post_id)) : ?>
 			<?php echo get_the_post_thumbnail($post_id, 'medium', array('class' => 'trvlr-card__image')); ?>
@@ -30,16 +30,16 @@ $popular_markup = trvlr_popular_badge($post_id);
 	</div>
 	<div class="trvlr-card__content">
 		<?php if ($popular_markup !== '') : ?>
-		<div class="trvlr-card__popular-inline trvlr-card__hover-only" aria-hidden="true">
-			<?php echo $popular_markup; ?>
-		</div>
+			<div class="trvlr-card__popular-inline trvlr-card__hover-only" aria-hidden="true">
+				<?php echo $popular_markup; ?>
+			</div>
 		<?php endif; ?>
 		<h3 class="trvlr-card__title">
 			<a href="<?php echo esc_url($permalink); ?>"><?php echo esc_html($title); ?></a>
 		</h3>
-		<?php if ($tag) : ?>
+		<?php if ($category) : ?>
 			<div class="trvlr-card__tag">
-				<?php echo esc_html($tag->name); ?>
+				<?php echo esc_html($category->name); ?>
 			</div>
 		<?php endif; ?>
 		<?php if ($has_excerpt) : ?>
@@ -70,7 +70,9 @@ $popular_markup = trvlr_popular_badge($post_id);
 		<button type="button" class="trvlr-card__book-bar trvlr-card__hover-only trvlr-book-now" attraction-id="<?php echo esc_attr($trvlr_id); ?>">
 			<span class="trvlr-card__book-bar-label"><?php esc_html_e('Book Now', 'trvlr'); ?></span>
 			<span class="trvlr-card__book-bar-icon" aria-hidden="true">
-				<svg><use href="#icon-arrow-right"></use></svg>
+				<svg>
+					<use href="#icon-arrow-right"></use>
+				</svg>
 			</span>
 		</button>
 	</div>

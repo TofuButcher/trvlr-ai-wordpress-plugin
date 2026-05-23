@@ -77,6 +77,45 @@ class Trvlr_Sync
 
     public function start_sync(): array
     {
+        return $this->_start_sync_internal(false);
+    }
+
+    public function start_sync_no_media(): array
+    {
+        return $this->_start_sync_internal(true);
+    }
+
+    public function cancel_sync(): array
+    {
+        $state = $this->get_sync_state();
+
+        if (!$state || $state['status'] !== 'in_progress') {
+            return array(
+                'success' => false,
+                'message' => 'No sync is currently in progress.',
+            );
+        }
+
+        $state['status'] = 'cancelled';
+        $state['attractions'] = array();
+        $this->save_sync_state($state);
+        delete_transient('trvlr_sync_in_progress');
+        delete_transient('trvlr_sync_progress');
+
+        Trvlr_Logger::log('sync_cancelled', 'Sync cancelled by user', array(
+            'user_id'       => get_current_user_id(),
+            'processed'     => $state['current_index'],
+            'total'         => $state['total'],
+        ), $state['session_id']);
+
+        return array(
+            'success' => true,
+            'message' => 'Sync cancelled.',
+        );
+    }
+
+    private function _start_sync_internal(bool $skip_media): array
+    {
         if (function_exists('trvlr_is_attraction_sync_disabled') && trvlr_is_attraction_sync_disabled()) {
             return array(
                 'success' => false,
@@ -124,6 +163,7 @@ class Trvlr_Sync
             'skipped'       => 0,
             'errors'        => 0,
             'status'        => 'in_progress',
+            'skip_media'    => $skip_media,
             'started_at'    => time(),
             'last_batch_at' => time(),
         );
@@ -132,17 +172,21 @@ class Trvlr_Sync
         set_transient('trvlr_sync_in_progress', true, 3600);
         $this->update_sync_progress(0, $total, 'Starting sync...');
 
-        Trvlr_Logger::log('sync_start', 'Sync initiated', array(
-            'user_id' => get_current_user_id(),
-            'total'   => $total,
+        $label = $skip_media ? 'Sync (no media) initiated' : 'Sync initiated';
+        Trvlr_Logger::log('sync_start', $label, array(
+            'user_id'    => get_current_user_id(),
+            'total'      => $total,
+            'skip_media' => $skip_media,
         ), $session_id);
 
         $this->schedule_next_batch();
 
+        $mode_note = $skip_media ? ' (media skipped)' : '';
         return array(
-            'success' => true,
-            'total'   => $total,
-            'message' => "Sync started. Processing {$total} attractions in batches.",
+            'success'    => true,
+            'total'      => $total,
+            'skip_media' => $skip_media,
+            'message'    => "Sync started{$mode_note}. Processing {$total} attractions in batches.",
         );
     }
 
@@ -158,6 +202,8 @@ class Trvlr_Sync
             return;
         }
 
+        $skip_media = !empty($state['skip_media']);
+
         $GLOBALS['trvlr_current_sync_session'] = $state['session_id'];
 
         @set_time_limit(120);
@@ -166,6 +212,13 @@ class Trvlr_Sync
         $memory_limit = $this->get_memory_limit_bytes();
 
         while ($state['current_index'] < $state['total'] && $processed_in_batch < $batch_size) {
+            // Re-read state to catch a cancellation triggered mid-batch
+            $fresh_state = $this->get_sync_state();
+            if (!$fresh_state || $fresh_state['status'] !== 'in_progress') {
+                unset($GLOBALS['trvlr_current_sync_session']);
+                return;
+            }
+
             if ($memory_limit > 0 && memory_get_usage(true) > $memory_limit * 0.8) {
                 break;
             }
@@ -194,8 +247,12 @@ class Trvlr_Sync
                 continue;
             }
 
-            if (!empty($list_item['images']) && empty($attraction_data['images']['all_images'])) {
-                $attraction_data['list_image'] = $list_item['images'];
+            if (!$skip_media) {
+                if (!empty($list_item['images']) && empty($attraction_data['images']['all_images'])) {
+                    $attraction_data['list_image'] = $list_item['images'];
+                }
+            } else {
+                unset($attraction_data['images'], $attraction_data['list_image']);
             }
 
             $result = $this->update_attraction_post($attraction_data);
@@ -568,7 +625,8 @@ class Trvlr_Sync
             $images_to_process = array();
 
             if (!empty($data['list_image'])) {
-                $list_image_url = $this->get_best_image_url($data['list_image']);
+                $list_image_url = is_string($data['list_image']) ? $data['list_image'] : $this->get_best_image_url($data['list_image']);
+                update_post_meta($post_id, '_trvlr_list_image_cache', $list_image_url);
                 $images_to_process[] = array('url' => $list_image_url);
             }
 
@@ -762,8 +820,9 @@ class Trvlr_Sync
 
             if (!$image_url) continue;
 
-            if (in_array($image_url, $processed_urls)) continue;
-            $processed_urls[] = $image_url;
+            $normalized_url = $this->normalize_image_url_for_dedup($image_url);
+            if (in_array($normalized_url, $processed_urls)) continue;
+            $processed_urls[] = $normalized_url;
 
             global $wpdb;
             $attachment_id = $wpdb->get_var(
@@ -856,6 +915,11 @@ class Trvlr_Sync
         }
 
         return null;
+    }
+
+    private function normalize_image_url_for_dedup($url)
+    {
+        return preg_replace('/_lg(\.(jpg|jpeg|png|gif))$/i', '$1', $url);
     }
 
     private function download_image_with_original_filename($image_url, $post_id)

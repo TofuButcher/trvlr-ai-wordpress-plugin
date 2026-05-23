@@ -282,6 +282,41 @@ function get_trvlr_main_tag($post_id = null)
 	return ! empty($tags) ? $tags[0] : null;
 }
 
+function get_trvlr_main_category($post_id = null)
+{
+	$categories = get_the_terms($post_id, 'category');
+	if (is_wp_error($categories) || empty($categories)) {
+		return null;
+	}
+	$categories = array_filter($categories, function ($category) {
+		return is_object($category) && isset($category->slug) && $category->slug !== 'popular';
+	});
+	return ! empty($categories) ? array_values($categories)[0] : null;
+}
+
+function get_trvlr_primary_term($post_id = null)
+{
+	$taxonomy = apply_filters('trvlr_primary_attraction_tax', null);
+
+	if (empty($taxonomy)) {
+		return get_trvlr_main_tag($post_id);
+	}
+
+	$excluded = apply_filters('trvlr_primary_attraction_tax_excluded_slugs', array('popular', 'uncategorized', 'uncategorised'));
+
+	$terms = get_the_terms($post_id, $taxonomy);
+
+	if (is_wp_error($terms) || empty($terms)) {
+		return null;
+	}
+
+	$terms = array_filter($terms, function ($term) use ($excluded) {
+		return is_object($term) && isset($term->slug) && ! in_array($term->slug, $excluded, true);
+	});
+
+	return ! empty($terms) ? array_values($terms)[0] : null;
+}
+
 function get_trvlr_attraction_advertised_price_value($post_id = null)
 {
 	return get_trvlr_advertised_price_value($post_id);

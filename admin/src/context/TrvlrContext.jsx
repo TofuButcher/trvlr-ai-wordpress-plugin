@@ -225,13 +225,37 @@ export const TrvlrProvider = ({ children }) => {
                 path: '/trvlr/v1/sync/manual',
                 method: 'POST',
             });
-            // Refresh stats after sync
             await refreshSyncStats();
             return { success: true, data: response };
         } catch (error) {
             return { success: false, error };
         }
     }, [refreshSyncStats]);
+
+    const triggerManualSyncNoMedia = useCallback(async () => {
+        try {
+            const response = await apiFetch({
+                path: '/trvlr/v1/sync/manual-no-media',
+                method: 'POST',
+            });
+            await refreshSyncStats();
+            return { success: true, data: response };
+        } catch (error) {
+            return { success: false, error };
+        }
+    }, [refreshSyncStats]);
+
+    const cancelSync = useCallback(async () => {
+        try {
+            const response = await apiFetch({
+                path: '/trvlr/v1/sync/cancel',
+                method: 'POST',
+            });
+            return { success: true, data: response };
+        } catch (error) {
+            return { success: false, error };
+        }
+    }, []);
 
     const saveScheduleSettings = useCallback(async (settings) => {
         setSaving(true);
@@ -324,6 +348,8 @@ export const TrvlrProvider = ({ children }) => {
         customEditsCount,
         refreshSyncStats,
         triggerManualSync,
+        triggerManualSyncNoMedia,
+        cancelSync,
         saveScheduleSettings,
         deleteData,
 

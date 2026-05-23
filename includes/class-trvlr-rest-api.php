@@ -93,6 +93,20 @@ class Trvlr_REST_API
 			'permission_callback' => array($this, 'check_admin_permission'),
 		));
 
+		// Manual sync (no media)
+		register_rest_route($this->namespace, '/sync/manual-no-media', array(
+			'methods' => 'POST',
+			'callback' => array($this, 'trigger_manual_sync_no_media'),
+			'permission_callback' => array($this, 'check_admin_permission'),
+		));
+
+		// Cancel in-progress sync
+		register_rest_route($this->namespace, '/sync/cancel', array(
+			'methods' => 'POST',
+			'callback' => array($this, 'cancel_sync'),
+			'permission_callback' => array($this, 'check_admin_permission'),
+		));
+
 		// Schedule settings
 		register_rest_route($this->namespace, '/sync/schedule', array(
 			array(
@@ -228,7 +242,7 @@ class Trvlr_REST_API
 		$relation_param = array('type' => 'string', 'enum' => array('AND', 'OR'));
 
 		$args = array(
-			'posts_per_page'    => array('type' => 'integer', 'default' => 16, 'minimum' => 1, 'maximum' => 100),
+			'posts_per_page'    => array('type' => 'integer', 'default' => 16, 'minimum' => -1, 'maximum' => 100),
 			'paged'             => array('type' => 'integer', 'default' => 1, 'minimum' => 1),
 			'orderby'           => array_merge($string_param, array('default' => 'date')),
 			'order'             => array('type' => 'string', 'default' => 'DESC', 'enum' => array('ASC', 'DESC', 'asc', 'desc'), 'sanitize_callback' => static function ($v) { return strtoupper($v); }),
@@ -246,6 +260,7 @@ class Trvlr_REST_API
 			'trvlr_tag_id'      => $string_param,
 			'trvlr_tag_slug'    => $string_param,
 			'trvlr_tag_relation' => $relation_param,
+			'trvlr_sort'        => $string_param,
 			'meta_key'          => $string_param,
 			'meta_value'        => $string_param,
 			'meta_compare'      => $string_param,
@@ -295,6 +310,7 @@ class Trvlr_REST_API
 			'tag', 'tag_id', 'tag_slug', 'tag_relation',
 			'category', 'category_id', 'category_slug', 'category_relation',
 			'trvlr_tag', 'trvlr_tag_id', 'trvlr_tag_slug', 'trvlr_tag_relation',
+			'trvlr_sort',
 			'meta_key', 'meta_value', 'meta_compare',
 		);
 
@@ -307,7 +323,8 @@ class Trvlr_REST_API
 		}
 
 		if (isset($args['posts_per_page'])) {
-			$args['posts_per_page'] = min(100, max(1, intval($args['posts_per_page'])));
+			$posts_per_page = intval($args['posts_per_page']);
+			$args['posts_per_page'] = $posts_per_page === -1 ? -1 : min(100, max(1, $posts_per_page));
 		}
 		if (isset($args['paged'])) {
 			$args['paged'] = max(1, intval($args['paged']));
@@ -537,6 +554,81 @@ class Trvlr_REST_API
 			return new WP_Error(
 				'sync_failed',
 				'Sync failed: ' . $e->getMessage(),
+				array('status' => 500)
+			);
+		}
+	}
+
+	public function trigger_manual_sync_no_media($request)
+	{
+		if (! function_exists('trvlr_is_attraction_sync_disabled')) {
+			require_once plugin_dir_path(__FILE__) . 'trvlr-feature-flags.php';
+		}
+		if (trvlr_is_attraction_sync_disabled()) {
+			return new WP_Error(
+				'sync_disabled',
+				__('Attraction syncing is disabled in TRVLR settings.', 'trvlr'),
+				array('status' => 403)
+			);
+		}
+
+		try {
+			require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-field-map.php';
+			require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-logger.php';
+			require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-notifier.php';
+			require_once plugin_dir_path(dirname(__FILE__)) . 'core/class-trvlr-sync.php';
+
+			$syncer = new Trvlr_Sync();
+			$result = $syncer->start_sync_no_media();
+
+			if (!$result['success']) {
+				return new WP_Error(
+					'sync_start_failed',
+					$result['message'],
+					array('status' => 400)
+				);
+			}
+
+			return rest_ensure_response($result);
+		} catch (Exception $e) {
+			if (class_exists('Trvlr_Logger')) {
+				Trvlr_Logger::log('error', 'Manual sync (no media) failed: ' . $e->getMessage(), array(
+					'trace' => $e->getTraceAsString()
+				));
+			}
+			error_log('TRVLR Manual Sync (no media) Error: ' . $e->getMessage());
+
+			return new WP_Error(
+				'sync_failed',
+				'Sync failed: ' . $e->getMessage(),
+				array('status' => 500)
+			);
+		}
+	}
+
+	public function cancel_sync($request)
+	{
+		try {
+			require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-logger.php';
+			require_once plugin_dir_path(dirname(__FILE__)) . 'core/class-trvlr-sync.php';
+
+			$syncer = new Trvlr_Sync();
+			$result = $syncer->cancel_sync();
+
+			if (!$result['success']) {
+				return new WP_Error(
+					'cancel_failed',
+					$result['message'],
+					array('status' => 400)
+				);
+			}
+
+			return rest_ensure_response($result);
+		} catch (Exception $e) {
+			error_log('TRVLR Cancel Sync Error: ' . $e->getMessage());
+			return new WP_Error(
+				'cancel_failed',
+				'Cancel failed: ' . $e->getMessage(),
 				array('status' => 500)
 			);
 		}

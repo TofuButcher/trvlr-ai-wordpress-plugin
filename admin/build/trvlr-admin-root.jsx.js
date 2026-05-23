@@ -1449,7 +1449,6 @@ const TrvlrProvider = ({
         path: '/trvlr/v1/sync/manual',
         method: 'POST'
       });
-      // Refresh stats after sync
       await refreshSyncStats();
       return {
         success: true,
@@ -1462,6 +1461,41 @@ const TrvlrProvider = ({
       };
     }
   }, [refreshSyncStats]);
+  const triggerManualSyncNoMedia = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useCallback)(async () => {
+    try {
+      const response = await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1___default()({
+        path: '/trvlr/v1/sync/manual-no-media',
+        method: 'POST'
+      });
+      await refreshSyncStats();
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error
+      };
+    }
+  }, [refreshSyncStats]);
+  const cancelSync = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useCallback)(async () => {
+    try {
+      const response = await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1___default()({
+        path: '/trvlr/v1/sync/cancel',
+        method: 'POST'
+      });
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error
+      };
+    }
+  }, []);
   const saveScheduleSettings = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useCallback)(async settings => {
     setSaving(true);
     try {
@@ -1583,6 +1617,8 @@ const TrvlrProvider = ({
     customEditsCount,
     refreshSyncStats,
     triggerManualSync,
+    triggerManualSyncNoMedia,
+    cancelSync,
     saveScheduleSettings,
     deleteData,
     // System
@@ -2328,9 +2364,11 @@ __webpack_require__.r(__webpack_exports__);
 
 const ManualSyncForm = () => {
   const {
-    refreshSyncStats
+    refreshSyncStats,
+    cancelSync
   } = (0,_context_TrvlrContext__WEBPACK_IMPORTED_MODULE_4__.useTrvlr)();
   const [syncing, setSyncing] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  const [cancelling, setCancelling] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const [message, setMessage] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
   const [progress, setProgress] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
   const pollingInterval = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
@@ -2355,6 +2393,16 @@ const ManualSyncForm = () => {
           type: 'error',
           text: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Sync appears to have stalled. Please try again.', 'trvlr')
         });
+      } else if (response.status === 'cancelled') {
+        stopPolling();
+        setSyncing(false);
+        setCancelling(false);
+        setProgress(null);
+        setMessage({
+          type: 'error',
+          text: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Sync was cancelled.', 'trvlr')
+        });
+        await refreshSyncStats();
       } else {
         stopPolling();
         setSyncing(false);
@@ -2412,6 +2460,43 @@ const ManualSyncForm = () => {
         text: errorMessage
       });
       console.error('Sync error:', error);
+    }
+  };
+  const handleManualSyncNoMedia = async () => {
+    setSyncing(true);
+    setMessage(null);
+    setProgress(null);
+    try {
+      const response = await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_3___default()({
+        path: '/trvlr/v1/sync/manual-no-media',
+        method: 'POST'
+      });
+      if (response.total) {
+        setProgress({
+          processed: 0,
+          total: response.total,
+          percentage: 0,
+          message: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Starting sync (no media)...', 'trvlr')
+        });
+      }
+      startPolling();
+    } catch (error) {
+      setSyncing(false);
+      const errorMessage = error?.message || error?.data?.message || (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Sync failed. Please check logs.', 'trvlr');
+      setMessage({
+        type: 'error',
+        text: errorMessage
+      });
+      console.error('Sync (no media) error:', error);
+    }
+  };
+  const handleCancel = async () => {
+    setCancelling(true);
+    try {
+      await cancelSync();
+    } catch (error) {
+      console.error('Cancel sync error:', error);
+      setCancelling(false);
     }
   };
   (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
@@ -2475,12 +2560,32 @@ const ManualSyncForm = () => {
         },
         children: [progress.processed, " of ", progress.total, " attractions synced"]
       })]
-    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.Button, {
-      variant: "primary",
-      onClick: handleManualSync,
-      isBusy: syncing,
-      disabled: syncing,
-      children: syncing ? (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Syncing...', 'trvlr') : (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Sync Now', 'trvlr')
+    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsxs)("div", {
+      style: {
+        display: 'flex',
+        gap: '8px',
+        alignItems: 'center'
+      },
+      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.Button, {
+        variant: "primary",
+        onClick: handleManualSync,
+        isBusy: syncing,
+        disabled: syncing,
+        children: syncing ? (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Syncing...', 'trvlr') : (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Sync Now', 'trvlr')
+      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.Button, {
+        variant: "secondary",
+        onClick: handleManualSyncNoMedia,
+        isBusy: syncing,
+        disabled: syncing,
+        children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Sync ( no media )', 'trvlr')
+      }), syncing && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.Button, {
+        variant: "tertiary",
+        isDestructive: true,
+        onClick: handleCancel,
+        isBusy: cancelling,
+        disabled: cancelling,
+        children: cancelling ? (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Cancelling...', 'trvlr') : (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Cancel', 'trvlr')
+      })]
     })]
   });
 };

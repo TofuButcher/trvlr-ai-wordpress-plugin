@@ -4,8 +4,13 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
+$attraction_id = get_trvlr_attraction_id($post_id);
+
+
 ?>
-<article id="attraction-<?php echo esc_attr((string) $post_id); ?>" class="trvlr-single-attraction trvlr-single-attraction--template-<?php echo esc_attr($trvlr_single_template_slug); ?> <?php echo esc_attr($post_class); ?>" data-trvlr-single-template="<?php echo esc_attr($trvlr_single_template_slug); ?>">
+<article
+	id="attraction-<?php echo esc_attr((string) $post_id); ?>"
+	class="trvlr-single-attraction trvlr-sa1">
 	<section class="trvlr-single-attraction__section">
 		<div class="trvlr-single-attraction__inner">
 			<div class="trvlr-single-attraction__content">

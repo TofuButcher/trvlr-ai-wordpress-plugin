@@ -241,6 +241,7 @@ function trvlr_shortcode_attraction_cards($atts)
 		'trvlr_tag_id'       => '',
 		'trvlr_tag_slug'     => '',
 		'trvlr_tag_relation' => '',
+		'trvlr_sort'         => '',
 		'meta_key'           => '',
 		'meta_value'         => '',
 		'meta_compare'       => '=',
@@ -311,6 +312,10 @@ function trvlr_shortcode_attraction_cards($atts)
 		$query_args['trvlr_tag_relation'] = sanitize_text_field($atts['trvlr_tag_relation']);
 	}
 
+	if ($atts['trvlr_sort'] !== '') {
+		$query_args['trvlr_sort'] = sanitize_key($atts['trvlr_sort']);
+	}
+
 	if (!empty($atts['meta_key'])) {
 		$query_args['meta_key'] = sanitize_text_field($atts['meta_key']);
 		if (!empty($atts['meta_value'])) {
@@ -325,6 +330,33 @@ function trvlr_shortcode_attraction_cards($atts)
 		$query_args['grid_id'] = $atts['id'];
 	}
 
+	$inherits_archive = (is_post_type_archive() || is_tax() || is_category() || is_tag())
+		&& $atts['ids'] === ''
+		&& $atts['exclude'] === ''
+		&& $atts['tag'] === ''
+		&& $atts['tag_id'] === ''
+		&& $atts['tag_slug'] === ''
+		&& $atts['tag_relation'] === ''
+		&& $atts['category'] === ''
+		&& $atts['category_id'] === ''
+		&& $atts['category_slug'] === ''
+		&& $atts['category_relation'] === ''
+		&& $atts['trvlr_tag'] === ''
+		&& $atts['trvlr_tag_id'] === ''
+		&& $atts['trvlr_tag_slug'] === ''
+		&& $atts['trvlr_tag_relation'] === ''
+		&& $atts['trvlr_sort'] === ''
+		&& $atts['meta_key'] === ''
+		&& $atts['id'] === ''
+		&& (int) $atts['posts_per_page'] === -1
+		&& $atts['orderby'] === 'date'
+		&& $atts['order'] === 'DESC'
+		&& $atts['meta_compare'] === '=';
+
+	if ($inherits_archive && $atts['meta_value'] === '') {
+		return trvlr_cards(array());
+	}
+
 	return trvlr_cards($query_args);
 }
 add_shortcode('trvlr_attraction_cards', 'trvlr_shortcode_attraction_cards');
@@ -335,6 +367,13 @@ function trvlr_shortcode_attraction_filter($atts)
 }
 add_shortcode('trvlr_attraction_filter', 'trvlr_shortcode_attraction_filter');
 
+function trvlr_shortcode_attraction_sort($atts)
+{
+	return trvlr_attraction_sort($atts ?? array());
+}
+add_shortcode('trvlr_attraction_sort', 'trvlr_shortcode_attraction_sort');
+add_shortcode('trvlr_sort', 'trvlr_shortcode_attraction_sort');
+
 function trvlr_shortcode_attraction_gallery($atts)
 {
 	$atts = shortcode_atts(array(
@@ -344,6 +383,20 @@ function trvlr_shortcode_attraction_gallery($atts)
 	return trvlr_gallery($atts['id']);
 }
 add_shortcode('trvlr_attraction_gallery', 'trvlr_shortcode_attraction_gallery');
+
+function trvlr_shortcode_attraction_template($atts)
+{
+	$atts = shortcode_atts(array(
+		'id' => '',
+		'template' => '',
+	), $atts, 'trvlr_attraction_template');
+
+	$post_id = $atts['id'] !== '' ? absint($atts['id']) : null;
+	$template = $atts['template'] !== '' ? $atts['template'] : null;
+
+	return trvlr_single_attraction_markup($post_id, $template);
+}
+add_shortcode('trvlr_attraction_template', 'trvlr_shortcode_attraction_template');
 
 function trvlr_shortcode_payment_confirmation($atts)
 {

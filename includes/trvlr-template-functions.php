@@ -442,6 +442,12 @@ function trvlr_build_query_args($args = array())
 		if (!isset($query_args['post_type'])) {
 			$query_args['post_type'] = 'trvlr_attraction';
 		}
+		if (isset($args['paged'])) {
+			$query_args['paged'] = max(1, intval($args['paged']));
+		}
+		if (!empty($args['trvlr_sort'])) {
+			$query_args = trvlr_apply_attraction_sort_query_args($query_args, sanitize_key($args['trvlr_sort']));
+		}
 		return $query_args;
 	}
 
@@ -589,6 +595,10 @@ function trvlr_build_query_args($args = array())
 			: array_map('intval', explode(',', $args['exclude']));
 	}
 
+	if (!empty($args['trvlr_sort'])) {
+		$query_args = trvlr_apply_attraction_sort_query_args($query_args, sanitize_key($args['trvlr_sort']));
+	}
+
 	$custom_keys = array(
 		'tag',
 		'tag_id',
@@ -606,12 +616,150 @@ function trvlr_build_query_args($args = array())
 		'query_args',
 		'ids',
 		'grid_id',
+		'trvlr_sort',
 	);
 	foreach ($custom_keys as $key) {
 		unset($query_args[$key]);
 	}
 
 	return $query_args;
+}
+
+function trvlr_apply_attraction_sort_query_args($query_args, $sort)
+{
+	if ($sort === 'az') {
+		$query_args['orderby'] = 'title';
+		$query_args['order'] = 'ASC';
+		return $query_args;
+	}
+
+	if ($sort === 'popular') {
+		return trvlr_sort_attraction_query_by_popular($query_args);
+	}
+
+	if ($sort !== 'price') {
+		return $query_args;
+	}
+
+	$lookup_args = $query_args;
+	$lookup_args['fields'] = 'ids';
+	$lookup_args['posts_per_page'] = -1;
+	$lookup_args['nopaging'] = true;
+	$lookup_args['no_found_rows'] = true;
+	unset($lookup_args['paged'], $lookup_args['orderby'], $lookup_args['order']);
+
+	$ids = get_posts($lookup_args);
+	if (empty($ids)) {
+		$query_args['post__in'] = array(0);
+		$query_args['orderby'] = 'post__in';
+		unset($query_args['order']);
+		return $query_args;
+	}
+
+	$positions = array_flip($ids);
+
+	usort($ids, function ($a, $b) use ($positions) {
+		$a_price = trvlr_get_sortable_lowest_price($a);
+		$b_price = trvlr_get_sortable_lowest_price($b);
+
+		if ($a_price === $b_price) {
+			return $positions[$a] - $positions[$b];
+		}
+
+		if ($a_price === null) {
+			return 1;
+		}
+
+		if ($b_price === null) {
+			return -1;
+		}
+
+		return $a_price <=> $b_price;
+	});
+
+	$query_args['post__in'] = array_map('intval', $ids);
+	$query_args['orderby'] = 'post__in';
+	unset($query_args['order']);
+
+	return $query_args;
+}
+
+function trvlr_sort_attraction_query_by_popular($query_args)
+{
+	$lookup_args = $query_args;
+	$lookup_args['fields'] = 'ids';
+	$lookup_args['posts_per_page'] = -1;
+	$lookup_args['nopaging'] = true;
+	$lookup_args['no_found_rows'] = true;
+	unset($lookup_args['paged'], $lookup_args['orderby'], $lookup_args['order']);
+
+	$ids = get_posts($lookup_args);
+	if (empty($ids)) {
+		$query_args['post__in'] = array(0);
+		$query_args['orderby'] = 'post__in';
+		unset($query_args['order']);
+		return $query_args;
+	}
+
+	$positions = array_flip($ids);
+
+	usort($ids, function ($a, $b) use ($positions) {
+		$a_popular = has_term('popular', 'trvlr_attraction_tag', $a) ? 1 : 0;
+		$b_popular = has_term('popular', 'trvlr_attraction_tag', $b) ? 1 : 0;
+
+		if ($a_popular === $b_popular) {
+			return $positions[$a] - $positions[$b];
+		}
+
+		return $b_popular - $a_popular;
+	});
+
+	$query_args['post__in'] = array_map('intval', $ids);
+	$query_args['orderby'] = 'post__in';
+	unset($query_args['order']);
+
+	return $query_args;
+}
+
+function trvlr_get_sortable_lowest_price($post_id)
+{
+	$pricing = get_post_meta($post_id, 'trvlr_pricing', true);
+	if (!is_array($pricing)) {
+		return null;
+	}
+
+	$prices = array();
+	foreach ($pricing as $price_option) {
+		foreach (array('sale_price', 'price', 'min_price', 'max_price') as $price_key) {
+			if (!empty($price_option[$price_key])) {
+				$parsed_price = trvlr_parse_sortable_price($price_option[$price_key]);
+				if ($parsed_price !== null) {
+					$prices[] = $parsed_price;
+				}
+			}
+		}
+	}
+
+	return !empty($prices) ? min($prices) : null;
+}
+
+function trvlr_parse_sortable_price($value)
+{
+	if (is_numeric($value)) {
+		return (float) $value;
+	}
+
+	$value = preg_replace('/[^\d.]/', '', (string) $value);
+	if ($value === '') {
+		return null;
+	}
+
+	$parts = explode('.', $value);
+	if (count($parts) > 2) {
+		$value = array_shift($parts) . '.' . implode('', $parts);
+	}
+
+	return is_numeric($value) ? (float) $value : null;
 }
 
 /**
@@ -657,11 +805,159 @@ function trvlr_build_cards_result($query_args = array())
 	);
 }
 
+function trvlr_cards_should_use_primary_loop_for_attractions()
+{
+	$q = isset($GLOBALS['wp_the_query']) ? $GLOBALS['wp_the_query'] : null;
+
+	if (!$q instanceof WP_Query) {
+		return false;
+	}
+
+	if ($q->is_post_type_archive('trvlr_attraction')) {
+		return true;
+	}
+
+	if (! ($q->is_archive() || $q->is_tax() || $q->is_category() || $q->is_tag())) {
+		return false;
+	}
+
+	$pt = $q->get('post_type');
+
+	if ($pt === '' || $pt === 'post') {
+		return false;
+	}
+
+	if ($pt === 'trvlr_attraction') {
+		return true;
+	}
+
+	if (is_array($pt)) {
+		$pt = array_values(array_unique(array_map('sanitize_key', $pt)));
+
+		return count($pt) === 1 && $pt[0] === 'trvlr_attraction';
+	}
+
+	return false;
+}
+
+function trvlr_cards_get_archive_term_query_args()
+{
+	if (!is_category() && !is_tag() && !is_tax()) {
+		return null;
+	}
+
+	$term = get_queried_object();
+
+	if (!($term instanceof WP_Term)) {
+		return null;
+	}
+
+	$tax = get_taxonomy($term->taxonomy);
+
+	if (!$tax || !is_array($tax->object_type)) {
+		return null;
+	}
+
+	if (!in_array('trvlr_attraction', $tax->object_type, true)) {
+		return null;
+	}
+
+	$q = isset($GLOBALS['wp_the_query']) ? $GLOBALS['wp_the_query'] : null;
+	$paged = max(1, (int) get_query_var('paged'), (int) get_query_var('page'));
+
+	$posts_per_page = (int) get_option('posts_per_page');
+
+	if ($q instanceof WP_Query) {
+		$mq_ppp = (int) $q->get('posts_per_page');
+
+		if ($mq_ppp > 0) {
+			$posts_per_page = $mq_ppp;
+		}
+	}
+
+	return array(
+		'tax_query'      => array(
+			array(
+				'taxonomy' => $term->taxonomy,
+				'field'    => 'term_id',
+				'terms'    => (int) $term->term_id,
+			),
+		),
+		'paged'          => $paged,
+		'posts_per_page' => $posts_per_page,
+	);
+}
+
+function trvlr_cards_has_explicit_archive_scope($args)
+{
+	$scope_keys = array(
+		'ids',
+		'post__in',
+		'tax_query',
+		'query_args',
+		'tag',
+		'tag_id',
+		'tag_slug',
+		'category',
+		'category_id',
+		'category_slug',
+		'trvlr_tag',
+		'trvlr_tag_id',
+		'trvlr_tag_slug',
+	);
+
+	foreach ($scope_keys as $key) {
+		if (!empty($args[$key])) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+function trvlr_cards_maybe_inherit_archive_query($args)
+{
+	if (empty($args) || !(is_post_type_archive() || is_tax() || is_category() || is_tag())) {
+		return $args;
+	}
+
+	if (trvlr_cards_has_explicit_archive_scope($args)) {
+		return $args;
+	}
+
+	$archive_args = trvlr_cards_get_archive_term_query_args();
+	if ($archive_args === null) {
+		return $args;
+	}
+
+	$grid_id = isset($args['grid_id']) ? $args['grid_id'] : '';
+	$sort = isset($args['trvlr_sort']) ? sanitize_key($args['trvlr_sort']) : '';
+	unset($args['grid_id']);
+	unset($args['trvlr_sort']);
+
+	unset($archive_args['paged']);
+	$query_args = trvlr_build_query_args(wp_parse_args($args, $archive_args));
+
+	$inherited = array('query_args' => $query_args);
+	if ($grid_id !== '') {
+		$inherited['grid_id'] = $grid_id;
+	}
+	if ($sort !== '') {
+		$inherited['trvlr_sort'] = $sort;
+	}
+
+	return $inherited;
+}
+
 /**
  * Output a grid of attraction cards from a WP_Query over `trvlr_attraction`.
  *
  * Usage:
- * - With an empty `$args` on a main archive/taxonomy screen, uses the main query (loop).
+ * - With an empty `$args` on a supported archive: if the main query is already limited to
+ *   `trvlr_attraction` (CPT archive or tax archive whose main query targets that type), the
+ *   main loop is used. If the viewed term applies to attractions but the main query is still
+ *   default `post` (e.g. `post_tag` URLs), a secondary query inherits the term and `post_type`
+ *   `trvlr_attraction`. Otherwise runs a dedicated query as below.
  * - Otherwise runs a dedicated query. Pass `query_args` as a full `WP_Query` argument array
  *   for a complete override (defaults `post_type` to `trvlr_attraction` if omitted).
  * - Or pass the parameters below; they are merged with defaults (`posts_per_page` 16, etc.).
@@ -688,9 +984,20 @@ function trvlr_cards($args = array())
 {
 	$use_main_query = false;
 
-	if (empty($args) && (is_post_type_archive() || is_tax() || is_category() || is_tag())) {
-		$use_main_query = true;
+	if (empty($args)) {
+		if (is_post_type_archive() || is_tax() || is_category() || is_tag()) {
+			if (trvlr_cards_should_use_primary_loop_for_attractions()) {
+				$use_main_query = true;
+			} else {
+				$archive_term_args = trvlr_cards_get_archive_term_query_args();
+				if ($archive_term_args !== null) {
+					$args = $archive_term_args;
+				}
+			}
+		}
 	}
+
+	$args = trvlr_cards_maybe_inherit_archive_query($args);
 
 	ob_start();
 
@@ -769,7 +1076,7 @@ function trvlr_attraction_filter($atts = array())
 		'terms'         => '',
 		'default_label' => __('Most Popular', 'trvlr'),
 		'default_slug'  => 'popular',
-		'orderby'       => 'name',
+		'orderby'       => 'menu_order',
 		'order'         => 'ASC',
 	), $atts, 'trvlr_attraction_filter');
 
@@ -803,6 +1110,12 @@ function trvlr_attraction_filter($atts = array())
 	$terms = get_terms($term_args);
 	if (is_wp_error($terms)) {
 		$terms = array();
+	}
+
+	if ($taxonomy === 'category') {
+		$terms = array_values(array_filter($terms, function ($term) {
+			return $term->slug !== 'uncategorized' && $term->slug !== 'uncategorised';
+		}));
 	}
 
 	$default_slug  = sanitize_text_field($atts['default_slug']);
@@ -870,6 +1183,74 @@ function trvlr_attraction_filter($atts = array())
 	return apply_filters('trvlr_attraction_filter', $html, $atts, $target);
 }
 
+function trvlr_attraction_sort($atts = array())
+{
+	$atts = shortcode_atts(array(
+		'target' => '',
+	), $atts, 'trvlr_attraction_sort');
+
+	$target = sanitize_html_class(trim($atts['target']));
+	if (empty($target)) {
+		return '';
+	}
+
+	$options = array(
+		array(
+			'label' => __('Sort by A-Z', 'trvlr'),
+			'query' => array('trvlr_sort' => 'az'),
+			'active' => true,
+		),
+		array(
+			'label' => __('Sort by Most Popular', 'trvlr'),
+			'query' => array('trvlr_sort' => 'popular'),
+			'active' => false,
+		),
+		array(
+			'label' => __('Sort by Price', 'trvlr'),
+			'query' => array('trvlr_sort' => 'price'),
+			'active' => false,
+		),
+	);
+
+	$buttons = '';
+	foreach ($options as $option) {
+		$buttons .= sprintf(
+			'<button class="filter-btn%4$s" data-trvlr-filter-target="%1$s" data-trvlr-query="%2$s">' .
+				'<span class="filter-btn__label">%3$s</span></button>',
+			esc_attr($target),
+			esc_attr(wp_json_encode($option['query'])),
+			esc_html($option['label']),
+			$option['active'] ? ' active' : ''
+		);
+	}
+
+	$html = sprintf(
+		'<div class="trvlr-attraction-filter trvlr-attraction-sort tour-filters" data-trvlr-filter-target="%1$s" role="navigation" aria-label="%2$s">
+			<button class="filter-btn active open-filter-menu" aria-label="%3$s" aria-haspopup="true">
+				<span class="filter-btn__label">%4$s</span>
+			</button>
+			<div class="filter-buttons__container" role="menu">
+				<button class="filter-btns-dropdown__toggle icon-toggle" aria-label="%5$s" aria-expanded="false">%6$s</button>
+				<div class="filter-buttons__container-inner">
+					<div class="filter-buttons__container-content">%7$s</div>
+				</div>
+			</div>
+		</div>',
+		esc_attr($target),
+		esc_attr__('Attraction sorting', 'trvlr'),
+		esc_attr__('Open attraction sorting', 'trvlr'),
+		esc_html__('Sort by A-Z', 'trvlr'),
+		esc_attr__('Toggle sorting', 'trvlr'),
+		trvlr_filter_toggle_svgs(),
+		$buttons
+	);
+
+	wp_enqueue_script('trvlr-attraction-filter');
+	wp_enqueue_style('trvlr-attraction-filter');
+
+	return apply_filters('trvlr_attraction_sort', $html, $atts, $target);
+}
+
 function trvlr_render_booking_calendar($atts = array())
 {
 	return trvlr_booking_calendar(null, $atts);
@@ -913,6 +1294,63 @@ function trvlr_get_formatted_attraction_locations($post_id = null)
 function trvlr_get_attraction_accordion($post_id = null)
 {
 	return trvlr_accordion($post_id);
+}
+
+function trvlr_single_attraction_markup($post_id = null, $template_slug = null)
+{
+	if (!class_exists('Trvlr_Template_Registry')) {
+		return '';
+	}
+
+	$post_id = $post_id ? absint($post_id) : get_the_ID();
+	if (!$post_id) {
+		return '';
+	}
+
+	$post = get_post($post_id);
+	if (!$post || $post->post_type !== 'trvlr_attraction') {
+		return '';
+	}
+
+	$registry_slug = null;
+	if ($template_slug !== null && $template_slug !== '') {
+		$try = sanitize_key((string) $template_slug);
+		$singles = Trvlr_Template_Registry::get_single_templates();
+		if ($try !== '' && isset($singles[$try])) {
+			$registry_slug = $try;
+		}
+	}
+
+	$trvlr_single_template_slug = $registry_slug !== null
+		? $registry_slug
+		: Trvlr_Template_Registry::get_active_single_slug();
+
+	$single_template_path = Trvlr_Template_Registry::get_single_template_path($registry_slug);
+	if ($single_template_path === '' || !is_readable($single_template_path)) {
+		return '';
+	}
+
+	global $post;
+	$original_post = $post;
+	$post = get_post($post_id);
+	setup_postdata($post);
+
+	$attraction_id = get_trvlr_attraction_id($post_id);
+	$post_classes = get_post_class('single-attraction', $post_id);
+	$post_class = implode(' ', $post_classes);
+
+	ob_start();
+	include $single_template_path;
+	$html = ob_get_clean();
+
+	$post = $original_post;
+	if ($post) {
+		setup_postdata($post);
+	} else {
+		wp_reset_postdata();
+	}
+
+	return apply_filters('trvlr_single_attraction_markup', $html, $post_id, $trvlr_single_template_slug);
 }
 
 function trvlr_payment_confirmation_markup()

@@ -650,6 +650,8 @@ class Trvlr_Admin
 					'skipped' => isset($state['skipped']) ? $state['skipped'] : 0,
 					'errors'  => isset($state['errors']) ? $state['errors'] : 0,
 				);
+			} elseif ($sync_status === 'cancelled') {
+				// Treat as not in-progress; the front-end will read status === 'cancelled'
 			} elseif ($sync_status === 'in_progress') {
 				$last_batch = isset($state['last_batch_at']) ? $state['last_batch_at'] : 0;
 				if ((time() - $last_batch) > 600) {

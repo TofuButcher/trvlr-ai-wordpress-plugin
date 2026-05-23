@@ -1,4 +1,5 @@
-.trvlr-attraction-filter.tour-filters {
+.trvlr-attraction-filter.tour-filters,
+.trvlr-attraction-sort.tour-filters {
 	display: flex;
 	flex-direction: row;
 	justify-content: space-between;
@@ -42,7 +43,6 @@
 		}
 
 		&.active {
-			color: #fff;
 			background: var(--trvlr-primary-color);
 			box-shadow: inset 0 0 0 1px transparent;
 		}
@@ -85,6 +85,8 @@
 		}
 
 		.filter-buttons__container {
+			display: flex;
+			width: fit-content;
 			position: relative;
 			flex-direction: column;
 			align-items: flex-end;

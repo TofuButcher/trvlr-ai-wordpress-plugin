@@ -96,11 +96,18 @@ class Trvlr_Public
 	 */
 	public function load_attraction_template($template)
 	{
-		if (is_singular('trvlr_attraction')) {
-			$plugin_template = plugin_dir_path(__FILE__) . 'partials/single-trvlr_attraction.php';
-			if (file_exists($plugin_template)) {
-				return $plugin_template;
-			}
+		if (!is_singular('trvlr_attraction')) {
+			return $template;
+		}
+
+		$use_plugin_partial = apply_filters('trvlr_use_plugin_single_attraction_template', true, $template);
+		if (!$use_plugin_partial) {
+			return $template;
+		}
+
+		$plugin_template = plugin_dir_path(__FILE__) . 'partials/single-trvlr_attraction.php';
+		if (file_exists($plugin_template)) {
+			return $plugin_template;
 		}
 
 		return $template;
