@@ -56,10 +56,11 @@ add_shortcode('trvlr_sale_description', 'trvlr_shortcode_sale_description');
 function trvlr_shortcode_gallery($atts)
 {
 	$atts = shortcode_atts(array(
-		'id' => get_the_ID(),
+		'id'   => get_the_ID(),
+		'type' => 'slider',
 	), $atts, 'trvlr_gallery');
 
-	return trvlr_gallery($atts['id']);
+	return trvlr_gallery($atts['id'], array('type' => $atts['type']));
 }
 add_shortcode('trvlr_gallery', 'trvlr_shortcode_gallery');
 
@@ -377,10 +378,11 @@ add_shortcode('trvlr_sort', 'trvlr_shortcode_attraction_sort');
 function trvlr_shortcode_attraction_gallery($atts)
 {
 	$atts = shortcode_atts(array(
-		'id' => get_the_ID(),
+		'id'   => get_the_ID(),
+		'type' => 'slider',
 	), $atts, 'trvlr_attraction_gallery');
 
-	return trvlr_gallery($atts['id']);
+	return trvlr_gallery($atts['id'], array('type' => $atts['type']));
 }
 add_shortcode('trvlr_attraction_gallery', 'trvlr_shortcode_attraction_gallery');
 

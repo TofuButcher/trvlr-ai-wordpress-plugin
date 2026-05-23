@@ -49,7 +49,8 @@ module.exports = {
 	devtool: process.env.NODE_ENV === 'production' ? false : 'source-map',
 	entry: {
 		'admin/build/trvlr-admin-root.jsx': './admin/src/trvlr-admin-root.jsx',
-		'public/dist/trvlr-gallery': './public/src/trvlr-gallery.js',
+		'public/dist/trvlr-gallery-slider': './public/src/trvlr-gallery-slider.js',
+		'public/dist/trvlr-gallery-masonry': './public/src/trvlr-gallery-masonry.js',
 		...scssFiles,
 	},
 	output: {

@@ -59,7 +59,7 @@ function trvlr_sale($post_id = null, $description = null)
 			<?php echo trvlr_sale_description($post_id, $sale_description); ?>
 		<?php endif; ?>
 	</div>
-<?php
+	<?php
 	return apply_filters('trvlr_sale', ob_get_clean(), $post_id);
 }
 
@@ -129,13 +129,56 @@ function trvlr_sale_description($post_id = null, $description = null)
 
 function trvlr_enqueue_gallery_slider_assets()
 {
-	wp_enqueue_style('trvlr-gallery');
-	wp_enqueue_script('trvlr-gallery');
+	wp_enqueue_style('trvlr-gallery-slider');
+	wp_enqueue_script('trvlr-gallery-slider');
 }
 
-function trvlr_gallery($post_id = null)
+function trvlr_enqueue_gallery_masonry_assets()
+{
+	wp_enqueue_style('trvlr-gallery-masonry');
+	wp_enqueue_script('trvlr-gallery-masonry');
+}
+
+function trvlr_gallery_attachment_lightbox_attrs($attachment_id)
+{
+	$full = wp_get_attachment_image_src($attachment_id, 'full');
+	if (!$full) {
+		return array(
+			'href'   => '',
+			'width'  => 0,
+			'height' => 0,
+		);
+	}
+
+	$width  = (int) $full[1];
+	$height = (int) $full[2];
+
+	if ($width <= 0 || $height <= 0) {
+		$meta = wp_get_attachment_metadata($attachment_id);
+		if (is_array($meta)) {
+			$width  = isset($meta['width']) ? (int) $meta['width'] : 0;
+			$height = isset($meta['height']) ? (int) $meta['height'] : 0;
+		}
+	}
+
+	return array(
+		'href'   => $full[0],
+		'width'  => $width,
+		'height' => $height,
+	);
+}
+
+function trvlr_gallery($post_id = null, $args = array())
 {
 	$post_id = $post_id ?: get_the_ID();
+	$args = wp_parse_args(
+		$args,
+		array(
+			'type' => 'slider',
+		)
+	);
+	$type = $args['type'] === 'masonry' ? 'masonry' : 'slider';
+
 	$media_ids = get_trvlr_media($post_id, true);
 	$gallery_ids = array_unique(array_filter($media_ids));
 
@@ -145,7 +188,38 @@ function trvlr_gallery($post_id = null)
 
 	if (count($gallery_ids) === 1) {
 		$output = '<div class="trvlr-gallery trvlr-gallery--single">' . wp_get_attachment_image($gallery_ids[0], 'large') . '</div>';
-		return apply_filters('trvlr_gallery', $output, $post_id, $gallery_ids);
+		return apply_filters('trvlr_gallery', $output, $post_id, $gallery_ids, $type);
+	}
+
+	if ($type === 'masonry') {
+		trvlr_enqueue_gallery_masonry_assets();
+
+		ob_start();
+		$gallery_id = 'trvlr-gallery-masonry-' . $post_id;
+	?>
+		<div id="<?php echo esc_attr($gallery_id); ?>" class="trvlr-gallery trvlr-gallery--masonry">
+			<div class="trvlr-gallery__grid">
+				<div class="trvlr-gallery__sizer" aria-hidden="true"></div>
+				<?php foreach ($gallery_ids as $image_id) :
+					$lightbox = trvlr_gallery_attachment_lightbox_attrs($image_id);
+					if ($lightbox['href'] === '') {
+						continue;
+					}
+				?>
+					<div class="trvlr-gallery__item">
+						<a
+							class="trvlr-gallery__link"
+							href="<?php echo esc_url($lightbox['href']); ?>"
+							data-pswp-width="<?php echo esc_attr((string) $lightbox['width']); ?>"
+							data-pswp-height="<?php echo esc_attr((string) $lightbox['height']); ?>">
+							<?php echo wp_get_attachment_image($image_id, 'large', false, array('loading' => 'eager')); ?>
+						</a>
+					</div>
+				<?php endforeach; ?>
+			</div>
+		</div>
+	<?php
+		return apply_filters('trvlr_gallery', ob_get_clean(), $post_id, $gallery_ids, $type);
 	}
 
 	trvlr_enqueue_gallery_slider_assets();
@@ -153,7 +227,7 @@ function trvlr_gallery($post_id = null)
 	ob_start();
 	$main_id = 'trvlr-main-slider-' . $post_id;
 	$nav_id = 'trvlr-nav-slider-' . $post_id;
-?>
+	?>
 	<div class="trvlr-gallery trvlr-gallery--slider">
 		<div id="<?php echo esc_attr($main_id); ?>" class="trvlr-gallery__main splide">
 			<div class="splide__track">
@@ -179,7 +253,7 @@ function trvlr_gallery($post_id = null)
 		</div>
 	</div>
 <?php
-	return apply_filters('trvlr_gallery', ob_get_clean(), $post_id, $gallery_ids);
+	return apply_filters('trvlr_gallery', ob_get_clean(), $post_id, $gallery_ids, $type);
 }
 
 function trvlr_short_description($post_id = null)

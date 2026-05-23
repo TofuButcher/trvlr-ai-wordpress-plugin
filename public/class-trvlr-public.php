@@ -225,7 +225,7 @@ class Trvlr_Public
 	public function inject_booking_modal()
 	{
 		$base_iframe_url = $this->get_trvlr_base_domain();
-	?>
+?>
 		<dialog id="trvlr-booking-modal" class="modal-dialog">
 			<div id="trvlr-booking-modal-content" class="iframe-cont">
 			</div>
@@ -394,18 +394,43 @@ class Trvlr_Public
 		}
 
 		wp_register_script(
-			'trvlr-gallery',
-			plugin_dir_url(__FILE__) . 'dist/trvlr-gallery.js',
+			'trvlr-gallery-slider',
+			plugin_dir_url(__FILE__) . 'dist/trvlr-gallery-slider.js',
 			$asset['dependencies'],
 			$asset['version'],
 			true
 		);
 
 		wp_register_style(
-			'trvlr-gallery',
-			plugin_dir_url(__FILE__) . 'dist/trvlr-gallery.css',
+			'trvlr-gallery-slider',
+			plugin_dir_url(__FILE__) . 'dist/trvlr-gallery-slider.css',
 			array(),
 			$asset['version'],
+			'all'
+		);
+
+		$masonry_asset_file = plugin_dir_path(__FILE__) . 'dist/trvlr-gallery-masonry.asset.php';
+		$masonry_asset = array(
+			'dependencies' => array(),
+			'version'      => $this->version,
+		);
+		if (is_readable($masonry_asset_file)) {
+			$masonry_asset = include $masonry_asset_file;
+		}
+
+		wp_register_script(
+			'trvlr-gallery-masonry',
+			plugin_dir_url(__FILE__) . 'dist/trvlr-gallery-masonry.js',
+			$masonry_asset['dependencies'],
+			$masonry_asset['version'],
+			true
+		);
+
+		wp_register_style(
+			'trvlr-gallery-masonry',
+			plugin_dir_url(__FILE__) . 'dist/trvlr-gallery-masonry.css',
+			array(),
+			$masonry_asset['version'],
 			'all'
 		);
 	}

@@ -10,7 +10,7 @@ $duration_raw = get_trvlr_duration($post_id);
 $duration_text = $duration_raw ? apply_filters('trvlr_duration', $duration_raw, $post_id) : '';
 $inclusions_out = trvlr_inclusions($post_id);
 $has_inclusions = $inclusions_out !== '';
-$gallery_out = trvlr_gallery($post_id);
+$gallery_out = trvlr_gallery($post_id, array('type' => 'masonry'));
 $has_gallery = $gallery_out !== '';
 $loc_out = trvlr_locations($post_id);
 $add_info_out = trvlr_additional_info($post_id);
