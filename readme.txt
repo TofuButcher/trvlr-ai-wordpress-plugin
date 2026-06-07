@@ -3,7 +3,7 @@ Contributors: pariswelch
 Tags: booking, reservations, tours, trvlr, booking system
 Requires at least: 5.0
 Tested up to: 6.4
-Stable tag: 0.1.6
+Stable tag: 0.1.7
 Requires PHP: 7.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
@@ -65,6 +65,11 @@ The front-end booking script listens for elements that include an `attraction-id
 See the `docs/` directory inside the plugin: `README.md` is the index; `reference/` holds optional detailed specs (e.g. REST payloads) when provided.
 
 == Changelog ==
+
+= 0.1.7 =
+* Added support for 'group' type attractions
+* Improvements to query manager script to enable building of better custom ajax filters / sort elements
+* Updated debugging endpoint "?trvlr_test=true" to use latest traveloris domain API endpoint
 
 = 0.1.6 =
 * Updated API + booking iframe URLs to use the new subdomain ( traveloris.com )

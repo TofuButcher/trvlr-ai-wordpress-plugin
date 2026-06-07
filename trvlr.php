@@ -3,17 +3,17 @@
 /**
  * Plugin Name: Trvlr AI Booking System
  * Description: Wordpress plugin for integrating the trvlr.ai booking system.
- * Version: 0.1.6
+ * Version: 0.1.7
  * Author: Paris Welch
  * Text Domain: trvlr
  */
 
-if (! defined('ABSPATH')) {
-	exit;
-}
+if (! defined('ABSPATH')) {go
+	exit;go
+}go
 
 // Define Constants
-define('TRVLR_VERSION', '0.1.6');
+define('TRVLR_VERSION', '0.1.7');
 define('TRVLR_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('TRVLR_PLUGIN_URL', plugin_dir_url(__FILE__));
 
