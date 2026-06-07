@@ -64,7 +64,7 @@
 				const params = new URLSearchParams();
 				Object.entries(fetchQuery).forEach(([k, v]) => {
 					if (v !== null && v !== undefined && v !== '') {
-						params.append(k, v);
+						params.append(k, Array.isArray(v) ? v.join(',') : v);
 					}
 				});
 				response = await fetch(`${_apiUrl}?${params}`);
@@ -95,13 +95,15 @@
 			state.maxPages    = data.max_pages;
 			state.foundPosts  = data.found_posts;
 
-			container.dataset.trvlrCurrentPage = data.current_page;
-			container.dataset.trvlrMaxPages    = data.max_pages;
-			container.dataset.trvlrFoundPosts  = data.found_posts;
+			container.dataset.trvlrCurrentPage  = data.current_page;
+			container.dataset.trvlrMaxPages     = data.max_pages;
+			container.dataset.trvlrFoundPosts   = data.found_posts;
+			container.dataset.trvlrCurrentQuery = JSON.stringify(state.currentQuery);
 
 			container.dispatchEvent(new CustomEvent('trvlr:loaded', {
 				bubbles: true,
 				detail: {
+					gridId:       gridId,
 					found_posts:  data.found_posts,
 					max_pages:    data.max_pages,
 					current_page: data.current_page,
@@ -121,14 +123,24 @@
 
 	/**
 	 * Merge `partialQuery` into the current query for `gridId`, reset to page 1, and fetch.
+	 * Keys whose value is null, undefined, or '' are removed from the current query rather
+	 * than stored, so each filter only owns its own keys.
 	 *
 	 * @param {string} gridId
-	 * @param {Object} partialQuery Key/value pairs to merge into the current query.
+	 * @param {Object} partialQuery Key/value pairs to merge. Null/empty values remove the key.
 	 */
 	function updateQuery(gridId, partialQuery) {
 		const state = _state.get(gridId);
 		if (!state) return;
-		state.currentQuery = { ...state.currentQuery, ...partialQuery };
+		const next = { ...state.currentQuery };
+		Object.entries(partialQuery).forEach(([k, v]) => {
+			if (v === null || v === undefined || v === '') {
+				delete next[k];
+			} else {
+				next[k] = v;
+			}
+		});
+		state.currentQuery = next;
 		_fetch(gridId, state.currentQuery, 1, 'replace');
 	}
 
@@ -170,6 +182,21 @@
 	}
 
 	/**
+	 * Remove one or more keys from the current query for `gridId`, reset to page 1, and fetch.
+	 *
+	 * @param {string}   gridId
+	 * @param {string[]} keys   Array of query keys to remove.
+	 */
+	function removeQueryKeys(gridId, keys) {
+		const state = _state.get(gridId);
+		if (!state) return;
+		const next = { ...state.currentQuery };
+		keys.forEach((k) => delete next[k]);
+		state.currentQuery = next;
+		_fetch(gridId, state.currentQuery, 1, 'replace');
+	}
+
+	/**
 	 * Return a copy of the current query state for `gridId`, or null if not found.
 	 *
 	 * @param {string} gridId
@@ -195,5 +222,5 @@
 		_init();
 	}
 
-	window.TrvlrQueryManager = { updateQuery, setQuery, loadMore, resetQuery, getQuery, getGridIds };
+	window.TrvlrQueryManager = { updateQuery, setQuery, loadMore, resetQuery, removeQueryKeys, getQuery, getGridIds };
 })();

@@ -255,6 +255,10 @@ class Trvlr_Sync
                 unset($attraction_data['images'], $attraction_data['list_image']);
             }
 
+            if (array_key_exists('group_id', $list_item)) {
+                $attraction_data['group_id'] = $list_item['group_id'];
+            }
+
             $result = $this->update_attraction_post($attraction_data);
 
             if ($result === 'created') $state['created']++;
@@ -481,6 +485,7 @@ class Trvlr_Sync
                 'trvlr_additional_info' => isset($data['additional_info']) ? Trvlr_Data_Transform::prepare_for_wp_editor($data['additional_info']) : '',
                 'trvlr_start_time' => isset($data['start_time']) ? sanitize_text_field($data['start_time']) : '',
                 'trvlr_end_time' => isset($data['end_time']) ? sanitize_text_field($data['end_time']) : '',
+                'trvlr_group_id' => isset($data['group_id']) && is_int($data['group_id']) ? $data['group_id'] : '',
             ),
         );
 

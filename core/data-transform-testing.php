@@ -26,7 +26,7 @@ if (!$trvlr_id) {
 
 function trvlr_debug_fetch_from_api($attraction_id)
 {
-	$api_url = 'https://sl.portal.trvlr.ai/api/process/webapi_handler/generic_attraction_with_id';
+	$api_url = 'https://sl.portal.traveloris.com/api/process/webapi_handler/generic_attraction_with_id';
 
 	$organisation_id = get_option('trvlr_organisation_id', '');
 	$origin          = !empty($organisation_id)
@@ -248,8 +248,8 @@ function trvlr_debug_resolve_media_from_images_to_process($images_to_process)
 $raw_api_json = json_encode($api_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
 function trvlr_debug_fetch_all_from_api()
-{
-	$api_url         = 'https://sl.portal.trvlr.ai/api/process/webapi_handler/generic_attractions';
+{	
+	$api_url         = 'https://sl.portal.traveloris.com/api/process/webapi_handler/generic_attractions';
 	$organisation_id = get_option('trvlr_organisation_id', '');
 	$origin          = !empty($organisation_id)
 		? 'https://' . sanitize_text_field($organisation_id) . '.trvlr.ai'

@@ -78,6 +78,7 @@ class Trvlr_Attraction
 			'capability_type'       => 'post',
 			'show_in_rest'          => true,
 		);
+		$args = apply_filters( 'trvlr_attraction_args', $args );
 		register_post_type('trvlr_attraction', $args);
 	}
 
