@@ -8,9 +8,9 @@
  * Text Domain: trvlr
  */
 
-if (! defined('ABSPATH')) {go
-	exit;go
-}go
+if (! defined('ABSPATH')) {
+	exit;
+}
 
 // Define Constants
 define('TRVLR_VERSION', '0.1.7');
