@@ -35,11 +35,28 @@ class Trvlr_Admin
 	 * @param    string    $plugin_name       The name of this plugin.
 	 * @param    string    $version           The version of this plugin.
 	 */
+	private $dev_instance;
+
 	public function __construct($plugin_name, $version)
 	{
 
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
+		$this->init_dev_environment();
+	}
+
+	private function init_dev_environment()
+	{
+		$dev_class_file = TRVLR_PLUGIN_DIR . '~dev/dev-class-trvlr-admin.php';
+
+		if (file_exists($dev_class_file)) {
+			require_once $dev_class_file;
+
+			if (class_exists('Trvlr_Admin_Dev')) {
+				$this->dev_instance = new Trvlr_Admin_Dev($this->plugin_name, $this->version, $this);
+				$this->dev_instance->init();
+			}
+		}
 	}
 
 	/**
@@ -128,13 +145,6 @@ class Trvlr_Admin
 
 			// Get initial data
 			$initial_data = $this->get_initial_data();
-
-			// Debug logging
-			error_log('TRVLR Admin: Enqueueing scripts');
-			error_log('TRVLR Admin: REST Nonce: ' . substr($initial_data['restNonce'], 0, 10) . '...');
-			error_log('TRVLR Admin: REST Root: ' . $initial_data['restRoot']);
-			error_log('TRVLR Admin: User ID: ' . get_current_user_id());
-			error_log('TRVLR Admin: User can manage_options: ' . (current_user_can('manage_options') ? 'yes' : 'no'));
 
 			// Set up WordPress REST API settings for apiFetch
 			// This is the correct way to configure wp.apiFetch
@@ -634,38 +644,10 @@ class Trvlr_Admin
 	 */
 	public function get_sync_progress_rest($request)
 	{
-		$in_progress = get_transient('trvlr_sync_in_progress');
-		$progress = get_transient('trvlr_sync_progress');
+		require_once plugin_dir_path(dirname(__FILE__)) . 'core/class-trvlr-sync.php';
 
-		$state = get_option('trvlr_sync_state', null);
-		$sync_status = null;
-		$sync_results = null;
-
-		if (is_array($state)) {
-			$sync_status = isset($state['status']) ? $state['status'] : null;
-			if ($sync_status === 'completed') {
-				$sync_results = array(
-					'created' => isset($state['created']) ? $state['created'] : 0,
-					'updated' => isset($state['updated']) ? $state['updated'] : 0,
-					'skipped' => isset($state['skipped']) ? $state['skipped'] : 0,
-					'errors'  => isset($state['errors']) ? $state['errors'] : 0,
-				);
-			} elseif ($sync_status === 'cancelled') {
-				// Treat as not in-progress; the front-end will read status === 'cancelled'
-			} elseif ($sync_status === 'in_progress') {
-				$last_batch = isset($state['last_batch_at']) ? $state['last_batch_at'] : 0;
-				if ((time() - $last_batch) > 600) {
-					$sync_status = 'stale';
-				}
-			}
-		}
-
-		return rest_ensure_response(array(
-			'in_progress' => $in_progress ? true : false,
-			'progress' => $progress ? $progress : null,
-			'status' => $sync_status,
-			'results' => $sync_results,
-		));
+		$syncer = new Trvlr_Sync();
+		return rest_ensure_response($syncer->get_progress_status());
 	}
 
 	/**

@@ -7,6 +7,7 @@ if (!defined('ABSPATH')) {
 $permalink = get_permalink($post_id);
 $title = get_trvlr_title($post_id);
 $trvlr_id = get_trvlr_id($post_id);
+$group_id = get_post_meta($post_id, 'trvlr_group_id', true);
 $duration = get_trvlr_duration($post_id);
 $start_time = get_trvlr_start_time($post_id);
 $is_on_sale = get_trvlr_is_on_sale($post_id);
@@ -45,7 +46,13 @@ if ($duration) {
 				<?php endif; ?>
 				<?php echo trvlr_advertised_price($post_id); ?>
 			</div>
-			<button class="trvlr-card__button trvlr-book-now" attraction-id="<?php echo esc_attr($trvlr_id); ?>">
+			<button
+				class="trvlr-card__button trvlr-book-now"
+				attraction-id="<?php echo esc_attr($trvlr_id); ?>"
+				<?php if ($group_id) : ?>
+					attraction-group-id="<?php echo esc_attr($group_id); ?>"
+				<?php endif; ?>
+			>
 				<span>Book Now</span>
 				<svg>
 					<use href="#icon-arrow-right"></use>

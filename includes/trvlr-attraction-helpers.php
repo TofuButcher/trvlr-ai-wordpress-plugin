@@ -73,6 +73,18 @@ function get_trvlr_attraction_id($post_id = null)
 	return get_trvlr_id($post_id);
 }
 
+function get_trvlr_group_id($post_id = null) {
+	$post_id = $post_id ?: get_the_ID();
+	$value = get_post_meta($post_id, 'trvlr_group_id', true);
+	if (empty($value)) {
+		$value = get_field('trvlr_group_id', $post_id);
+	}
+	if (empty($value)) {
+		$value = get_field('attraction_group_id', $post_id);
+	}
+	return apply_filters('trvlr_group_id', $value ?: '', $post_id);
+}
+
 function get_trvlr_title($post_id = null)
 {
 	$post_id = $post_id ?: get_the_ID();

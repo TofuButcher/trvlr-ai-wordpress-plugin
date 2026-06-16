@@ -99,6 +99,11 @@ class Trvlr
 		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-logger.php';
 
 		/**
+		 * Async dispatch abstraction (Action Scheduler with WP-Cron fallback)
+		 */
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-async.php';
+
+		/**
 		 * The scheduler class for automated sync
 		 */
 		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-scheduler.php';

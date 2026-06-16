@@ -447,6 +447,7 @@ function trvlr_booking_calendar($post_id = null, $args = array())
 		'width' => '450px',
 		'height' => '600px',
 		'attraction_id' => get_trvlr_id($post_id),
+		'group_id' => get_trvlr_group_id($post_id),
 	);
 	$args = wp_parse_args($args, $defaults);
 
@@ -457,10 +458,8 @@ function trvlr_booking_calendar($post_id = null, $args = array())
 	if (empty($args['attraction_id'])) {
 		return '<p>Sorry this attraction is not available for booking. No Trvlr AI ID found.</p>';
 	}
-
-	$group_id = get_post_meta($post_id, 'trvlr_group_id', true);
-	$calendar_query = $group_id
-		? 'group_id=' . esc_attr($group_id)
+	$calendar_query = !empty($args['group_id'])
+		? 'group_id=' . esc_attr($args['group_id'])
 		: 'attr_id=' . esc_attr($args['attraction_id']);
 
 	ob_start();
@@ -494,9 +493,15 @@ function trvlr_booking_button($post_id = null, $args = array())
 		return '<p>Sorry this attraction is not available for booking. No Trvlr AI ID found.</p>';
 	}
 
+	$group_id = get_post_meta($post_id, 'trvlr_group_id', true);
+
 	ob_start();
 ?>
-	<button class="trvlr-book-now<?php echo esc_attr($args['class']); ?>" attraction-id="<?php echo esc_attr($args['attraction_id']); ?>">
+	<button
+		class="trvlr-book-now<?php echo esc_attr($args['class']); ?>"
+		attraction-id="<?php echo esc_attr($args['attraction_id']); ?>"
+		<?php if ($group_id) : ?>attraction-group-id="<?php echo esc_attr($group_id); ?>"<?php endif; ?>
+	>
 		<span><?php echo esc_html($args['label']); ?></span>
 	</button>
 <?php

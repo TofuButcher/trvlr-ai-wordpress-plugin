@@ -7,6 +7,10 @@
  * @subpackage Trvlr/includes
  */
 
+if (!class_exists('Trvlr_Async')) {
+	require_once plugin_dir_path(__FILE__) . 'class-trvlr-async.php';
+}
+
 class Trvlr_Scheduler
 {
 	/**
@@ -25,12 +29,12 @@ class Trvlr_Scheduler
 			$frequency = 'daily';
 		}
 
-		// Schedule new event
-		wp_schedule_event(time(), $frequency, 'trvlr_scheduled_sync');
+		// Schedule new event (Action Scheduler when available, else WP-Cron)
+		Trvlr_Async::schedule_recurring_sync($frequency);
 		update_option('trvlr_sync_frequency', $frequency);
 		update_option('trvlr_sync_enabled', '1');
 
-		Trvlr_Logger::log('system', "Scheduled sync enabled: {$frequency}");
+		Trvlr_Logger::log('system', "Scheduled sync enabled: {$frequency} (" . Trvlr_Async::driver() . ")");
 	}
 
 	/**
@@ -38,10 +42,7 @@ class Trvlr_Scheduler
 	 */
 	public static function unschedule_sync()
 	{
-		$timestamp = wp_next_scheduled('trvlr_scheduled_sync');
-		if ($timestamp) {
-			wp_unschedule_event($timestamp, 'trvlr_scheduled_sync');
-		}
+		Trvlr_Async::unschedule_recurring_sync();
 		update_option('trvlr_sync_enabled', '0');
 	}
 
@@ -72,7 +73,7 @@ class Trvlr_Scheduler
 	 */
 	public static function get_next_sync_time()
 	{
-		return wp_next_scheduled('trvlr_scheduled_sync');
+		return Trvlr_Async::next_sync_time();
 	}
 
 	/**

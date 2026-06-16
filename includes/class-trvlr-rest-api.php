@@ -353,31 +353,11 @@ class Trvlr_REST_API
 	public function check_admin_permission()
 	{
 		$can_manage = current_user_can('manage_options');
-		$user_id = get_current_user_id();
 
-		// Log detailed request info
-		error_log('TRVLR REST API: === Permission Check ===');
-		error_log('TRVLR REST API: User ID: ' . $user_id);
-		error_log('TRVLR REST API: Can manage: ' . ($can_manage ? 'yes' : 'no'));
-		error_log('TRVLR REST API: Request URI: ' . $_SERVER['REQUEST_URI']);
-		error_log('TRVLR REST API: Request Method: ' . $_SERVER['REQUEST_METHOD']);
-
-		// Log nonce header
-		$nonce_header = isset($_SERVER['HTTP_X_WP_NONCE']) ? $_SERVER['HTTP_X_WP_NONCE'] : 'NOT SET';
-		error_log('TRVLR REST API: X-WP-Nonce header: ' . substr($nonce_header, 0, 10) . '...');
-
-		// Log cookies
-		$cookie_nonce = isset($_COOKIE['wordpress_logged_in_' . COOKIEHASH]) ? 'SET' : 'NOT SET';
-		error_log('TRVLR REST API: WordPress cookie: ' . $cookie_nonce);
-
-		// Verify nonce if present
-		if ($nonce_header !== 'NOT SET') {
-			$nonce_check = wp_verify_nonce($nonce_header, 'wp_rest');
-			error_log('TRVLR REST API: Nonce verification: ' . ($nonce_check ? 'VALID' : 'INVALID'));
-		}
-
-		if (!$can_manage) {
-			error_log('TRVLR REST API: Permission denied for user ' . $user_id);
+		// Only log on actual denials, and only when debugging is enabled, to
+		// avoid spamming the error log on every (2s) progress poll.
+		if (!$can_manage && defined('WP_DEBUG') && WP_DEBUG) {
+			error_log('TRVLR REST API: Permission denied for user ' . get_current_user_id() . ' on ' . ($_SERVER['REQUEST_URI'] ?? ''));
 		}
 
 		return $can_manage;

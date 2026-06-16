@@ -7,6 +7,7 @@ if (!defined('ABSPATH')) {
 $permalink = get_permalink($post_id);
 $title = get_trvlr_title($post_id);
 $trvlr_id = get_trvlr_id($post_id);
+$group_id = get_post_meta($post_id, 'trvlr_group_id', true);
 $duration_raw = get_trvlr_duration($post_id);
 $duration_display = apply_filters('trvlr_duration', $duration_raw, $post_id);
 $is_on_sale = get_trvlr_is_on_sale($post_id);
@@ -67,7 +68,14 @@ $popular_markup = trvlr_popular_badge($post_id);
 				<?php endif; ?>
 			</div>
 		</div>
-		<button type="button" class="trvlr-card__book-bar trvlr-card__hover-only trvlr-book-now" attraction-id="<?php echo esc_attr($trvlr_id); ?>">
+		<button
+			type="button"
+			class="trvlr-card__book-bar trvlr-card__hover-only trvlr-book-now"
+			attraction-id="<?php echo esc_attr($trvlr_id); ?>"
+			<?php if ($group_id) : ?>
+					attraction-group-id="<?php echo esc_attr($group_id); ?>"
+			<?php endif; ?>
+		>
 			<span class="trvlr-card__book-bar-label"><?php esc_html_e('Book Now', 'trvlr'); ?></span>
 			<span class="trvlr-card__book-bar-icon" aria-hidden="true">
 				<svg>

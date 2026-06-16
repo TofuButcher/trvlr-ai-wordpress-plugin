@@ -4,12 +4,14 @@ import { Button, Notice } from '@wordpress/components';
 import apiFetch from '@wordpress/api-fetch';
 import { useTrvlr } from '../context/TrvlrContext';
 
+type Progress = { processed: number; total: number; percentage: number; message: string };
+
 export const ManualSyncForm = () => {
    const { refreshSyncStats, cancelSync } = useTrvlr();
    const [syncing, setSyncing] = useState(false);
    const [cancelling, setCancelling] = useState(false);
    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-   const [progress, setProgress] = useState<{ processed: number; total: number; percentage: number; message: string } | null>(null);
+   const [progress, setProgress] = useState<Progress | null>(null);
    const pollingInterval = useRef<number | null>(null);
 
    const stopPolling = () => {
@@ -19,49 +21,62 @@ export const ManualSyncForm = () => {
       }
    };
 
+   const finishWithResults = (response: any) => {
+      stopPolling();
+      setSyncing(false);
+      setCancelling(false);
+      setProgress(null);
+
+      if (response.results) {
+         const r = response.results;
+         const parts: string[] = [];
+         if (r.created > 0) parts.push(`${r.created} created`);
+         if (r.updated > 0) parts.push(`${r.updated} updated`);
+         if (r.skipped > 0) parts.push(`${r.skipped} skipped`);
+         if (r.errors > 0) parts.push(`${r.errors} errors`);
+
+         setMessage({
+            type: r.errors > 0 ? 'error' : 'success',
+            text: parts.length > 0
+               ? `Sync completed: ${parts.join(', ')}.`
+               : __('Sync completed successfully!', 'trvlr'),
+         });
+      } else {
+         setMessage({ type: 'success', text: __('Sync completed successfully!', 'trvlr') });
+      }
+   };
+
    const pollProgress = async () => {
       try {
          const response: any = await apiFetch({ path: '/trvlr/v1/sync/progress' });
 
-         if (response.in_progress && response.progress) {
-            setProgress(response.progress);
-         } else if (response.status === 'stale') {
+         if (response.in_progress) {
+            setSyncing(true);
+            if (response.progress) setProgress(response.progress);
+            return;
+         }
+
+         if (response.status === 'stale') {
             stopPolling();
             setSyncing(false);
+            setCancelling(false);
             setProgress(null);
-            setMessage({ type: 'error', text: __('Sync appears to have stalled. Please try again.', 'trvlr') });
-         } else if (response.status === 'cancelled') {
+            setMessage({ type: 'error', text: __('Sync appears to have stalled. You can cancel it and start again.', 'trvlr') });
+            return;
+         }
+
+         if (response.status === 'cancelled') {
             stopPolling();
             setSyncing(false);
             setCancelling(false);
             setProgress(null);
             setMessage({ type: 'error', text: __('Sync was cancelled.', 'trvlr') });
             await refreshSyncStats();
-         } else {
-            stopPolling();
-            setSyncing(false);
-            setProgress(null);
-
-            if (response.results) {
-               const r = response.results;
-               const parts: string[] = [];
-               if (r.created > 0) parts.push(`${r.created} created`);
-               if (r.updated > 0) parts.push(`${r.updated} updated`);
-               if (r.skipped > 0) parts.push(`${r.skipped} skipped`);
-               if (r.errors > 0) parts.push(`${r.errors} errors`);
-
-               setMessage({
-                  type: r.errors > 0 ? 'error' : 'success',
-                  text: parts.length > 0
-                     ? `Sync completed: ${parts.join(', ')}.`
-                     : __('Sync completed successfully!', 'trvlr'),
-               });
-            } else {
-               setMessage({ type: 'success', text: __('Sync completed successfully!', 'trvlr') });
-            }
-
-            await refreshSyncStats();
+            return;
          }
+
+         finishWithResults(response);
+         await refreshSyncStats();
       } catch (error) {
          console.error('Error polling sync progress:', error);
       }
@@ -72,58 +87,62 @@ export const ManualSyncForm = () => {
       pollingInterval.current = window.setInterval(pollProgress, 2000);
    };
 
-   const handleManualSync = async () => {
+   // Attach the UI to whatever the server reports is currently happening.
+   // Used both on mount and as a fallback when a start request is rejected.
+   const attachToExistingSync = async (): Promise<boolean> => {
+      try {
+         const response: any = await apiFetch({ path: '/trvlr/v1/sync/progress' });
+         if (response.in_progress) {
+            setSyncing(true);
+            setProgress(response.progress || null);
+            startPolling();
+            return true;
+         }
+         if (response.status === 'stale') {
+            setSyncing(true);
+            setProgress(response.progress || null);
+            startPolling();
+            setMessage({ type: 'error', text: __('A previous sync appears to have stalled. You can cancel it and start again.', 'trvlr') });
+            return true;
+         }
+      } catch (e) {}
+      return false;
+   };
+
+   const startSync = async (path: string, startingMessage: string) => {
       setSyncing(true);
       setMessage(null);
       setProgress(null);
 
       try {
-         const response: any = await apiFetch({
-            path: '/trvlr/v1/sync/manual',
-            method: 'POST'
-         });
+         const response: any = await apiFetch({ path, method: 'POST' });
 
          if (response.total) {
-            setProgress({ processed: 0, total: response.total, percentage: 0, message: __('Starting sync...', 'trvlr') });
+            setProgress({ processed: 0, total: response.total, percentage: 0, message: startingMessage });
          }
-
          startPolling();
-      } catch (error) {
-         setSyncing(false);
-         const errorMessage = error?.message || error?.data?.message || __('Sync failed. Please check logs.', 'trvlr');
-         setMessage({ type: 'error', text: errorMessage });
-         console.error('Sync error:', error);
+      } catch (error: any) {
+         // A common rejection is "a sync is already in progress" (often started
+         // elsewhere). Rather than just erroring, attach to the live run so the
+         // user sees progress and gets a Cancel control.
+         const attached = await attachToExistingSync();
+         if (!attached) {
+            setSyncing(false);
+            const errorMessage = error?.message || error?.data?.message || __('Sync failed. Please check logs.', 'trvlr');
+            setMessage({ type: 'error', text: errorMessage });
+            console.error('Sync error:', error);
+         }
       }
    };
 
-   const handleManualSyncNoMedia = async () => {
-      setSyncing(true);
-      setMessage(null);
-      setProgress(null);
-
-      try {
-         const response: any = await apiFetch({
-            path: '/trvlr/v1/sync/manual-no-media',
-            method: 'POST'
-         });
-
-         if (response.total) {
-            setProgress({ processed: 0, total: response.total, percentage: 0, message: __('Starting sync (no media)...', 'trvlr') });
-         }
-
-         startPolling();
-      } catch (error) {
-         setSyncing(false);
-         const errorMessage = error?.message || error?.data?.message || __('Sync failed. Please check logs.', 'trvlr');
-         setMessage({ type: 'error', text: errorMessage });
-         console.error('Sync (no media) error:', error);
-      }
-   };
+   const handleManualSync = () => startSync('/trvlr/v1/sync/manual', __('Starting sync...', 'trvlr'));
+   const handleManualSyncNoMedia = () => startSync('/trvlr/v1/sync/manual-no-media', __('Starting sync (no media)...', 'trvlr'));
 
    const handleCancel = async () => {
       setCancelling(true);
       try {
          await cancelSync();
+         await pollProgress();
       } catch (error) {
          console.error('Cancel sync error:', error);
          setCancelling(false);
@@ -131,18 +150,7 @@ export const ManualSyncForm = () => {
    };
 
    useEffect(() => {
-      const checkExistingSync = async () => {
-         try {
-            const response: any = await apiFetch({ path: '/trvlr/v1/sync/progress' });
-            if (response.in_progress && response.progress) {
-               setSyncing(true);
-               setProgress(response.progress);
-               startPolling();
-            }
-         } catch (e) {}
-      };
-      checkExistingSync();
-
+      attachToExistingSync();
       return () => stopPolling();
    }, []);
 
@@ -158,7 +166,7 @@ export const ManualSyncForm = () => {
             </Notice>
          )}
 
-         {syncing && progress && (
+         {syncing && (
             <div style={{
                background: '#f0f0f1',
                border: '1px solid #c3c4c7',
@@ -167,7 +175,7 @@ export const ManualSyncForm = () => {
                marginBottom: '16px'
             }}>
                <div style={{ marginBottom: '12px', fontWeight: 600 }}>
-                  {progress.percentage}% Complete
+                  {progress ? `${progress.percentage}% Complete` : __('Sync in progress…', 'trvlr')}
                </div>
                <div style={{
                   background: '#fff',
@@ -180,12 +188,14 @@ export const ManualSyncForm = () => {
                   <div style={{
                      background: '#2271b1',
                      height: '100%',
-                     width: `${progress.percentage}%`,
+                     width: `${progress?.percentage ?? 0}%`,
                      transition: 'width 0.3s ease'
                   }} />
                </div>
                <div style={{ fontSize: '13px', color: '#50575e' }}>
-                  {progress.processed} of {progress.total} attractions synced
+                  {progress
+                     ? `${progress.processed} of ${progress.total} attractions synced`
+                     : __('Connecting to the running sync…', 'trvlr')}
                </div>
             </div>
          )}
@@ -224,4 +234,3 @@ export const ManualSyncForm = () => {
       </div>
    );
 };
-

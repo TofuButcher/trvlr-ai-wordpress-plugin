@@ -3,7 +3,7 @@ Contributors: pariswelch
 Tags: booking, reservations, tours, trvlr, booking system
 Requires at least: 5.0
 Tested up to: 6.4
-Stable tag: 0.1.7
+Stable tag: 0.1.8
 Requires PHP: 7.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
@@ -65,6 +65,11 @@ The front-end booking script listens for elements that include an `attraction-id
 See the `docs/` directory inside the plugin: `README.md` is the index; `reference/` holds optional detailed specs (e.g. REST payloads) when provided.
 
 == Changelog ==
+
+= 0.1.8 =
+* Improvements to syncing functionality to reliably show feedback for current sync state even if user didn't start it
+* Sync now supports use of Action Scheduler where available to improve reliability on sites with low traffic. AS not bundled so falls back to WP-Cron if not found.
+* All booking elements now automatically use Group ID when found so group type attractions now work out of the box
 
 = 0.1.7 =
 * Added support for 'group' type attractions

@@ -106,6 +106,7 @@ class TrvlrBookingSystem {
       const attractionId = button.getAttribute('attraction-id');
       if (attractionId === '' || attractionId === null || attractionId === undefined) return;
       this.state.currentAttractionId = attractionId;
+      this.state.currentGroupId = button.getAttribute('attraction-group-id') || null;
       this.showBookNowForm();
       this.elements.modal.showModal();
    }
@@ -144,11 +145,14 @@ class TrvlrBookingSystem {
    }
 
    showBookNowForm() {
+      const query = this.state.currentGroupId
+         ? `group_id=${this.state.currentGroupId}`
+         : `attr_id=${this.state.currentAttractionId}`;
       this.elements.modalContent.innerHTML = `
          <iframe
             style="width: 100%; height: 100%;"
             frameborder="0"
-            src="${this.config.baseIframeUrl}/book-now/index.html?attr_id=${this.state.currentAttractionId}"
+            src="${this.config.baseIframeUrl}/book-now/index.html?${query}"
             title="Book Now"
             class="iframe-cont"
             id="book-now-modal-iframe"
