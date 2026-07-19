@@ -3,7 +3,7 @@ Contributors: pariswelch
 Tags: booking, reservations, tours, trvlr, booking system
 Requires at least: 5.0
 Tested up to: 6.4
-Stable tag: 0.1.9
+Stable tag: 0.1.91
 Requires PHP: 7.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
@@ -65,6 +65,9 @@ The front-end booking script listens for elements that include an `attraction-id
 See the `docs/` directory inside the plugin: `README.md` is the index; `reference/` holds optional detailed specs (e.g. REST payloads) when provided.
 
 == Changelog ==
+
+= 0.1.91 =
+* Version bump to force update - Refer to 0.1.9
 
 = 0.1.9 =
 * New template and style options
