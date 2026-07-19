@@ -389,6 +389,24 @@ function trvlr_render_details_meta_box($post)
         <?php wp_editor($additional_info, 'trvlr_additional_info', array('media_buttons' => false, 'textarea_rows' => 5)); ?>
     </div>
 
+    <div class="trvlr-row">
+        <label>Simple Location</label>
+        <input type="text" name="trvlr_simple_location" value="<?php echo esc_attr(get_post_meta($post->ID, 'trvlr_simple_location', true)); ?>" class="widefat">
+        <span class="description">Short location name shown in the summary bar (e.g. "Cairns")</span>
+    </div>
+
+    <div class="trvlr-row">
+        <label>Suitable Ages</label>
+        <input type="text" name="trvlr_suitable_ages" value="<?php echo esc_attr(get_post_meta($post->ID, 'trvlr_suitable_ages', true)); ?>" class="widefat">
+        <span class="description">Age suitability text shown in the summary bar (e.g. "All ages")</span>
+    </div>
+
+    <div class="trvlr-row">
+        <label>Cancellation Policy</label>
+        <input type="text" name="trvlr_cancellation_policy" value="<?php echo esc_attr(get_post_meta($post->ID, 'trvlr_cancellation_policy', true)); ?>" class="widefat">
+        <span class="description">Cancellation policy text shown in the summary bar (e.g. "Free cancellation")</span>
+    </div>
+
 
     <script>
         function trvlrOpenMediaUploader(e) {
@@ -438,7 +456,7 @@ function trvlr_save_details_meta($post_id)
     // Save Standard Details
     if (isset($_POST['trvlr_details_nonce']) && wp_verify_nonce($_POST['trvlr_details_nonce'], 'trvlr_save_details')) {
 
-        $text_fields = array('trvlr_duration', 'trvlr_start_time', 'trvlr_end_time', 'trvlr_sale_description');
+        $text_fields = array('trvlr_duration', 'trvlr_start_time', 'trvlr_end_time', 'trvlr_sale_description', 'trvlr_simple_location', 'trvlr_suitable_ages', 'trvlr_cancellation_policy');
         foreach ($text_fields as $field) {
             if (isset($_POST[$field])) {
                 update_post_meta($post_id, $field, sanitize_text_field($_POST[$field]));

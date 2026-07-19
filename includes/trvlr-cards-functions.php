@@ -360,7 +360,7 @@ function trvlr_parse_sortable_price($value)
  *     @type int    $current_page Current page number.
  * }
  */
-function trvlr_build_cards_result($query_args = array())
+function trvlr_build_cards_result($query_args = array(), $card_variant = 'default')
 {
 	$query = new WP_Query($query_args);
 
@@ -369,7 +369,7 @@ function trvlr_build_cards_result($query_args = array())
 	if ($query->have_posts()) {
 		while ($query->have_posts()) {
 			$query->the_post();
-			echo trvlr_card(get_the_ID());
+			echo trvlr_card(get_the_ID(), $card_variant);
 		}
 		wp_reset_postdata();
 	} else {
@@ -602,14 +602,41 @@ function trvlr_cards($args = array())
 			? sanitize_html_class($args['grid_id'])
 			: 'trvlr-grid-' . $grid_counter;
 
+		// Extract card_variant before building query args (not a WP_Query key).
+		$card_variant = 'default';
+		if (!empty($args['card_variant'])) {
+			$card_variant = sanitize_key($args['card_variant']);
+		}
+
 		$initial_query = $args;
 		unset($initial_query['grid_id']);
 
-		$query_args = trvlr_build_query_args($args);
-		$result     = trvlr_build_cards_result($query_args);
+		// Remove card_variant from args passed to trvlr_build_query_args (not a WP_Query key),
+		// but keep it in $initial_query so the JS query state includes it for AJAX fetches.
+		$query_build_args = $args;
+		unset($query_build_args['card_variant']);
+
+		$query_args = trvlr_build_query_args($query_build_args);
+		$result     = trvlr_build_cards_result($query_args, $card_variant);
+
+		// Derive a category--{slug} class from the active tax_query for the initial render.
+		$category_class = '';
+		if (!empty($query_args['tax_query'])) {
+			$tq = $query_args['tax_query'];
+			// Normalise: single-clause arrays are stored as [[...]], multi-clause with 'relation' key.
+			$clauses = is_array($tq) ? $tq : array();
+			foreach ($clauses as $k => $clause) {
+				if ($k === 'relation' || !is_array($clause) || empty($clause['taxonomy'])) continue;
+				if ($clause['taxonomy'] === 'category' && !empty($clause['terms'])) {
+					$slug = is_array($clause['terms']) ? $clause['terms'][0] : $clause['terms'];
+					$category_class = ' category--' . sanitize_html_class($slug);
+					break;
+				}
+			}
+		}
 
 		$container_atts = array(
-			'class'                     => 'trvlr-cards-container',
+			'class'                     => 'trvlr-cards-container' . $category_class,
 			'data-trvlr-grid-id'        => $grid_id,
 			'data-trvlr-initial-query'  => wp_json_encode($initial_query),
 			'data-trvlr-found-posts'    => $result['found_posts'],

@@ -46,6 +46,20 @@ class Trvlr_Template_Registry
 				'file' => $dir . 'public/templates/cards/card-template-2.php',
 			)
 		);
+		self::register_card(
+			'card-3',
+			array(
+				'label' => __('Card 3', 'trvlr'),
+				'file' => $dir . 'public/templates/cards/card-template-3.php',
+			)
+		);
+		self::register_card(
+			'card-4',
+			array(
+				'label' => __('Card 4', 'trvlr'),
+				'file' => $dir . 'public/templates/cards/card-template-4.php',
+			)
+		);
 		self::register_single(
 			'page-1',
 			array(
@@ -58,6 +72,20 @@ class Trvlr_Template_Registry
 			array(
 				'label' => __('Page 2', 'trvlr'),
 				'file' => $dir . 'public/templates/single-attraction/single-template-2.php',
+			)
+		);
+		self::register_single(
+			'page-3',
+			array(
+				'label' => __('Page 3', 'trvlr'),
+				'file' => $dir . 'public/templates/single-attraction/single-template-3.php',
+			)
+		);
+		self::register_single(
+			'page-4',
+			array(
+				'label' => __('Page 4', 'trvlr'),
+				'file' => $dir . 'public/templates/single-attraction/single-template-4.php',
 			)
 		);
 	}
@@ -82,6 +110,26 @@ class Trvlr_Template_Registry
 				'stylesheet' => 'themes-variant-2.css',
 			)
 		);
+		self::register_presentation_theme(
+			'theme-3',
+			array(
+				'label' => __('Theme 3', 'trvlr'),
+				'card' => 'card-3',
+				'single' => 'page-3',
+				'stylesheet' => 'themes-variant-3.css',
+				'script' => 'variant-3.js',
+			)
+		);
+		self::register_presentation_theme(
+			'theme-4',
+			array(
+				'label' => __('Theme 4', 'trvlr'),
+				'card' => 'card-4',
+				'single' => 'page-4',
+				'stylesheet' => 'themes-variant-4.css',
+				'script' => 'variant-4.js',
+			)
+		);
 	}
 
 	public static function register_presentation_theme($slug, $args)
@@ -104,12 +152,17 @@ class Trvlr_Template_Registry
 				$stylesheet = 'themes-variant-' . $sfx . '.css';
 			}
 		}
+		$script = '';
+		if (isset($args['script']) && is_string($args['script']) && $args['script'] !== '') {
+			$script = basename($args['script']);
+		}
 		self::$presentation_themes[$slug] = array(
 			'slug' => $slug,
 			'label' => isset($args['label']) ? $args['label'] : $slug,
 			'card' => $card,
 			'single' => $single,
 			'stylesheet' => $stylesheet,
+			'script' => $script,
 		);
 	}
 
@@ -210,6 +263,17 @@ class Trvlr_Template_Registry
 		$sheet = isset(self::$presentation_themes[$pt]['stylesheet']) ? (string) self::$presentation_themes[$pt]['stylesheet'] : '';
 
 		return $sheet;
+	}
+
+	public static function get_active_presentation_theme_script_basename()
+	{
+		$pt = self::get_active_presentation_theme_slug();
+		if ($pt === '' || !isset(self::$presentation_themes[$pt])) {
+			return '';
+		}
+		$script = isset(self::$presentation_themes[$pt]['script']) ? (string) self::$presentation_themes[$pt]['script'] : '';
+
+		return $script;
 	}
 
 	public static function get_default_card_slug()

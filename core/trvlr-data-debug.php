@@ -5,8 +5,9 @@ if (!isset($_GET['trvlr_test']) || $_GET['trvlr_test'] !== 'true') {
 }
 
 // Resolve TRVLR ID and post ID
-$post_id  = 0;
-$trvlr_id = 0;
+$post_id  = null;
+$trvlr_id = null;
+$group_id = null;
 
 if (isset($_GET['trvlr_id'])) {
 	$trvlr_id = intval($_GET['trvlr_id']);
@@ -18,19 +19,33 @@ if (isset($_GET['trvlr_id'])) {
 	$trvlr_id = intval(get_trvlr_id($post_id));
 }
 
+if (isset($_GET['group_id'])) {
+	$group_id = intval($_GET['group_id']);
+}
+
+$org_id = get_option('trvlr_organisation_id', '');
+if (isset($_GET['org_id'])) {
+	$org_id = sanitize_text_field($_GET['org_id']);
+}
+
 if (!$trvlr_id) {
 	echo '<h1>TRVLR Debug</h1>';
 	echo '<p>No TRVLR ID found. Use <code>?trvlr_test=true&amp;trvlr_id=123</code>, open from a TRVLR Attraction edit URL (<code>post.php?post=…</code>), or view a single TRVLR Attraction on the frontend with <code>?trvlr_test=true</code>.</p>';
 	die();
 }
 
-function trvlr_debug_fetch_from_api($attraction_id)
+if (!$org_id) {
+	echo '<h1>TRVLR Debug</h1>';
+	echo '<p>No organisation ID found. Please set the <code>trvlr_organisation_id</code> option in the WordPress options. You can also set it via <code>?trvlr_test=true&amp;org_id=organisation</code>.</p>';
+	die();
+}
+
+function trvlr_debug_fetch_from_api($attraction_id, $org_id)
 {
 	$api_url = 'https://sl.portal.traveloris.com/api/process/webapi_handler/generic_attraction_with_id';
 
-	$organisation_id = get_option('trvlr_organisation_id', '');
-	$origin          = !empty($organisation_id)
-		? 'https://' . sanitize_text_field($organisation_id) . '.trvlr.ai'
+	$origin          = !empty($org_id)
+		? 'https://' . sanitize_text_field($org_id) . '.trvlr.ai'
 		: home_url();
 
 	$response = wp_remote_post($api_url, array(
@@ -53,7 +68,7 @@ function trvlr_debug_fetch_from_api($attraction_id)
 	return array('error' => 'No results found', 'raw' => $body);
 }
 
-$api_data = trvlr_debug_fetch_from_api($trvlr_id);
+$api_data = trvlr_debug_fetch_from_api($trvlr_id, $org_id);
 
 if (isset($api_data['error'])) {
 	echo '<h1>Error fetching from API</h1>';
@@ -247,12 +262,11 @@ function trvlr_debug_resolve_media_from_images_to_process($images_to_process)
 
 $raw_api_json = json_encode($api_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
-function trvlr_debug_fetch_all_from_api()
-{	
+function trvlr_debug_fetch_all_from_api($org_id)
+{
 	$api_url         = 'https://sl.portal.traveloris.com/api/process/webapi_handler/generic_attractions';
-	$organisation_id = get_option('trvlr_organisation_id', '');
-	$origin          = !empty($organisation_id)
-		? 'https://' . sanitize_text_field($organisation_id) . '.trvlr.ai'
+	$origin          = !empty($org_id)
+		? 'https://' . sanitize_text_field($org_id) . '.trvlr.ai'
 		: home_url();
 
 	$response = wp_remote_post($api_url, array(
@@ -311,7 +325,93 @@ function trvlr_debug_fetch_all_from_api()
 	);
 }
 
-$all_fetch_result = trvlr_debug_fetch_all_from_api();
+function trvlr_debug_find_list_item($all_attractions_data, $trvlr_id)
+{
+	if (empty($all_attractions_data['results']) || !is_array($all_attractions_data['results'])) {
+		return null;
+	}
+	foreach ($all_attractions_data['results'] as $item) {
+		if (!is_array($item)) {
+			continue;
+		}
+		if (isset($item['pk']) && (int) $item['pk'] === (int) $trvlr_id) {
+			return $item;
+		}
+	}
+	return null;
+}
+
+function trvlr_debug_fetch_group_from_api($group_id, $organisation, $org_id)
+{
+	$api_url = 'https://sl.portal.traveloris.com/api/process/webapi_handler/fetch-group-attractions';
+	$origin  = !empty($org_id)
+		? 'https://' . sanitize_text_field($org_id) . '.trvlr.ai'
+		: home_url();
+
+	$response = wp_remote_post($api_url, array(
+		'headers' => array(
+			'Content-Type' => 'application/json',
+			'Accept'       => '*/*',
+			'Origin'       => $origin,
+		),
+		'body'    => json_encode(array(
+			'group_id'     => (string) $group_id,
+			'organisation' => is_numeric($organisation) ? (int) $organisation : $organisation,
+		)),
+		'timeout' => 30,
+	));
+
+	if (is_wp_error($response)) {
+		$msg = $response->get_error_message();
+		return array(
+			'ok'      => false,
+			'message' => $msg !== '' ? $msg : 'HTTP request failed (no message)',
+			'code'    => 0,
+			'raw'     => '',
+		);
+	}
+
+	$code = wp_remote_retrieve_response_code($response);
+	$body = wp_remote_retrieve_body($response);
+
+	if ($body === '' || $body === null) {
+		return array(
+			'ok'      => false,
+			'message' => 'Empty response body (HTTP ' . (int) $code . ')',
+			'code'    => (int) $code,
+			'raw'     => '',
+		);
+	}
+
+	$data = json_decode($body, true);
+	if (json_last_error() !== JSON_ERROR_NONE) {
+		return array(
+			'ok'      => false,
+			'message' => 'Invalid JSON: ' . json_last_error_msg() . ' (HTTP ' . (int) $code . ')',
+			'code'    => (int) $code,
+			'raw'     => substr($body, 0, 4000),
+		);
+	}
+
+	if (!is_array($data)) {
+		return array(
+			'ok'      => false,
+			'message' => 'Decoded response was not an array/object (HTTP ' . (int) $code . ')',
+			'code'    => (int) $code,
+			'raw'     => substr($body, 0, 4000),
+		);
+	}
+
+	return array(
+		'ok'      => true,
+		'message' => '',
+		'code'    => (int) $code,
+		'raw'     => '',
+		'data'    => $data,
+	);
+}
+
+$all_fetch_result = trvlr_debug_fetch_all_from_api($org_id);
 if ($all_fetch_result['ok']) {
 	$all_attractions_data = $all_fetch_result['data'];
 	$raw_all_json         = json_encode($all_attractions_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -325,6 +425,63 @@ if ($all_fetch_result['ok']) {
 			'message'                   => $all_fetch_result['message'],
 			'http_code'                 => $all_fetch_result['code'],
 			'body_preview'              => $all_fetch_result['raw'],
+		),
+		JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+	);
+}
+
+$list_item              = $all_attractions_data ? trvlr_debug_find_list_item($all_attractions_data, $trvlr_id) : null;
+$list_group_id          = null;
+$list_organisation      = null;
+$group_fetch_result     = null;
+$group_attractions_data = null;
+$group_fetch_error      = '';
+$raw_group_json         = '';
+
+if ($list_item !== null) {
+	if (array_key_exists('group_id', $list_item) && $list_item['group_id'] !== null && $list_item['group_id'] !== '') {
+		$list_group_id = $list_item['group_id'];
+	}
+	if (isset($list_item['organisation'])) {
+		$list_organisation = $list_item['organisation'];
+	}
+}
+
+if ($list_group_id === null && $group_id) {
+	$list_group_id = $group_id;
+}
+
+if ($list_group_id !== null) {
+	$group_id = $list_group_id;
+	$group_org_for_api = $list_organisation !== null ? $list_organisation : $org_id;
+	$group_fetch_result = trvlr_debug_fetch_group_from_api($group_id, $group_org_for_api, $org_id);
+	if ($group_fetch_result['ok']) {
+		$group_attractions_data = $group_fetch_result['data'];
+		$raw_group_json         = json_encode($group_attractions_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+	} else {
+		$group_fetch_error = $group_fetch_result['message'];
+		$raw_group_json    = json_encode(
+			array(
+				'_trvlr_debug_fetch_failed' => true,
+				'group_id'                  => $group_id,
+				'organisation'              => $group_org_for_api,
+				'message'                   => $group_fetch_result['message'],
+				'http_code'                 => $group_fetch_result['code'],
+				'body_preview'              => $group_fetch_result['raw'],
+			),
+			JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+		);
+	}
+} else {
+	$raw_group_json = json_encode(
+		array(
+			'_trvlr_debug_no_group' => true,
+			'trvlr_id'              => $trvlr_id,
+			'list_item_found'      => $list_item !== null,
+			'message'              => $list_item === null
+				? 'Attraction not found in all-attractions results (no pk match)'
+				: 'No group_id on list item for this attraction',
+			'list_item'            => $list_item,
 		),
 		JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
 	);
@@ -600,6 +757,16 @@ if ($all_fetch_result['ok']) {
 					<div class="info-label">Organisation ID</div>
 					<div class="info-value"><?php echo esc_html(get_option('trvlr_organisation_id', 'Not Set')); ?></div>
 				</div>
+				<div class="info-item">
+					<div class="info-label">Group ID</div>
+					<div class="info-value"><?php echo $group_id !== null && $group_id !== '' ? esc_html((string) $group_id) : '—'; ?></div>
+				</div>
+				<?php if ($list_item !== null && !empty($list_item['title'])): ?>
+					<div class="info-item">
+						<div class="info-label">List Title</div>
+						<div class="info-value"><?php echo esc_html($list_item['title']); ?></div>
+					</div>
+				<?php endif; ?>
 			</div>
 		</div>
 
@@ -726,7 +893,7 @@ if ($all_fetch_result['ok']) {
 			$terms          = get_the_terms($post_id, 'trvlr_attraction_tag');
 			$term_names     = ($terms && !is_wp_error($terms)) ? array_map(fn($t) => $t->name, $terms) : array();
 			$tags_db_plain  = $term_names ? implode(', ', $term_names) : '(none)';
-			?>
+		?>
 			<div class="card">
 				<div class="field-header">
 					<h3>Attraction Tags (Taxonomy)</h3>
@@ -759,7 +926,7 @@ if ($all_fetch_result['ok']) {
 			$db_thumb      = (int) get_post_thumbnail_id($post_id);
 			$exp_thumb     = !empty($img_expected['featured_id']) ? (int) $img_expected['featured_id'] : 0;
 			$images_match  = (Trvlr_Field_Map::hash_field_value($exp_gallery, 'trvlr_media')
-					=== Trvlr_Field_Map::hash_field_value($db_gallery, 'trvlr_media'))
+				=== Trvlr_Field_Map::hash_field_value($db_gallery, 'trvlr_media'))
 				&& (Trvlr_Field_Map::hash_field_value($exp_thumb, '_thumbnail_id')
 					=== Trvlr_Field_Map::hash_field_value($db_thumb, '_thumbnail_id'));
 			$images_badge = $images_match ? 'match' : 'no-match';
@@ -817,7 +984,7 @@ if ($all_fetch_result['ok']) {
 			}
 
 			$images_db_plain = implode("\n", $img_db_lines);
-			?>
+		?>
 			<div class="card">
 				<div class="field-header">
 					<h3>Images</h3>
@@ -889,6 +1056,46 @@ if ($all_fetch_result['ok']) {
 			<pre class="api-response-pre" id="api-all-json"><?php echo htmlspecialchars($raw_all_json); ?></pre>
 		</div>
 
+		<div class="card">
+			<div class="api-response-header">
+				<h3 class="section-title" style="margin:0;">Group Attractions API Response</h3>
+				<button class="copy-btn" id="copy-group-btn" onclick="copyGroupResponse()">
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+						<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+						<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+					</svg>
+					Copy JSON
+				</button>
+			</div>
+			<?php if ($group_id === null || $group_id === ''): ?>
+				<p style="font-size:13px;color:#555;margin:0 0 10px;">
+					No <code>group_id</code> for this attraction
+					<?php if ($list_item === null): ?>
+						(pk <?php echo (int) $trvlr_id; ?> not found in all-attractions results).
+					<?php else: ?>
+						(list item found; <code>group_id</code> is null/empty).
+					<?php endif; ?>
+				</p>
+			<?php elseif ($group_fetch_error !== ''): ?>
+				<p style="color:#721c24;font-weight:600;">Fetch failed for group_id <?php echo esc_html((string) $group_id); ?>: <?php echo esc_html($group_fetch_error); ?></p>
+				<?php if (!empty($group_fetch_result['raw'])): ?>
+					<p style="font-size:12px;color:#666;">Non-JSON body preview:</p>
+					<pre class="api-response-pre" style="max-height:220px;"><?php echo esc_html($group_fetch_result['raw']); ?></pre>
+				<?php endif; ?>
+			<?php else: ?>
+				<p style="font-size:13px;color:#555;margin:0 0 10px;">
+					group_id <?php echo esc_html((string) $group_id); ?>
+					<?php if ($list_organisation !== null): ?>
+						· organisation <?php echo esc_html((string) $list_organisation); ?>
+					<?php endif; ?>
+					<?php if ($group_fetch_result): ?>
+						(HTTP <?php echo (int) $group_fetch_result['code']; ?>)
+					<?php endif; ?>
+				</p>
+			<?php endif; ?>
+			<pre class="api-response-pre" id="api-group-json"><?php echo htmlspecialchars($raw_group_json); ?></pre>
+		</div>
+
 	</div>
 
 	<script>
@@ -923,7 +1130,7 @@ if ($all_fetch_result['ok']) {
 			return new TextDecoder('utf-8').decode(bytes);
 		}
 
-		document.addEventListener('click', function (e) {
+		document.addEventListener('click', function(e) {
 			const btn = e.target.closest('[data-trvlr-copy-b64]');
 			if (!btn) {
 				return;
@@ -936,16 +1143,16 @@ if ($all_fetch_result['ok']) {
 				return;
 			}
 			const label = btn.textContent;
-			const done = function () {
+			const done = function() {
 				btn.classList.add('copied');
 				btn.textContent = 'Copied';
-				setTimeout(function () {
+				setTimeout(function() {
 					btn.classList.remove('copied');
 					btn.textContent = label;
 				}, 1500);
 			};
 			if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-				navigator.clipboard.writeText(text).then(done).catch(function () {
+				navigator.clipboard.writeText(text).then(done).catch(function() {
 					if (copyFallback(text)) {
 						done();
 					}
@@ -957,16 +1164,16 @@ if ($all_fetch_result['ok']) {
 
 		function copyToClipboard(text, btnId) {
 			const btn = document.getElementById(btnId);
-			const done = function () {
+			const done = function() {
 				btn.classList.add('copied');
 				btn.innerHTML = CHECK_ICON + ' Copied!';
-				setTimeout(function () {
+				setTimeout(function() {
 					btn.classList.remove('copied');
 					btn.innerHTML = COPY_ICON + ' Copy JSON';
 				}, 2500);
 			};
 			if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-				navigator.clipboard.writeText(text).then(done).catch(function () {
+				navigator.clipboard.writeText(text).then(done).catch(function() {
 					if (copyFallback(text)) {
 						done();
 					}
@@ -982,6 +1189,10 @@ if ($all_fetch_result['ok']) {
 
 		function copyAllResponse() {
 			copyToClipboard(<?php echo json_encode($raw_all_json); ?>, 'copy-all-btn');
+		}
+
+		function copyGroupResponse() {
+			copyToClipboard(<?php echo json_encode($raw_group_json); ?>, 'copy-group-btn');
 		}
 	</script>
 </body>

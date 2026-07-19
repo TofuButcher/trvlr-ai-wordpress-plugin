@@ -264,6 +264,7 @@ class Trvlr_REST_API
 			'meta_key'          => $string_param,
 			'meta_value'        => $string_param,
 			'meta_compare'      => $string_param,
+			'card_variant'      => $string_param,
 		);
 
 		register_rest_route($this->namespace, '/cards', array(
@@ -312,6 +313,7 @@ class Trvlr_REST_API
 			'trvlr_tag', 'trvlr_tag_id', 'trvlr_tag_slug', 'trvlr_tag_relation',
 			'trvlr_sort',
 			'meta_key', 'meta_value', 'meta_compare',
+			'card_variant',
 		);
 
 		$args = array();
@@ -330,9 +332,21 @@ class Trvlr_REST_API
 			$args['paged'] = max(1, intval($args['paged']));
 		}
 
+		// Validate card_variant — fall back to 'default' if not in supported list.
+		$supported_card_variants = array('default', 'expanded');
+		$card_variant = 'default';
+		if (!empty($args['card_variant']) && in_array($args['card_variant'], $supported_card_variants, true)) {
+			$card_variant = $args['card_variant'];
+		}
+		unset($args['card_variant']);
+
 		$body = $request->get_json_params();
 		if (!empty($body['query_args']) && is_array($body['query_args'])) {
 			$args['query_args'] = $body['query_args'];
+		}
+		// card_variant may also be sent at the top level of a POST JSON body.
+		if (!empty($body['card_variant']) && in_array($body['card_variant'], $supported_card_variants, true)) {
+			$card_variant = $body['card_variant'];
 		}
 
 		$query_args = trvlr_build_query_args($args);
@@ -342,7 +356,7 @@ class Trvlr_REST_API
 		$query_args['post_type']   = 'trvlr_attraction';
 		$query_args['post_status'] = 'publish';
 
-		$result = trvlr_build_cards_result($query_args);
+		$result = trvlr_build_cards_result($query_args, $card_variant);
 
 		return rest_ensure_response($result);
 	}

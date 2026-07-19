@@ -17,9 +17,16 @@ function trvlr_shortcode_duration($atts)
 {
 	$atts = shortcode_atts(array(
 		'id' => get_the_ID(),
+		'icon' => true,
+		'icon_element' => '',
 	), $atts, 'trvlr_duration');
 
-	return trvlr_duration($atts['id']);
+	$icon = filter_var($atts['icon'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+
+	return trvlr_duration($atts['id'], array(
+		'icon' => $icon !== false,
+		'icon_element' => $atts['icon_element'],
+	));
 }
 add_shortcode('trvlr_duration', 'trvlr_shortcode_duration');
 

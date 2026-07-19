@@ -93,6 +93,21 @@ class Trvlr_Field_Map
 				'type' => 'string',
 				'sync_from' => null,
 			),
+			'trvlr_simple_location' => array(
+				'label' => 'Simple Location',
+				'type' => 'string',
+				'sync_from' => null,
+			),
+			'trvlr_suitable_ages' => array(
+				'label' => 'Suitable Ages',
+				'type' => 'string',
+				'sync_from' => null,
+			),
+			'trvlr_cancellation_policy' => array(
+				'label' => 'Cancellation Policy',
+				'type' => 'string',
+				'sync_from' => null,
+			),
 		);
 	}
 

@@ -16,12 +16,16 @@ class Trvlr_Sync
     const SYNC_STATE_OPTION = 'trvlr_sync_state';
     const SYNC_QUEUE_OPTION = 'trvlr_sync_queue';
     const BATCH_LOCK_TRANSIENT = 'trvlr_sync_batch_lock';
+    const ATTRACTIONS_LIST_TRANSIENT_PREFIX = 'trvlr_attractions_list_';
+    const ATTRACTIONS_LIST_TTL = 900;
     const BATCH_CRON_HOOK = 'trvlr_process_sync_batch';
     const DEFAULT_BATCH_SIZE = 2;
     const STALE_TIMEOUT = 600;
     const BATCH_LOCK_TTL = 130;
 
-    public function sync_single($post_id)
+    private $attractions_list_memory = null;
+
+    public function sync_single($post_id, $use_cached_list = false)
     {
         if (function_exists('trvlr_is_attraction_sync_disabled') && trvlr_is_attraction_sync_disabled()) {
             return array(
@@ -48,6 +52,19 @@ class Trvlr_Sync
             );
         }
 
+        if (!$use_cached_list) {
+            $list = $this->get_attractions_list(true);
+            if (is_wp_error($list)) {
+                return array(
+                    'success' => false,
+                    'message' => 'Failed to fetch attractions list: ' . $list->get_error_message(),
+                );
+            }
+        }
+
+        $list_item = $this->get_list_item_by_trvlr_id($trvlr_id, false);
+        $this->apply_list_item_overrides($attraction_data, $list_item);
+
         $list_image = get_post_meta($post_id, '_trvlr_list_image_cache', true);
         if ($list_image && empty($attraction_data['images']['all_images'])) {
             $attraction_data['list_image'] = $list_image;
@@ -70,6 +87,88 @@ class Trvlr_Sync
             'success' => true,
             'message' => $status_message,
             'result' => $result
+        );
+    }
+
+    public function sync_by_trvlr_ids(array $trvlr_ids): array
+    {
+        if (function_exists('trvlr_is_attraction_sync_disabled') && trvlr_is_attraction_sync_disabled()) {
+            return array(
+                'success' => false,
+                'synced'   => 0,
+                'errors'   => 0,
+                'message'  => 'Attraction syncing is disabled in TRVLR settings.',
+            );
+        }
+
+        $trvlr_ids = array_values(array_unique(array_filter(array_map('absint', $trvlr_ids))));
+        if (empty($trvlr_ids)) {
+            return array(
+                'success' => false,
+                'synced'  => 0,
+                'errors'  => 0,
+                'message' => 'No valid TRVLR IDs provided.',
+            );
+        }
+
+        $list = $this->get_attractions_list(true);
+        if (is_wp_error($list)) {
+            return array(
+                'success' => false,
+                'synced'  => 0,
+                'errors'  => count($trvlr_ids),
+                'message' => 'Failed to fetch attractions list: ' . $list->get_error_message(),
+            );
+        }
+
+        $synced = 0;
+        $errors = 0;
+        $list_by_id = $this->get_attractions_list_map(false);
+
+        foreach ($trvlr_ids as $trvlr_id) {
+            $existing_post = $this->get_post_by_trvlr_id($trvlr_id);
+
+            if ($existing_post) {
+                $result = $this->sync_single($existing_post->ID, true);
+                if (empty($result['success'])) {
+                    $errors++;
+                } else {
+                    $synced++;
+                }
+                continue;
+            }
+
+            $attraction_data = $this->fetch_single_attraction($trvlr_id);
+
+            if (!$attraction_data) {
+                $errors++;
+                continue;
+            }
+
+            $list_item = isset($list_by_id[(int) $trvlr_id]) ? $list_by_id[(int) $trvlr_id] : null;
+            $this->apply_list_item_overrides($attraction_data, $list_item);
+
+            $result = $this->update_attraction_post($attraction_data);
+
+            if ($result === 'error') {
+                $errors++;
+            } else {
+                $synced++;
+            }
+
+            $cache_post = $this->get_post_by_trvlr_id($trvlr_id);
+            if ($cache_post) {
+                clean_post_cache($cache_post->ID);
+            }
+        }
+
+        return array(
+            'success' => $errors === 0,
+            'synced'  => $synced,
+            'errors'  => $errors,
+            'message' => $errors === 0
+                ? "Synced {$synced} attraction(s)."
+                : "Synced {$synced} attraction(s), {$errors} error(s).",
         );
     }
 
@@ -141,7 +240,7 @@ class Trvlr_Sync
 
         $session_id = 'sync_' . date('YmdHis') . '_' . substr(md5(uniqid()), 0, 8);
 
-        $api_data = $this->fetch_attractions_from_api();
+        $api_data = $this->get_attractions_list(true);
 
         if (is_wp_error($api_data)) {
             Trvlr_Logger::log('error', 'API fetch failed: ' . $api_data->get_error_message());
@@ -302,9 +401,7 @@ class Trvlr_Sync
                     unset($attraction_data['images'], $attraction_data['list_image']);
                 }
 
-                if (array_key_exists('group_id', $list_item)) {
-                    $attraction_data['group_id'] = $list_item['group_id'];
-                }
+                $this->apply_list_item_overrides($attraction_data, $list_item);
 
                 $result = $this->update_attraction_post($attraction_data);
 
@@ -614,6 +711,91 @@ class Trvlr_Sync
         }
 
         return $value;
+    }
+
+    private function get_attractions_list_cache_key()
+    {
+        $organisation_id = (string) get_option('trvlr_organisation_id', '');
+        return self::ATTRACTIONS_LIST_TRANSIENT_PREFIX . md5($organisation_id);
+    }
+
+    private function get_attractions_list($force_refresh = false)
+    {
+        if (!$force_refresh && is_array($this->attractions_list_memory) && isset($this->attractions_list_memory['results'])) {
+            return $this->attractions_list_memory;
+        }
+
+        $cache_key = $this->get_attractions_list_cache_key();
+
+        if (!$force_refresh) {
+            $cached = get_transient($cache_key);
+            if (is_array($cached) && isset($cached['results']) && is_array($cached['results'])) {
+                $this->attractions_list_memory = $cached;
+                return $cached;
+            }
+        }
+
+        $data = $this->fetch_attractions_from_api();
+
+        if (is_wp_error($data)) {
+            return $data;
+        }
+
+        $this->attractions_list_memory = $data;
+        set_transient($cache_key, $data, self::ATTRACTIONS_LIST_TTL);
+
+        return $data;
+    }
+
+    private function get_attractions_list_map($force_refresh = false)
+    {
+        $map = array();
+        $list = $this->get_attractions_list($force_refresh);
+
+        if (is_wp_error($list) || empty($list['results']) || !is_array($list['results'])) {
+            return $map;
+        }
+
+        foreach ($list['results'] as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $id = isset($item['pk']) ? (int) $item['pk'] : (isset($item['id']) ? (int) $item['id'] : 0);
+            if ($id) {
+                $map[$id] = $item;
+            }
+        }
+
+        return $map;
+    }
+
+    private function get_list_item_by_trvlr_id($trvlr_id, $force_refresh = false)
+    {
+        $map = $this->get_attractions_list_map($force_refresh);
+        $trvlr_id = (int) $trvlr_id;
+        return isset($map[$trvlr_id]) ? $map[$trvlr_id] : null;
+    }
+
+    private function apply_list_item_overrides(array &$attraction_data, $list_item)
+    {
+        if (!is_array($list_item)) {
+            return;
+        }
+
+        if (array_key_exists('group_id', $list_item)) {
+            $attraction_data['group_id'] = $list_item['group_id'];
+        }
+
+        $list_title = '';
+        if (!empty($list_item['title'])) {
+            $list_title = $list_item['title'];
+        } elseif (!empty($list_item['name'])) {
+            $list_title = $list_item['name'];
+        }
+
+        if ($list_title !== '') {
+            $attraction_data['title'] = $list_title;
+        }
     }
 
     private function fetch_attractions_from_api()

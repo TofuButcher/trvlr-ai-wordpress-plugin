@@ -15,9 +15,57 @@ function trvlr_title($post_id = null, $level = 1)
 	return apply_filters('trvlr_title', $output, $post_id, $level);
 }
 
-function trvlr_duration($post_id = null)
+function trvlr_icon_element_kses($html)
+{
+	return wp_kses(
+		$html,
+		array(
+			'svg' => array(
+				'aria-hidden' => true,
+				'class' => true,
+				'fill' => true,
+				'height' => true,
+				'role' => true,
+				'stroke' => true,
+				'stroke-linecap' => true,
+				'stroke-linejoin' => true,
+				'stroke-width' => true,
+				'viewBox' => true,
+				'viewbox' => true,
+				'width' => true,
+				'xmlns' => true,
+			),
+			'path' => array(
+				'd' => true,
+				'fill' => true,
+				'fill-rule' => true,
+				'stroke' => true,
+				'stroke-linecap' => true,
+				'stroke-linejoin' => true,
+				'stroke-width' => true,
+			),
+			'use' => array(
+				'href' => true,
+				'xlink:href' => true,
+			),
+			'span' => array(
+				'aria-hidden' => true,
+				'class' => true,
+			),
+		)
+	);
+}
+
+function trvlr_duration($post_id = null, $args = array())
 {
 	$post_id = $post_id ?: get_the_ID();
+	$args = wp_parse_args(
+		$args,
+		array(
+			'icon' => true,
+			'icon_element' => '',
+		)
+	);
 	$duration = get_trvlr_duration($post_id);
 
 	if (!$duration || $duration === '0' || $duration === '0-0-0') {
@@ -27,13 +75,115 @@ function trvlr_duration($post_id = null)
 	ob_start();
 ?>
 	<div class="trvlr-duration">
-		<svg class="trvlr-duration__icon">
-			<use href="#icon-clock"></use>
-		</svg>
+		<?php if ($args['icon']) : ?>
+			<?php if ($args['icon_element'] !== '') : ?>
+				<?php echo trvlr_icon_element_kses($args['icon_element']); ?>
+			<?php else : ?>
+				<svg class="trvlr-duration__icon">
+					<use href="#icon-clock"></use>
+				</svg>
+			<?php endif; ?>
+		<?php endif; ?>
 		<span class="trvlr-duration__value"><?php echo esc_html($duration); ?></span>
 	</div>
 <?php
-	return apply_filters('trvlr_duration', ob_get_clean(), $post_id);
+	return apply_filters('trvlr_duration', ob_get_clean(), $post_id, $args);
+}
+
+function trvlr_suitable_ages($post_id = null, $args = array())
+{
+	$post_id = $post_id ?: get_the_ID();
+	$args = wp_parse_args(
+		$args,
+		array(
+			'icon' => true,
+			'icon_element' => '',
+		)
+	);
+
+	$label = get_post_meta($post_id, 'trvlr_suitable_ages', true);
+	if (!$label || $label === '') {
+		return '';
+	}
+
+	ob_start();
+?>
+	<div class="trvlr-suitable-ages">
+		<?php if ($args['icon']) : ?>
+			<?php if ($args['icon_element'] !== '') : ?>
+				<?php echo trvlr_icon_element_kses($args['icon_element']); ?>
+			<?php else : ?>
+				<span class="trvlr-suitable-ages__icon" aria-hidden="true"></span>
+			<?php endif; ?>
+		<?php endif; ?>
+		<span class="trvlr-suitable-ages__value"><?php echo esc_html($label); ?></span>
+	</div>
+<?php
+	return apply_filters('trvlr_suitable_ages', ob_get_clean(), $post_id, $args);
+}
+
+function trvlr_simple_location($post_id = null, $args = array())
+{
+	$post_id = $post_id ?: get_the_ID();
+	$args = wp_parse_args(
+		$args,
+		array(
+			'icon' => true,
+			'icon_element' => '',
+		)
+	);
+
+	$label = get_post_meta($post_id, 'trvlr_simple_location', true);
+	if (!$label || $label === '') {
+		return '';
+	}
+
+	ob_start();
+?>
+	<div class="trvlr-simple-location">
+		<?php if ($args['icon']) : ?>
+			<?php if ($args['icon_element'] !== '') : ?>
+				<?php echo trvlr_icon_element_kses($args['icon_element']); ?>
+			<?php else : ?>
+				<span class="trvlr-simple-location__icon" aria-hidden="true"></span>
+			<?php endif; ?>
+		<?php endif; ?>
+		<span class="trvlr-simple-location__value"><?php echo esc_html($label); ?></span>
+	</div>
+<?php
+	return apply_filters('trvlr_simple_location', ob_get_clean(), $post_id, $args);
+}
+
+function trvlr_cancellation_policy($post_id = null, $args = array())
+{
+	$post_id = $post_id ?: get_the_ID();
+	$args = wp_parse_args(
+		$args,
+		array(
+			'icon' => true,
+			'icon_element' => '',
+		)
+	);
+
+	$label = get_post_meta($post_id, 'trvlr_cancellation_policy', true);
+	if (!$label || $label === '') {
+		return '';
+	}
+
+	ob_start();
+?>
+	<div class="trvlr-cancellation-policy">
+		<?php if ($args['icon']) : ?>
+			<?php if ($args['icon_element'] !== '') : ?>
+				<?php echo trvlr_icon_element_kses($args['icon_element']); ?>
+			<?php else : ?>
+				<span class="trvlr-cancellation-policy__icon" aria-hidden="true"></span>
+			<?php endif; ?>
+		<?php endif; ?>
+		<span class="trvlr-cancellation-policy__value"><?php echo esc_html($label); ?></span>
+	</div>
+<?php
+	return apply_filters('trvlr_cancellation_policy', ob_get_clean(), $post_id, $args);
 }
 
 function trvlr_sale($post_id = null, $description = null)
@@ -68,11 +218,12 @@ function trvlr_sale($post_id = null, $description = null)
 
 function trvlr_term_has_popular($terms)
 {
+	$popular_term = apply_filters('trvlr_popular_term', 'popular');
 	if (is_array($terms)) {
 		foreach ($terms as $term) {
-			if (is_object($term) && isset($term->slug) && $term->slug === 'popular') {
+			if (is_object($term) && isset($term->slug) && $term->slug === $popular_term) {
 				return true;
-			} else if (is_string($term) && $term === 'popular' || $term === 'Popular') {
+			} else if (is_string($term) && $term === $popular_term || $term === ucfirst($popular_term)) {
 				return true;
 			}
 		}
@@ -80,22 +231,29 @@ function trvlr_term_has_popular($terms)
 	return false;
 }
 
-function trvlr_popular_badge($post_id = null)
+function trvlr_popular_badge($post_id = null, $args = array())
 {
 	$post_id = $post_id ?: get_the_ID();
+	$args = wp_parse_args(
+		$args,
+		array(
+			'icon' => true,
+		)
+	);
 	$attraction_tags = get_trvlr_attraction_tags($post_id);
 	$categories = get_the_terms($post_id, 'category');
 	$post_tags = get_the_terms($post_id, 'post_tag');
 
 	$is_popular = trvlr_term_has_popular($attraction_tags) || trvlr_term_has_popular($categories) || trvlr_term_has_popular($post_tags);
 
+	$badge_text = apply_filters('trvlr_badge_text', 'Popular', $post_id);
+
 	if ($is_popular) {
-		return '<div class="trvlr-popular-badge">
-			<svg class="trvlr-icon trvlr-popular-badge__icon">
-				<use href="#icon-star"></use>
-			</svg>
-			<span class="trvlr-popular-badge__text">Popular</span>
-		</div>';
+		$icon = $args['icon'] ? '<svg class="trvlr-icon trvlr-popular-badge__icon">
+			<use href="#icon-star"></use>
+		</svg>' : '';
+
+		return '<div class="trvlr-popular-badge">' . $icon . '<span class="trvlr-popular-badge__text">' . $badge_text . '</span></div>';
 	}
 	return '';
 }
@@ -186,9 +344,11 @@ function trvlr_gallery($post_id = null, $args = array())
 		$args,
 		array(
 			'type' => 'slider',
+			'variant' => '',
 		)
 	);
 	$type = $args['type'] === 'masonry' ? 'masonry' : 'slider';
+	$variant = sanitize_html_class((string) $args['variant']);
 
 	$media_ids = get_trvlr_media($post_id, true);
 	$gallery_ids = array_unique(array_filter($media_ids));
@@ -239,7 +399,7 @@ function trvlr_gallery($post_id = null, $args = array())
 	$main_id = 'trvlr-main-slider-' . $post_id;
 	$nav_id = 'trvlr-nav-slider-' . $post_id;
 	?>
-	<div class="trvlr-gallery trvlr-gallery--slider">
+	<div class="trvlr-gallery trvlr-gallery--slider<?php echo $variant !== '' ? ' trvlr-gallery--' . esc_attr($variant) : ''; ?>"<?php echo $variant !== '' ? ' data-trvlr-gallery-variant="' . esc_attr($variant) . '"' : ''; ?>>
 		<div id="<?php echo esc_attr($main_id); ?>" class="trvlr-gallery__main splide">
 			<div class="splide__track">
 				<ul class="splide__list">
@@ -284,13 +444,32 @@ function trvlr_description($post_id = null)
 {
 	$post_id = $post_id ?: get_the_ID();
 	$content = get_trvlr_description($post_id);
+	
+	if (!$content) {
+		return '';
+	}
+
+	if ($content !== '' && $content !== null) {
+		$has_html = preg_match('/<(?:p|br|div|span|ul|ol|li|h[1-6]|strong|em|a|img|table|blockquote)\b/i', $content);
+		if (!$has_html) {
+			$content = wpautop($content);
+		}
+	}
+
+	$output = '<div class="trvlr-description">' . $content . '</div>';
+	return apply_filters('trvlr_description', $output, $post_id);
+}
+
+function trvlr_highlights($post_id = null) {
+	$post_id = $post_id ?: get_the_ID();
+	$content = get_post_meta($post_id, 'trvlr_highlights', true);
 
 	if (!$content) {
 		return '';
 	}
 
-	$output = '<div class="trvlr-description">' . $content . '</div>';
-	return apply_filters('trvlr_description', $output, $post_id);
+	$output = '<div class="trvlr-highlights">' . $content . '</div>';
+	return apply_filters('trvlr_highlights', $output, $post_id);
 }
 
 function trvlr_inclusions($post_id = null)
@@ -508,7 +687,7 @@ function trvlr_booking_button($post_id = null, $args = array())
 	return apply_filters('trvlr_booking_button', ob_get_clean(), $post_id, $args);
 }
 
-function trvlr_card($post_id = null)
+function trvlr_card($post_id = null, $variant = 'default')
 {
 	$post_id = $post_id ?: get_the_ID();
 
@@ -518,6 +697,7 @@ function trvlr_card($post_id = null)
 
 	$trvlr_card_template_slug = Trvlr_Template_Registry::get_active_card_slug();
 	$template_path = Trvlr_Template_Registry::get_card_template_path();
+	$trvlr_card_variant = (is_string($variant) && $variant !== '') ? $variant : 'default';
 
 	ob_start();
 	include $template_path;

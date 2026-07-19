@@ -124,6 +124,22 @@ class Trvlr_Public
 
 		wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/trvlr-public.js', array('jquery'), $this->version, false);
 
+		if (class_exists('Trvlr_Template_Registry')) {
+			$presentation_theme_script = Trvlr_Template_Registry::get_active_presentation_theme_script_basename();
+			if ($presentation_theme_script !== '') {
+				$presentation_theme_script_path = plugin_dir_path(__FILE__) . 'js/' . $presentation_theme_script;
+				if (is_readable($presentation_theme_script_path)) {
+					wp_enqueue_script(
+						'trvlr-presentation-theme',
+						plugin_dir_url(__FILE__) . 'js/' . $presentation_theme_script,
+						array('jquery'),
+						filemtime($presentation_theme_script_path) ? (string) filemtime($presentation_theme_script_path) : $this->version,
+						true
+					);
+				}
+			}
+		}
+
 		wp_register_script(
 			'trvlr-query-manager',
 			plugin_dir_url(__FILE__) . 'js/trvlr-query-manager.js',

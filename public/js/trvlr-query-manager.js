@@ -41,32 +41,80 @@
 		});
 	}
 
+	/**
+	 * Sync the category--{slug} class on a grid container to match the active category
+	 * in the current query. Reads from query.query_args.tax_query (POST path) or from
+	 * a top-level category/category_slug param (GET path).
+	 *
+	 * @param {Element} container  The .trvlr-cards-container element.
+	 * @param {Object}  query      The current query object stored in state.
+	 */
+	function _updateCategoryClass(container, query) {
+		// Remove any existing category-- class.
+		Array.from(container.classList).forEach((cls) => {
+			if (cls.startsWith('category--')) container.classList.remove(cls);
+		});
+
+		let categorySlug = '';
+
+		// POST path: category is in query_args.tax_query
+		if (query.query_args && query.query_args.tax_query) {
+			const tq = query.query_args.tax_query;
+			const clauses = Array.isArray(tq)
+				? tq
+				: Object.keys(tq).filter((k) => k !== 'relation').map((k) => tq[k]);
+			clauses.forEach((clause) => {
+				if (!categorySlug && clause && clause.taxonomy === 'category' && clause.terms) {
+					categorySlug = Array.isArray(clause.terms) ? clause.terms[0] : clause.terms;
+				}
+			});
+		}
+
+		// GET path: category param at top level
+		if (!categorySlug && query.category_slug) categorySlug = query.category_slug;
+		if (!categorySlug && query.category)       categorySlug = query.category;
+
+		if (categorySlug) {
+			container.classList.add('category--' + categorySlug);
+		}
+	}
+
 	async function _fetch(gridId, query, page, mode) {
 		const state = _state.get(gridId);
 		if (!state || state.isLoading) return;
 
 		const container = state.el;
 		state.isLoading = true;
+		container.classList.remove('trvlr-cards-container--loaded');
 		container.classList.add('trvlr-cards-container--loading');
 		container.dispatchEvent(new CustomEvent('trvlr:loading', { bubbles: true }));
 
 		try {
-			const fetchQuery = { ...query, paged: page };
+			// card_variant is a rendering concern, not a WP_Query key — keep it separate.
+			const cardVariant = query.card_variant || '';
+			const fetchQuery  = { ...query, paged: page };
+			delete fetchQuery.card_variant;
+
 			let response;
 
 			if (fetchQuery.query_args) {
+				// POST path: send query_args as JSON body; card_variant at top level.
+				const body = { ...fetchQuery };
+				if (cardVariant) body.card_variant = cardVariant;
 				response = await fetch(_apiUrl, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify(fetchQuery),
+					body: JSON.stringify(body),
 				});
 			} else {
+				// GET path: all params as URL query string including card_variant.
 				const params = new URLSearchParams();
 				Object.entries(fetchQuery).forEach(([k, v]) => {
 					if (v !== null && v !== undefined && v !== '') {
 						params.append(k, Array.isArray(v) ? v.join(',') : v);
 					}
 				});
+				if (cardVariant) params.append('card_variant', cardVariant);
 				response = await fetch(`${_apiUrl}?${params}`);
 			}
 
@@ -100,6 +148,9 @@
 			container.dataset.trvlrFoundPosts   = data.found_posts;
 			container.dataset.trvlrCurrentQuery = JSON.stringify(state.currentQuery);
 
+			// Update category--* class to reflect the active category filter.
+			_updateCategoryClass(container, state.currentQuery);
+
 			container.dispatchEvent(new CustomEvent('trvlr:loaded', {
 				bubbles: true,
 				detail: {
@@ -118,6 +169,7 @@
 		} finally {
 			state.isLoading = false;
 			container.classList.remove('trvlr-cards-container--loading');
+			container.classList.add('trvlr-cards-container--loaded');
 		}
 	}
 

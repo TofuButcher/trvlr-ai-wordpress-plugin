@@ -10,6 +10,8 @@ function initGallerySliders() {
 			return;
 		}
 
+		const isTheme3 = wrap.classList.contains('trvlr-gallery--theme-3') || wrap.dataset.trvlrGalleryVariant === 'theme-3';
+
 		const mainSlider = new Splide(main, {
 			type: 'slide',
 			direction: 'ltr',
@@ -22,7 +24,26 @@ function initGallerySliders() {
 			interval: 3000,
 		});
 
-		const navSlider = new Splide(nav, {
+		const navConfig = isTheme3 ? {
+			type: 'slide',
+			direction: 'ltr',
+			height: '510px',
+			fixedHeight: '120px',
+			fixedWidth: '120px',
+			gap: '10px',
+			pagination: false,
+			arrows: false,
+			isNavigation: true,
+			drag: false,
+			breakpoints: {
+				700: {
+					height: 'auto',
+					fixedWidth: '100px',
+					fixedHeight: '100px',
+					drag: true,
+				},
+			},
+		} : {
 			type: 'slide',
 			direction: 'ttb',
 			height: '460px',
@@ -41,7 +62,9 @@ function initGallerySliders() {
 					fixedHeight: '70px',
 				},
 			},
-		});
+		};
+
+		const navSlider = new Splide(nav, navConfig);
 
 		mainSlider.sync(navSlider);
 		mainSlider.mount();
