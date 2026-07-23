@@ -27,7 +27,7 @@ Core **category** and **post_tag** are also registered on the post type for opti
 
 ## Content fields (trackable for sync and edit detection)
 
-Aligned with `Trvlr_Field_Map` and the attraction editor. Types reflect how values are hashed, not always the DB storage shape.
+Aligned with `Trvlr_Field_Map::get_fields()` (`data_type` for hashing; `sync` / `ui` for Traveloris ownership and Attraction Details controls).
 
 | Field | Notes |
 |-------|--------|
@@ -51,10 +51,8 @@ Aligned with `Trvlr_Field_Map` and the attraction editor. Types reflect how valu
 
 | Meta | Purpose |
 |------|---------|
-| `_trvlr_sync_hash_{field}` | Per-field hash after a successful sync write. |
-| `_trvlr_edited_fields` | List of field names diverging from last sync. |
-| `_trvlr_has_custom_edits` | Flag when any tracked field differs. |
-| `_trvlr_force_sync_fields` | Fields to accept from API on next sync despite edits. |
+| `_trvlr_edited_fields` | Field keys deliberately in Custom Edit mode (skipped on sync). |
+| `_trvlr_has_custom_edits` | `'1'` when `_trvlr_edited_fields` is non-empty. |
 | `_trvlr_list_image_cache` | Optional cache when list thumbnail must be preserved. |
 
 ## Editor vs template

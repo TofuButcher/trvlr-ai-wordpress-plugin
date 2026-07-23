@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Logging functionality for TRVLR sync operations
+ * Logging for TRVLR sync operations.
  *
  * @package    Trvlr
  * @subpackage Trvlr/includes
@@ -10,7 +10,7 @@
 class Trvlr_Logger
 {
 	/**
-	 * Get the table name for logs
+	 * @return string
 	 */
 	private static function get_table_name()
 	{
@@ -19,18 +19,16 @@ class Trvlr_Logger
 	}
 
 	/**
-	 * Check if log table exists and create if missing
+	 * Create the log table (and migrate sync_session_id) if missing.
 	 */
 	public static function ensure_table_exists()
 	{
 		global $wpdb;
 		$table_name = self::get_table_name();
 		
-		// Check if table exists
 		$table_exists = $wpdb->get_var("SHOW TABLES LIKE '$table_name'");
 		
 		if ($table_exists != $table_name) {
-			// Table doesn't exist, create it
 			require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 			
 			$charset_collate = $wpdb->get_charset_collate();
@@ -48,32 +46,28 @@ class Trvlr_Logger
 			
 			dbDelta($sql);
 		} else {
-			// Table exists, check if sync_session_id column exists
+			// Older installs may lack sync_session_id (used for grouped logs).
 			$column_exists = $wpdb->get_results("SHOW COLUMNS FROM $table_name LIKE 'sync_session_id'");
 			if (empty($column_exists)) {
-				// Add the column
 				$wpdb->query("ALTER TABLE $table_name ADD COLUMN sync_session_id varchar(50) AFTER details, ADD KEY sync_session_id (sync_session_id)");
 			}
 		}
 	}
 
 	/**
-	 * Log a sync event
-	 * 
-	 * @param string $type Log type (sync_start, sync_complete, attraction_created, etc.)
-	 * @param string $message Human-readable message
-	 * @param array $details Additional details to store as JSON
+	 * @param string      $type       Log type (sync_start, sync_complete, attraction_created, etc.)
+	 * @param string      $message    Human-readable message
+	 * @param array       $details    Additional details stored as JSON
 	 * @param string|null $session_id Optional session ID for grouping related logs
 	 */
 	public static function log($type, $message, $details = array(), $session_id = null)
 	{
-		// Ensure table exists before logging
 		self::ensure_table_exists();
 		
 		global $wpdb;
 		$table_name = self::get_table_name();
 
-		// If no session ID provided, try to get current session from global
+		// Fall back to the in-flight sync session when callers omit session_id.
 		if ($session_id === null) {
 			$session_id = isset($GLOBALS['trvlr_current_sync_session']) ? $GLOBALS['trvlr_current_sync_session'] : null;
 		}
@@ -91,20 +85,16 @@ class Trvlr_Logger
 			array('%s', '%s', '%s', '%s', '%s', '%d')
 		);
 
-		// Also log to PHP error log for debugging
 		error_log("TRVLR [{$type}]: {$message}");
 	}
 
 	/**
-	 * Get logs from the database
-	 * 
-	 * @param int $limit Number of logs to retrieve
-	 * @param string|null $type Filter by log type
-	 * @return array Array of log objects
+	 * @param int         $limit Number of logs to retrieve
+	 * @param string|null $type  Filter by log type
+	 * @return array
 	 */
 	public static function get_logs($limit = 50, $type = null)
 	{
-		// Ensure table exists before querying
 		self::ensure_table_exists();
 		
 		global $wpdb;
@@ -122,20 +112,16 @@ class Trvlr_Logger
 	}
 
 	/**
-	 * Get logs grouped by sync session
-	 * 
 	 * @param int $limit Number of sync sessions to retrieve
-	 * @return array Array of sync sessions with their logs
+	 * @return array
 	 */
 	public static function get_grouped_logs($limit = 50)
 	{
-		// Ensure table exists before querying
 		self::ensure_table_exists();
 		
 		global $wpdb;
 		$table_name = self::get_table_name();
 
-		// Get distinct sync sessions (ordered by most recent)
 		$sessions = $wpdb->get_results($wpdb->prepare(
 			"SELECT DISTINCT sync_session_id, MIN(created_at) as started_at, MAX(created_at) as completed_at
 			FROM {$table_name}
@@ -149,7 +135,6 @@ class Trvlr_Logger
 		$grouped = array();
 
 		foreach ($sessions as $session) {
-			// Get all logs for this session
 			$logs = $wpdb->get_results($wpdb->prepare(
 				"SELECT * FROM {$table_name}
 				WHERE sync_session_id = %s
@@ -157,7 +142,6 @@ class Trvlr_Logger
 				$session->sync_session_id
 			));
 
-			// Calculate session summary
 			$created_count = 0;
 			$updated_count = 0;
 			$skipped_count = 0;
@@ -199,7 +183,7 @@ class Trvlr_Logger
 			);
 		}
 
-		// Also get logs without a session ID (legacy or standalone logs)
+		// Legacy / standalone rows without a session ID.
 		$standalone_logs = $wpdb->get_results($wpdb->prepare(
 			"SELECT * FROM {$table_name}
 			WHERE sync_session_id IS NULL
@@ -229,8 +213,6 @@ class Trvlr_Logger
 	}
 
 	/**
-	 * Clear old logs
-	 * 
 	 * @param int $days Delete logs older than this many days
 	 * @return int Number of deleted rows
 	 */
@@ -250,8 +232,6 @@ class Trvlr_Logger
 	}
 
 	/**
-	 * Clear all logs
-	 * 
 	 * @return int Number of deleted rows
 	 */
 	public static function clear_all_logs()
@@ -263,8 +243,6 @@ class Trvlr_Logger
 	}
 
 	/**
-	 * Get log statistics
-	 * 
 	 * @return array Counts by log type
 	 */
 	public static function get_stats()
@@ -284,9 +262,6 @@ class Trvlr_Logger
 		return $stats;
 	}
 
-	/**
-	 * Schedule daily log cleanup
-	 */
 	public static function schedule_cleanup()
 	{
 		if (! wp_next_scheduled('trvlr_daily_log_cleanup')) {
@@ -294,9 +269,6 @@ class Trvlr_Logger
 		}
 	}
 
-	/**
-	 * Unschedule log cleanup
-	 */
 	public static function unschedule_cleanup()
 	{
 		$timestamp = wp_next_scheduled('trvlr_daily_log_cleanup');
@@ -305,9 +277,6 @@ class Trvlr_Logger
 		}
 	}
 
-	/**
-	 * Daily cleanup callback
-	 */
 	public static function run_daily_cleanup()
 	{
 		$deleted = self::clear_old_logs(30);
@@ -315,12 +284,10 @@ class Trvlr_Logger
 	}
 
 	/**
-	 * Export logs as CSV
-	 * 
-	 * @param int    $limit     Number of logs to export (default: all)
-	 * @param string $type      Filter by log type (optional)
-	 * @param string $date_from Filter by start date (optional)
-	 * @param string $date_to   Filter by end date (optional)
+	 * @param int         $limit     Number of logs to export (default: all)
+	 * @param string|null $type      Filter by log type
+	 * @param string|null $date_from Start date (Y-m-d)
+	 * @param string|null $date_to   End date (Y-m-d)
 	 * @return string CSV content
 	 */
 	public static function export_to_csv($limit = null, $type = null, $date_from = null, $date_to = null)
@@ -328,7 +295,6 @@ class Trvlr_Logger
 		global $wpdb;
 		$table_name = self::get_table_name();
 
-		// Build query
 		$sql = "SELECT * FROM {$table_name} WHERE 1=1";
 		$params = array();
 
@@ -360,25 +326,21 @@ class Trvlr_Logger
 			$logs = $wpdb->get_results($sql, ARRAY_A);
 		}
 
-		// Generate CSV
 		$csv = array();
 		
-		// Headers
 		$csv[] = array('ID', 'Type', 'Message', 'Details', 'Created At', 'User ID');
 
-		// Data rows
 		foreach ($logs as $log) {
 			$csv[] = array(
 				$log['id'],
 				$log['log_type'],
 				$log['message'],
-				$log['details'], // JSON string
+				$log['details'],
 				$log['created_at'],
 				$log['user_id']
 			);
 		}
 
-		// Convert to CSV string
 		$output = '';
 		foreach ($csv as $row) {
 			$output .= implode(',', array_map(array(__CLASS__, 'escape_csv_value'), $row)) . "\n";
@@ -388,10 +350,8 @@ class Trvlr_Logger
 	}
 
 	/**
-	 * Escape CSV value
-	 * 
-	 * @param string $value Value to escape
-	 * @return string Escaped value
+	 * @param string $value
+	 * @return string
 	 */
 	private static function escape_csv_value($value)
 	{
@@ -402,10 +362,8 @@ class Trvlr_Logger
 	}
 
 	/**
-	 * Generate CSV filename
-	 * 
-	 * @param string $type Optional log type
-	 * @return string Filename
+	 * @param string|null $type Optional log type suffix
+	 * @return string
 	 */
 	public static function get_csv_filename($type = null)
 	{
@@ -418,4 +376,3 @@ class Trvlr_Logger
 		return $filename;
 	}
 }
-

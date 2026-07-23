@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Email notification system for TRVLR sync events
+ * Email notifications for TRVLR sync events.
  *
  * @package    Trvlr
  * @subpackage Trvlr/includes
@@ -10,12 +10,10 @@
 class Trvlr_Notifier
 {
 	/**
-	 * Send email notification
-	 * 
-	 * @param string $subject Email subject
-	 * @param string $message Email body
-	 * @param array  $headers Optional headers
-	 * @return bool Success/failure
+	 * @param string $subject
+	 * @param string $message
+	 * @param array  $headers
+	 * @return bool
 	 */
 	private static function send_email($subject, $message, $headers = array())
 	{
@@ -36,10 +34,8 @@ class Trvlr_Notifier
 	}
 
 	/**
-	 * Send sync error notification
-	 * 
-	 * @param string $error_message Error details
-	 * @param array  $context Additional context
+	 * @param string $error_message
+	 * @param array  $context
 	 */
 	public static function notify_sync_error($error_message, $context = array())
 	{
@@ -62,7 +58,6 @@ class Trvlr_Notifier
 
 		self::send_email($subject, $message);
 		
-		// Log the notification
 		Trvlr_Logger::log('notification', 'Error notification sent', array(
 			'error' => $error_message,
 			'email' => get_option('trvlr_notification_email', get_option('admin_email'))
@@ -70,12 +65,10 @@ class Trvlr_Notifier
 	}
 
 	/**
-	 * Send sync completion notification
-	 * 
-	 * @param int $created   Number created
-	 * @param int $updated   Number updated
-	 * @param int $skipped   Number skipped
-	 * @param int $errors    Number of errors
+	 * @param int $created
+	 * @param int $updated
+	 * @param int $skipped
+	 * @param int $errors
 	 */
 	public static function notify_sync_complete($created, $updated, $skipped, $errors = 0)
 	{
@@ -83,7 +76,7 @@ class Trvlr_Notifier
 			return;
 		}
 
-		// Only send if there were changes or errors
+		// Skip no-op syncs (no changes and no errors).
 		if ($created === 0 && $updated === 0 && $errors === 0) {
 			return;
 		}
@@ -107,16 +100,12 @@ class Trvlr_Notifier
 		self::send_email($subject, $message);
 	}
 
-	/**
-	 * Send weekly summary email
-	 */
 	public static function send_weekly_summary()
 	{
 		if (!self::is_notification_enabled('weekly_summary')) {
 			return;
 		}
 
-		// Get stats from the past week
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'trvlr_sync_logs';
 		$week_ago = date('Y-m-d H:i:s', strtotime('-7 days'));
@@ -144,7 +133,6 @@ class Trvlr_Notifier
 			$message .= '</ul>';
 		}
 
-		// Get current attraction stats
 		$total = wp_count_posts('trvlr_attraction')->publish;
 		$with_edits = get_posts(array(
 			'post_type' => 'trvlr_attraction',
@@ -173,9 +161,7 @@ class Trvlr_Notifier
 	}
 
 	/**
-	 * Check if notification type is enabled
-	 * 
-	 * @param string $type Notification type
+	 * @param string $type
 	 * @return bool
 	 */
 	private static function is_notification_enabled($type)
@@ -185,8 +171,6 @@ class Trvlr_Notifier
 	}
 
 	/**
-	 * Get available notification types
-	 * 
 	 * @return array
 	 */
 	public static function get_notification_types()
@@ -198,21 +182,15 @@ class Trvlr_Notifier
 		);
 	}
 
-	/**
-	 * Schedule weekly summary
-	 */
 	public static function schedule_weekly_summary()
 	{
 		if (!wp_next_scheduled('trvlr_weekly_summary')) {
-			// Schedule for Monday at 9am
+			// Intentionally Monday 9:00 local time.
 			$next_monday = strtotime('next monday 9:00');
 			wp_schedule_event($next_monday, 'weekly', 'trvlr_weekly_summary');
 		}
 	}
 
-	/**
-	 * Unschedule weekly summary
-	 */
 	public static function unschedule_weekly_summary()
 	{
 		$timestamp = wp_next_scheduled('trvlr_weekly_summary');
@@ -221,4 +199,3 @@ class Trvlr_Notifier
 		}
 	}
 }
-

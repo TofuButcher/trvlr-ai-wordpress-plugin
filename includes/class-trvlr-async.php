@@ -3,18 +3,11 @@
 /**
  * Async dispatch abstraction.
  *
- * Routes background scheduling through Action Scheduler when it is available on
- * the site, and transparently falls back to native WP-Cron when it is not. This
- * keeps the plugin working everywhere while giving sites that ship Action
- * Scheduler (e.g. WooCommerce, or a future bundled copy) far more reliable,
- * self-propagating batch processing that does not depend on per-batch traffic.
+ * Routes background scheduling through Action Scheduler when available, otherwise
+ * WP-Cron. Action Scheduler is not bundled — progressive enhancement only.
  *
- * Action Scheduler is NOT bundled by this plugin; this is a progressive
- * enhancement that activates only if `as_*()` functions are present.
- *
- * The action hooks used here (`trvlr_process_sync_batch`, `trvlr_scheduled_sync`)
- * are the same hooks registered in class-trvlr.php, so the existing callbacks
- * fire regardless of which scheduler triggered them.
+ * Hooks (`trvlr_process_sync_batch`, `trvlr_scheduled_sync`) match those registered
+ * in class-trvlr.php so callbacks fire regardless of which driver triggered them.
  *
  * @package    Trvlr
  * @subpackage Trvlr/includes
@@ -27,7 +20,7 @@ class Trvlr_Async
 	const SYNC_HOOK   = 'trvlr_scheduled_sync';
 
 	/**
-	 * Is Action Scheduler usable on this site?
+	 * @return bool
 	 */
 	public static function is_available(): bool
 	{
@@ -37,16 +30,12 @@ class Trvlr_Async
 	}
 
 	/**
-	 * Which scheduler is in use ('action_scheduler' | 'wp_cron'). For diagnostics.
+	 * @return string 'action_scheduler' | 'wp_cron'
 	 */
 	public static function driver(): string
 	{
 		return self::is_available() ? 'action_scheduler' : 'wp_cron';
 	}
-
-	// ----------------------------------------------------------------
-	// Sync batch chaining (run ASAP, one after another)
-	// ----------------------------------------------------------------
 
 	/**
 	 * Queue the next sync batch. No-op if one is already pending.
@@ -58,9 +47,7 @@ class Trvlr_Async
 		}
 
 		if (self::is_available()) {
-			// Async actions run as soon as possible and Action Scheduler
-			// dispatches its own loopback runner, so the chain self-propagates
-			// without waiting for the next visitor.
+			// AS async actions self-propagate via loopback; no visitor traffic needed.
 			as_enqueue_async_action(self::BATCH_HOOK, array(), self::GROUP);
 		} else {
 			wp_schedule_single_event(time() + 1, self::BATCH_HOOK);
@@ -68,8 +55,7 @@ class Trvlr_Async
 	}
 
 	/**
-	 * Queue a batch and actively nudge a runner now. Used by the dashboard
-	 * self-heal path to recover a stalled run.
+	 * Queue a batch and nudge a runner now (dashboard self-heal for stalled runs).
 	 */
 	public static function queue_batch_now(): void
 	{
@@ -77,7 +63,6 @@ class Trvlr_Async
 			if (!self::has_batch()) {
 				as_enqueue_async_action(self::BATCH_HOOK, array(), self::GROUP);
 			}
-			// Action Scheduler kicks its async runner on enqueue; nothing else needed.
 			return;
 		}
 
@@ -90,7 +75,7 @@ class Trvlr_Async
 	}
 
 	/**
-	 * Is a sync batch currently scheduled/pending?
+	 * @return bool
 	 */
 	public static function has_batch(): bool
 	{
@@ -101,7 +86,7 @@ class Trvlr_Async
 	}
 
 	/**
-	 * Remove all pending sync batches (both drivers, to cover mixed/legacy state).
+	 * Clear pending batches on both drivers (covers mixed/legacy state).
 	 */
 	public static function clear_batches(): void
 	{
@@ -113,13 +98,7 @@ class Trvlr_Async
 		}
 	}
 
-	// ----------------------------------------------------------------
-	// Recurring automatic sync
-	// ----------------------------------------------------------------
-
 	/**
-	 * Schedule the recurring automatic sync.
-	 *
 	 * @param string $frequency hourly|twicedaily|daily|weekly
 	 */
 	public static function schedule_recurring_sync(string $frequency): void
@@ -135,7 +114,7 @@ class Trvlr_Async
 	}
 
 	/**
-	 * Remove the recurring automatic sync (both drivers).
+	 * Unschedule recurring sync on both drivers.
 	 */
 	public static function unschedule_recurring_sync(): void
 	{
@@ -149,8 +128,6 @@ class Trvlr_Async
 	}
 
 	/**
-	 * Next scheduled automatic sync timestamp, or false.
-	 *
 	 * @return int|false
 	 */
 	public static function next_sync_time()
@@ -164,6 +141,9 @@ class Trvlr_Async
 
 	/**
 	 * Map a WP-Cron-style frequency string to seconds for Action Scheduler.
+	 *
+	 * @param string $frequency
+	 * @return int
 	 */
 	public static function frequency_to_seconds(string $frequency): int
 	{

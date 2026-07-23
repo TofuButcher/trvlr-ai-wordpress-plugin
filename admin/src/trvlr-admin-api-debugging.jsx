@@ -12,7 +12,6 @@ export const DebuggingComponent = () => {
       setResults(prev => ({ ...prev, [name]: 'Loading...' }));
 
       try {
-         // Use the global wp.apiFetch which WordPress configures automatically
          const response = await window.wp.apiFetch({ path });
          setResults(prev => ({
             ...prev,
@@ -50,7 +49,6 @@ export const DebuggingComponent = () => {
       setResults(prev => ({ ...prev, 'WP Users': 'Loading...' }));
 
       try {
-         // Use the global wp.apiFetch which WordPress configures automatically
          const response = await window.wp.apiFetch({ path: '/wp/v2/users/me' });
          setResults(prev => ({
             ...prev,

@@ -35,7 +35,7 @@ export const ThemeField: React.FC<ThemeFieldProps> = ({ field, value, onChange }
                <ColorPicker
                   color={value as string}
                   onChangeComplete={(color) => {
-                     // Handle different color picker outputs
+                     // WP ColorPicker may return hex or rgb depending on alpha.
                      const colorValue = color.hex || `rgba(${color.rgb.r},${color.rgb.g},${color.rgb.b},${color.rgb.a})`;
                      onChange(colorValue);
                   }}

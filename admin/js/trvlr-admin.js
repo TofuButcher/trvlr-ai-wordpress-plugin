@@ -143,20 +143,16 @@ jQuery(document).ready(function($) {
         e.preventDefault();
         var key = $(this).data('key');
         var tmpl = $('#tmpl-trvlr-repeater-' + key).html();
-        var wrapper = $(this).closest('.trvlr-repeater-wrapper').find('.trvlr-repeater-rows');
-        
-        // Generate a unique index (timestamp + random)
+        var $rows = $(this).closest('.trvlr-repeater-wrapper').find('.trvlr-repeater-rows');
         var index = new Date().getTime() + Math.floor(Math.random() * 1000);
         var rowHtml = tmpl.replace(/{{index}}/g, index);
-        
-        wrapper.append(rowHtml);
+
+        $rows.append(rowHtml);
     });
 
     $(document).on('click', '.trvlr-remove-row', function(e) {
         e.preventDefault();
-        if (confirm('Remove this row?')) {
-            $(this).closest('.trvlr-repeater-row').remove();
-        }
+        $(this).closest('.trvlr-repeater-row').remove();
     });
 
     // --- FORCE SYNC MANAGEMENT ---
@@ -191,55 +187,9 @@ jQuery(document).ready(function($) {
         $allCheckbox.prop('checked', allChecked);
     });
 
-    // Save force sync settings
-    $('#trvlr-save-force-sync').on('click', function(e) {
-        e.preventDefault();
-        var $btn = $(this);
-        var $status = $('#trvlr-force-sync-status');
-        var force_sync_fields = {};
-        
-        // Collect all checked fields for each post
-        $('.trvlr-field-checkbox:checked').each(function() {
-            var postId = $(this).data('post-id');
-            var field = $(this).val();
-            
-            if (!force_sync_fields[postId]) {
-                force_sync_fields[postId] = [];
-            }
-            force_sync_fields[postId].push(field);
-        });
-        
-        $btn.prop('disabled', true);
-        $status.text('Saving...').css('color', '#000');
-        
-        $.ajax({
-            url: ajaxurl,
-            type: 'POST',
-            data: {
-                action: 'trvlr_save_force_sync_settings',
-                nonce: trvlr_admin_vars.nonce,
-                force_sync_fields: force_sync_fields
-            },
-            success: function(response) {
-                if (response.success) {
-                    $status.text(response.data.message).css('color', 'green');
-                    setTimeout(function() { location.reload(); }, 1500);
-                } else {
-                    $status.text('Error: ' + (response.data || 'Unknown error')).css('color', 'red');
-                    $btn.prop('disabled', false);
-                }
-            },
-            error: function() {
-                $status.text('Ajax error.').css('color', 'red');
-                $btn.prop('disabled', false);
-            }
-        });
-    });
-
-    // Clear all force sync settings
     $('#trvlr-clear-all-edits').on('click', function(e) {
         e.preventDefault();
-        if (!confirm('Are you sure you want to clear all force sync settings? Custom edit flags will remain, but no fields will be force-synced on next sync.')) {
+        if (!confirm('Clear Custom Edit mode for every attraction on this site? The next sync will restore Traveloris content for those fields.')) {
             return;
         }
         

@@ -1,35 +1,41 @@
 <?php
 
 /**
- * Define all custom meta fields for attractions
- * 
+ * Attraction meta boxes and field UI driven by Trvlr_Field_Map.
+ *
  * @package Trvlr
  */
 
-// Include Helper
 require_once plugin_dir_path(__FILE__) . 'class-trvlr-meta-repeater.php';
 
-// Initialize Repeater Objects Globally so we can access them in save hooks
+/**
+ * Repeater instances built from the field registry.
+ *
+ * @return array<string, Trvlr_Meta_Repeater>
+ */
 function trvlr_get_repeater_instances()
 {
-    return array(
-        'pricing' => new Trvlr_Meta_Repeater('trvlr_attraction', 'trvlr_pricing', 'Attraction Pricing', array(
-            array('id' => 'type', 'label' => 'Price Type'),
-            array('id' => 'price', 'label' => 'Price'),
-            array('id' => 'sale_price', 'label' => 'Sale Price'),
-        )),
-        'locations' => new Trvlr_Meta_Repeater('trvlr_attraction', 'trvlr_locations', 'Locations', array(
-            array('id' => 'type', 'label' => 'Type (Start/End)'),
-            array('id' => 'address', 'label' => 'Address'),
-            array('id' => 'lat', 'label' => 'Latitude'),
-            array('id' => 'lng', 'label' => 'Longitude'),
-        )),
-    );
+    $instances = array();
+    foreach (Trvlr_Field_Map::get_meta_ui_fields() as $field_name => $config) {
+        if (empty($config['ui']['control']) || $config['ui']['control'] !== 'repeater') {
+            continue;
+        }
+        $columns = isset($config['ui']['repeater']) ? $config['ui']['repeater'] : array();
+        $instances[$field_name] = new Trvlr_Meta_Repeater(
+            'trvlr_attraction',
+            $field_name,
+            $config['label'],
+            $columns
+        );
+    }
+    return $instances;
 }
 
+/**
+ * @return void
+ */
 function trvlr_register_meta_boxes()
 {
-
     add_meta_box(
         'trvlr_sync_actions',
         'TRVLR Sync',
@@ -39,7 +45,6 @@ function trvlr_register_meta_boxes()
         'high'
     );
 
-    // 1. Consolidated Details Box (Normal context with Core priority to appear right after title)
     add_meta_box(
         'trvlr_attraction_details',
         'Attraction Details',
@@ -49,16 +54,89 @@ function trvlr_register_meta_boxes()
         'core'
     );
 
-    // Hide Native Custom Fields
     remove_meta_box('postcustom', 'trvlr_attraction', 'normal');
 }
 add_action('add_meta_boxes', 'trvlr_register_meta_boxes');
 
+/**
+ * Whether this attraction uses Synced / Custom Edit chrome at all.
+ *
+ * @param int $post_id
+ * @return bool
+ */
+function trvlr_field_sync_enabled($post_id)
+{
+    return (bool) get_post_meta($post_id, 'trvlr_id', true);
+}
+
+/**
+ * Whether a field should show Synced / Custom Edit chrome.
+ *
+ * @param int    $post_id
+ * @param string $field
+ * @return bool
+ */
+function trvlr_field_uses_sync_chrome($post_id, $field)
+{
+    return trvlr_field_sync_enabled($post_id) && Trvlr_Field_Map::is_syncable($field);
+}
+
+/**
+ * Open Synced / Custom Edit field wrapper markup.
+ *
+ * @param int    $post_id
+ * @param string $field
+ * @param string $label
+ * @return void
+ */
+function trvlr_field_sync_open($post_id, $field, $label = '')
+{
+    $GLOBALS['trvlr_field_sync_wrap_open'] = false;
+
+    if (!trvlr_field_uses_sync_chrome($post_id, $field)) {
+        return;
+    }
+
+    $is_custom = trvlr_is_custom_edit($post_id, $field);
+    $mode_class = $is_custom ? 'is-custom-edit' : 'is-synced';
+    $badge = $is_custom ? __('Not Synced - WP Edit', 'trvlr') : __('Synced to Traveloris', 'trvlr');
+    $button = $is_custom ? __('Enable Traveloris Sync', 'trvlr') : __('Custom Edit', 'trvlr');
+
+    echo '<div class="trvlr-field-sync ' . esc_attr($mode_class) . '" data-field="' . esc_attr($field) . '">';
+    echo '<div class="trvlr-field-sync-bar">';
+    if ($label !== '') {
+        echo '<span class="trvlr-field-sync-label">' . esc_html($label) . '</span>';
+    }
+    echo '<span class="trvlr-field-mode-badge">' . esc_html($badge) . '</span>';
+    echo '<button type="button" class="button-link trvlr-field-mode-toggle">' . esc_html($button) . '</button>';
+    echo '</div>';
+    echo '<div class="trvlr-field-sync-body">';
+    $GLOBALS['trvlr_field_sync_wrap_open'] = true;
+}
+
+/**
+ * Close Synced / Custom Edit field wrapper markup.
+ *
+ * @return void
+ */
+function trvlr_field_sync_close()
+{
+    if (empty($GLOBALS['trvlr_field_sync_wrap_open'])) {
+        return;
+    }
+    echo '</div></div>';
+    $GLOBALS['trvlr_field_sync_wrap_open'] = false;
+}
+
+/**
+ * @param WP_Post $post
+ * @return void
+ */
 function trvlr_render_sync_actions_meta_box($post)
 {
     $trvlr_id = get_post_meta($post->ID, 'trvlr_id', true);
-    $has_edits = get_post_meta($post->ID, '_trvlr_has_custom_edits', true);
-    $edited_fields = get_post_meta($post->ID, '_trvlr_edited_fields', true);
+    $edited_fields = trvlr_get_custom_edit_fields($post->ID);
+    $field_labels = Trvlr_Field_Map::get_field_labels();
 
 ?>
     <div id="trvlr-sync-actions" style="padding: 10px 0;">
@@ -67,12 +145,17 @@ function trvlr_render_sync_actions_meta_box($post)
                 <strong>TRVLR ID:</strong> <?php echo esc_html($trvlr_id); ?>
             </p>
 
-            <?php if ($has_edits && is_array($edited_fields) && !empty($edited_fields)): ?>
-                <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 8px; margin-bottom: 10px; border-radius: 3px; font-size: 12px;">
-                    <strong>⚠️ Manual edits detected</strong><br>
-                    <?php echo count($edited_fields); ?> field(s) will be skipped during sync
-                </div>
-            <?php endif; ?>
+            <div id="trvlr-custom-edits-sidebar" style="background: #fff3cd; border: 1px solid #ffc107; padding: 8px; margin-bottom: 10px; border-radius: 3px; font-size: 12px;<?php echo empty($edited_fields) ? ' display:none;' : ''; ?>">
+                <strong><?php esc_html_e('Custom Edit fields', 'trvlr'); ?></strong>
+                <ul class="trvlr-custom-edits-list" id="trvlr-custom-edits-list">
+                    <?php foreach ($edited_fields as $field): ?>
+                        <li data-field="<?php echo esc_attr($field); ?>">
+                            <?php echo esc_html(isset($field_labels[$field]) ? $field_labels[$field] : $field); ?>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+                <p style="margin: 6px 0 0; color: #666;"><?php esc_html_e('These stay in WordPress until you enable Traveloris sync on each field.', 'trvlr'); ?></p>
+            </div>
 
             <button type="button" id="trvlr-sync-single-btn" class="button button-primary" style="width: 100%;">
                 <span class="dashicons dashicons-update" style="vertical-align: middle;"></span>
@@ -122,6 +205,21 @@ function trvlr_render_sync_actions_meta_box($post)
 
     <script>
         jQuery(document).ready(function($) {
+            window.trvlrUpdateCustomEditsSidebar = function(fields, labels) {
+                var $box = $('#trvlr-custom-edits-sidebar');
+                var $list = $('#trvlr-custom-edits-list');
+                $list.empty();
+                if (!fields || !fields.length) {
+                    $box.hide();
+                    return;
+                }
+                fields.forEach(function(field) {
+                    var label = (labels && labels[field]) ? labels[field] : field;
+                    $list.append($('<li/>').attr('data-field', field).text(label));
+                });
+                $box.show();
+            };
+
             $('#trvlr-sync-single-btn').on('click', function() {
                 var $btn = $(this);
                 var $message = $('#trvlr-sync-message');
@@ -171,23 +269,22 @@ function trvlr_render_sync_actions_meta_box($post)
 <?php
 }
 
-// Move content editor below our meta box
+/**
+ * @return void
+ */
 function trvlr_move_editor_below_metabox()
 {
-    global $post, $wp_meta_boxes;
-
     if (get_post_type() === 'trvlr_attraction') {
-        // Remove the editor from its default position
         remove_post_type_support('trvlr_attraction', 'editor');
     }
 }
 add_action('admin_head', 'trvlr_move_editor_below_metabox');
 
-// Add the editor back after our meta box
+/**
+ * @return void
+ */
 function trvlr_add_editor_after_metabox()
 {
-    global $post;
-
     if (get_post_type() === 'trvlr_attraction') {
         add_meta_box(
             'trvlr_content_editor',
@@ -201,212 +298,149 @@ function trvlr_add_editor_after_metabox()
 }
 add_action('add_meta_boxes', 'trvlr_add_editor_after_metabox', 20);
 
-// Render the editor in our custom meta box
+/**
+ * @param WP_Post $post
+ * @return void
+ */
 function trvlr_render_editor_meta_box($post)
 {
-    $content = $post->post_content;
-    wp_editor($content, 'content', array(
+    wp_editor($post->post_content, 'content', array(
         'textarea_rows' => 15,
         'teeny' => false,
         'media_buttons' => true
     ));
 }
 
+/**
+ * Render a single meta UI field from the registry.
+ *
+ * @param int    $post_id
+ * @param string $field_name
+ * @param array  $config Field map entry with `label` and `ui`.
+ * @return void
+ */
+function trvlr_render_meta_ui_field($post_id, $field_name, $config)
+{
+    $ui = $config['ui'];
+    $label = $config['label'];
+    $control = isset($ui['control']) ? $ui['control'] : 'text';
+    $span = isset($ui['span']) ? max(1, min(12, (int) $ui['span'])) : 12;
+    $value = Trvlr_Field_Map::get_field_value($post_id, $field_name);
+    $uses_chrome = trvlr_field_uses_sync_chrome($post_id, $field_name);
 
-// Render ALL Details in One Box
+    echo '<div class="trvlr-meta-field trvlr-meta-span-' . esc_attr((string) $span) . '">';
+    trvlr_field_sync_open($post_id, $field_name, $label);
+
+    switch ($control) {
+        case 'richtext':
+            echo '<div class="trvlr-row">';
+            if (!$uses_chrome) {
+                echo '<label>' . esc_html($label) . '</label>';
+            }
+            $editor_args = array(
+                'media_buttons' => false,
+                'textarea_rows' => isset($ui['rows']) ? (int) $ui['rows'] : 5,
+            );
+            if (!empty($ui['teeny'])) {
+                $editor_args['teeny'] = true;
+            }
+            wp_editor(is_string($value) ? $value : '', $field_name, $editor_args);
+            echo '</div>';
+            break;
+
+        case 'checkbox':
+            echo '<div class="trvlr-row">';
+            echo '<label class="trvlr-field-control-label">';
+            echo '<input type="checkbox" name="' . esc_attr($field_name) . '" value="1" ' . checked($value, '1', false) . '>';
+            if (!$uses_chrome) {
+                echo ' ' . esc_html($label);
+            }
+            echo '</label>';
+            echo '</div>';
+            break;
+
+        case 'time':
+            echo '<div class="trvlr-row">';
+            if (!$uses_chrome) {
+                echo '<label>' . esc_html($label) . '</label>';
+            }
+            echo '<input type="time" name="' . esc_attr($field_name) . '" value="' . esc_attr(is_string($value) ? $value : '') . '" class="regular-text">';
+            echo '</div>';
+            break;
+
+        case 'gallery':
+            $media_ids = is_array($value) ? $value : array();
+            echo '<div class="trvlr-row">';
+            if (!$uses_chrome) {
+                echo '<label>' . esc_html($label) . '</label>';
+            }
+            echo '<div class="trvlr-media-gallery" id="trvlr-media-gallery">';
+            foreach ($media_ids as $attachment_id) {
+                $img_url = wp_get_attachment_image_url($attachment_id, 'thumbnail');
+                if (!$img_url) {
+                    continue;
+                }
+                echo '<div class="media-item" data-id="' . esc_attr($attachment_id) . '">';
+                echo '<img src="' . esc_url($img_url) . '" alt="" />';
+                echo '<button type="button" class="remove" onclick="trvlrRemoveMedia(this)" aria-label="Remove media">';
+                echo '<span class="dashicons dashicons-trash" aria-hidden="true"></span>';
+                echo '</button>';
+                echo '<input type="hidden" name="trvlr_media[]" value="' . esc_attr($attachment_id) . '">';
+                echo '</div>';
+            }
+            echo '</div>';
+            echo '<button type="button" class="button trvlr-add-media" onclick="trvlrOpenMediaUploader(event)">Add Media</button>';
+            echo '</div>';
+            break;
+
+        case 'repeater':
+            $repeaters = trvlr_get_repeater_instances();
+            if (isset($repeaters[$field_name])) {
+                $repeaters[$field_name]->render($post_id);
+            }
+            break;
+
+        case 'text':
+        default:
+            echo '<div class="trvlr-row">';
+            if (!$uses_chrome) {
+                echo '<label>' . esc_html($label) . '</label>';
+            }
+            echo '<input type="text" name="' . esc_attr($field_name) . '" value="' . esc_attr(is_string($value) ? $value : '') . '" class="widefat">';
+            if (!empty($ui['description'])) {
+                echo '<span class="description">' . esc_html($ui['description']) . '</span>';
+            }
+            echo '</div>';
+            break;
+    }
+
+    trvlr_field_sync_close();
+    echo '</div>';
+}
+
+/**
+ * Render Attraction Details from the field registry.
+ *
+ * @param WP_Post $post
+ * @return void
+ */
 function trvlr_render_details_meta_box($post)
 {
     wp_nonce_field('trvlr_save_details', 'trvlr_details_nonce');
-
     $trvlr_id = get_post_meta($post->ID, 'trvlr_id', true);
-    $description = get_post_meta($post->ID, 'trvlr_description', true);
-    $short_desc = get_post_meta($post->ID, 'trvlr_short_description', true);
-    $inclusions = get_post_meta($post->ID, 'trvlr_inclusions', true);
-    $highlights = get_post_meta($post->ID, 'trvlr_highlights', true);
-    $duration = get_post_meta($post->ID, 'trvlr_duration', true);
-    $start_time = get_post_meta($post->ID, 'trvlr_start_time', true);
-    $end_time = get_post_meta($post->ID, 'trvlr_end_time', true);
-    $additional_info = get_post_meta($post->ID, 'trvlr_additional_info', true);
-    $media_ids = get_post_meta($post->ID, 'trvlr_media', true);
-    $is_on_sale = get_post_meta($post->ID, 'trvlr_is_on_sale', true);
-    $sale_description = get_post_meta($post->ID, 'trvlr_sale_description', true);
 
 ?>
-    <style>
-        .trvlr-row {
-            margin-bottom: 15px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 15px;
-        }
-
-        .trvlr-row label {
-            font-weight: bold;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .trvlr-row .description {
-            margin-top: 5px;
-            font-style: italic;
-            color: #666;
-        }
-
-        .trvlr-repeater-section {
-            margin-top: 20px;
-            border-top: 2px solid #ddd;
-            padding-top: 10px;
-        }
-
-        .trvlr-repeater-section h4 {
-            margin: 0 0 10px 0;
-            font-size: 1.1em;
-        }
-
-        .wp-editor-wrap {
-            width: 100%;
-        }
-
-        .trvlr-media-gallery {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .trvlr-media-gallery .media-item {
-            position: relative;
-        }
-
-        .trvlr-media-gallery .media-item img {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-        }
-
-        .trvlr-media-gallery .media-item .remove {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: red;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-        }
-    </style>
-
-    <div class="trvlr-row">
-        <label>TRVLR ID</label>
-        <input type="text" class="regular-text" value="<?php echo esc_attr($trvlr_id); ?>" readonly disabled>
-        <span class="description">System ID (Read Only)</span>
-    </div>
-
-    <div class="trvlr-row">
-        <label>Description</label>
-        <?php wp_editor($description, 'trvlr_description', array('media_buttons' => false, 'textarea_rows' => 10)); ?>
-    </div>
-
-    <div class="trvlr-row">
-        <label>Short Description</label>
-        <?php wp_editor($short_desc, 'trvlr_short_description', array('media_buttons' => false, 'textarea_rows' => 3, 'teeny' => true)); ?>
-    </div>
-
-    <div class="trvlr-row">
-        <label>Inclusions</label>
-        <?php wp_editor($inclusions, 'trvlr_inclusions', array('media_buttons' => false, 'textarea_rows' => 5)); ?>
-    </div>
-
-    <div class="trvlr-row">
-        <label>Highlights</label>
-        <?php wp_editor($highlights, 'trvlr_highlights', array('media_buttons' => false, 'textarea_rows' => 5)); ?>
-    </div>
-
-    <div class="trvlr-row">
-        <label>
-            <input type="checkbox" name="trvlr_is_on_sale" value="1" <?php checked($is_on_sale, '1'); ?>>
-            Is On Sale?
-        </label>
-    </div>
-
-    <div class="trvlr-row">
-        <label>Sale Description</label>
-        <input type="text" name="trvlr_sale_description" value="<?php echo esc_attr($sale_description); ?>" class="widefat">
-    </div>
-
-    <!-- Pricing Repeater -->
-    <?php
-    $repeaters = trvlr_get_repeater_instances();
-    $repeaters['pricing']->render($post->ID);
-    ?>
-
-
-    <!-- Locations Repeater -->
-    <?php $repeaters['locations']->render($post->ID); ?>
-
-    <div class="trvlr-row" style="margin-top:20px;">
-        <label>Media Gallery (Images/Videos)</label>
-        <div class="trvlr-media-gallery" id="trvlr-media-gallery">
-            <?php
-            if (! empty($media_ids) && is_array($media_ids)) {
-                foreach ($media_ids as $attachment_id) {
-                    $img_url = wp_get_attachment_image_url($attachment_id, 'thumbnail');
-                    if ($img_url) {
-                        echo '<div class="media-item" data-id="' . esc_attr($attachment_id) . '">';
-                        echo '<img src="' . esc_url($img_url) . '" />';
-                        echo '<button type="button" class="remove" onclick="trvlrRemoveMedia(this)">×</button>';
-                        echo '<input type="hidden" name="trvlr_media[]" value="' . esc_attr($attachment_id) . '">';
-                        echo '</div>';
-                    }
-                }
-            }
-            ?>
+    <div class="trvlr-meta-fields-grid">
+        <div class="trvlr-meta-readonly trvlr-row">
+            <label>TRVLR ID</label>
+            <input type="text" class="regular-text" value="<?php echo esc_attr($trvlr_id); ?>" readonly disabled>
+            <span class="description">System ID (Read Only)</span>
         </div>
-        <button type="button" class="button" onclick="trvlrOpenMediaUploader(event)">Add Media</button>
-    </div>
 
-    <div class="trvlr-row">
-        <label>Duration</label>
-        <input type="text" name="trvlr_duration" value="<?php echo esc_attr($duration); ?>" class="regular-text">
+        <?php foreach (Trvlr_Field_Map::get_meta_ui_fields() as $field_name => $config): ?>
+            <?php trvlr_render_meta_ui_field($post->ID, $field_name, $config); ?>
+        <?php endforeach; ?>
     </div>
-
-    <div class="trvlr-row">
-        <div style="display:flex; gap:20px; flex-wrap:wrap;">
-            <div style="flex:1; min-width:200px;">
-                <label>Start Time</label>
-                <input type="time" name="trvlr_start_time" value="<?php echo esc_attr($start_time); ?>" class="regular-text">
-            </div>
-            <div style="flex:1; min-width:200px;">
-                <label>End Time</label>
-                <input type="time" name="trvlr_end_time" value="<?php echo esc_attr($end_time); ?>" class="regular-text">
-            </div>
-        </div>
-    </div>
-
-    <div class="trvlr-row">
-        <label>Additional Info</label>
-        <?php wp_editor($additional_info, 'trvlr_additional_info', array('media_buttons' => false, 'textarea_rows' => 5)); ?>
-    </div>
-
-    <div class="trvlr-row">
-        <label>Simple Location</label>
-        <input type="text" name="trvlr_simple_location" value="<?php echo esc_attr(get_post_meta($post->ID, 'trvlr_simple_location', true)); ?>" class="widefat">
-        <span class="description">Short location name shown in the summary bar (e.g. "Cairns")</span>
-    </div>
-
-    <div class="trvlr-row">
-        <label>Suitable Ages</label>
-        <input type="text" name="trvlr_suitable_ages" value="<?php echo esc_attr(get_post_meta($post->ID, 'trvlr_suitable_ages', true)); ?>" class="widefat">
-        <span class="description">Age suitability text shown in the summary bar (e.g. "All ages")</span>
-    </div>
-
-    <div class="trvlr-row">
-        <label>Cancellation Policy</label>
-        <input type="text" name="trvlr_cancellation_policy" value="<?php echo esc_attr(get_post_meta($post->ID, 'trvlr_cancellation_policy', true)); ?>" class="widefat">
-        <span class="description">Cancellation policy text shown in the summary bar (e.g. "Free cancellation")</span>
-    </div>
-
 
     <script>
         function trvlrOpenMediaUploader(e) {
@@ -425,9 +459,14 @@ function trvlr_render_details_meta_box($post)
 
                 selection.forEach(function(attachment) {
                     attachment = attachment.toJSON();
+                    var thumb = attachment.sizes && attachment.sizes.thumbnail
+                        ? attachment.sizes.thumbnail.url
+                        : attachment.url;
                     var itemHtml = '<div class="media-item" data-id="' + attachment.id + '">' +
-                        '<img src="' + attachment.sizes.thumbnail.url + '" />' +
-                        '<button type="button" class="remove" onclick="trvlrRemoveMedia(this)">×</button>' +
+                        '<img src="' + thumb + '" alt="" />' +
+                        '<button type="button" class="remove" onclick="trvlrRemoveMedia(this)" aria-label="Remove media">' +
+                        '<span class="dashicons dashicons-trash" aria-hidden="true"></span>' +
+                        '</button>' +
                         '<input type="hidden" name="trvlr_media[]" value="' + attachment.id + '">' +
                         '</div>';
                     gallery.insertAdjacentHTML('beforeend', itemHtml);
@@ -443,54 +482,95 @@ function trvlr_render_details_meta_box($post)
             }
         }
     </script>
-
 <?php
 }
 
-// Save All Fields
+/**
+ * Whether a syncable field may accept an admin save write.
+ *
+ * @param int    $post_id
+ * @param string $field_name
+ * @return bool
+ */
+function trvlr_field_allows_admin_save($post_id, $field_name)
+{
+    if (!Trvlr_Field_Map::is_syncable($field_name)) {
+        return true;
+    }
+    if (!trvlr_field_sync_enabled($post_id)) {
+        return true;
+    }
+    return trvlr_is_custom_edit($post_id, $field_name);
+}
+
+/**
+ * Save attraction detail meta from the field registry.
+ *
+ * @param int $post_id
+ * @return void
+ */
 function trvlr_save_details_meta($post_id)
 {
-    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
-    if (! current_user_can('edit_post', $post_id)) return;
-
-    // Save Standard Details
-    if (isset($_POST['trvlr_details_nonce']) && wp_verify_nonce($_POST['trvlr_details_nonce'], 'trvlr_save_details')) {
-
-        $text_fields = array('trvlr_duration', 'trvlr_start_time', 'trvlr_end_time', 'trvlr_sale_description', 'trvlr_simple_location', 'trvlr_suitable_ages', 'trvlr_cancellation_policy');
-        foreach ($text_fields as $field) {
-            if (isset($_POST[$field])) {
-                update_post_meta($post_id, $field, sanitize_text_field($_POST[$field]));
-            }
-        }
-
-        $editor_fields = array('trvlr_description', 'trvlr_short_description', 'trvlr_inclusions', 'trvlr_highlights', 'trvlr_additional_info');
-        foreach ($editor_fields as $field) {
-            if (isset($_POST[$field])) {
-                update_post_meta($post_id, $field, wp_kses_post($_POST[$field]));
-            }
-        }
-
-        // Checkbox
-        update_post_meta($post_id, 'trvlr_is_on_sale', isset($_POST['trvlr_is_on_sale']) ? '1' : '0');
-
-        // Media Gallery
-        // Only update if explicitly provided in POST (don't delete if field not submitted)
-        if (isset($_POST['trvlr_media'])) {
-            if (is_array($_POST['trvlr_media']) && !empty($_POST['trvlr_media'])) {
-                $media_ids = array_map('intval', $_POST['trvlr_media']);
-                update_post_meta($post_id, 'trvlr_media', $media_ids);
-            } else {
-                // Empty array explicitly submitted - clear the gallery
-                delete_post_meta($post_id, 'trvlr_media');
-            }
-        }
-        // If not in POST, leave unchanged (user didn't interact with gallery field)
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+    if (!current_user_can('edit_post', $post_id)) {
+        return;
+    }
+    if (get_post_type($post_id) !== 'trvlr_attraction') {
+        return;
+    }
+    if (defined('TRVLR_SYNCING') && TRVLR_SYNCING) {
+        return;
+    }
+    if (!isset($_POST['trvlr_details_nonce']) || !wp_verify_nonce($_POST['trvlr_details_nonce'], 'trvlr_save_details')) {
+        return;
     }
 
-    // Save Repeaters
     $repeaters = trvlr_get_repeater_instances();
-    foreach ($repeaters as $r) {
-        $r->save($post_id);
+
+    foreach (Trvlr_Field_Map::get_meta_ui_fields() as $field_name => $config) {
+        if (!trvlr_field_allows_admin_save($post_id, $field_name)) {
+            continue;
+        }
+
+        $control = isset($config['ui']['control']) ? $config['ui']['control'] : 'text';
+
+        switch ($control) {
+            case 'richtext':
+                if (isset($_POST[$field_name])) {
+                    update_post_meta($post_id, $field_name, wp_kses_post(wp_unslash($_POST[$field_name])));
+                }
+                break;
+
+            case 'checkbox':
+                update_post_meta($post_id, $field_name, isset($_POST[$field_name]) ? '1' : '0');
+                break;
+
+            case 'gallery':
+                if (isset($_POST['trvlr_media'])) {
+                    if (is_array($_POST['trvlr_media']) && !empty($_POST['trvlr_media'])) {
+                        update_post_meta($post_id, $field_name, array_map('intval', $_POST['trvlr_media']));
+                    } else {
+                        delete_post_meta($post_id, $field_name);
+                    }
+                }
+                break;
+
+            case 'repeater':
+                if (isset($repeaters[$field_name])) {
+                    $repeaters[$field_name]->save($post_id);
+                }
+                break;
+
+            case 'time':
+            case 'text':
+            default:
+                if (isset($_POST[$field_name])) {
+                    update_post_meta($post_id, $field_name, sanitize_text_field(wp_unslash($_POST[$field_name])));
+                }
+                break;
+        }
     }
 }
 add_action('save_post', 'trvlr_save_details_meta');

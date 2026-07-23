@@ -436,6 +436,13 @@ function trvlr_short_description($post_id = null)
 		return '';
 	}
 
+	if ($content !== '' && $content !== null) {
+		$has_html = preg_match('/<(?:p|br|div|span|ul|ol|li|h[1-6]|strong|em|a|img|table|blockquote)\b/i', $content);
+		if (!$has_html) {
+			$content = wpautop($content);
+		}
+	}
+
 	$output = '<div class="trvlr-short-description">' . $content . '</div>';
 	return apply_filters('trvlr_short_description', $output, $post_id);
 }
@@ -458,6 +465,19 @@ function trvlr_description($post_id = null)
 
 	$output = '<div class="trvlr-description">' . $content . '</div>';
 	return apply_filters('trvlr_description', $output, $post_id);
+}
+
+function trvlr_important_information($post_id = null)
+{
+	$post_id = $post_id ?: get_the_ID();
+	$content = get_trvlr_important_information($post_id);
+
+	if (!$content) {
+		return '';
+	}
+
+	$output = '<div class="trvlr-important-information">' . esc_html($content) . '</div>';
+	return apply_filters('trvlr_important_information', $output, $post_id);
 }
 
 function trvlr_highlights($post_id = null) {

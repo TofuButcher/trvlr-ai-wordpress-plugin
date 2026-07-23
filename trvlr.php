@@ -86,7 +86,6 @@ add_filter('upgrader_source_selection', function ($source, $remote_source) {
 	return $source;
 }, 10, 2);
 
-// Temp test files
 if (file_exists(TRVLR_PLUGIN_DIR . 'test-api.php')) {
 	require_once TRVLR_PLUGIN_DIR . 'test-api.php';
 }

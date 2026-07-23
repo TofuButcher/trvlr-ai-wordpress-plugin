@@ -1,8 +1,7 @@
 <?php
 
 /**
- * Central field mapping and configuration for TRVLR attractions
- * Single source of truth for both sync and edit tracking
+ * Unified attraction field registry for sync, Custom Edit, and meta UI.
  *
  * @package    Trvlr
  * @subpackage Trvlr/includes
@@ -11,136 +10,263 @@
 class Trvlr_Field_Map
 {
 	/**
-	 * Get all trackable fields with their configurations
-	 * 
-	 * @return array Field configurations
+	 * @return array Field catalog keyed by field id
 	 */
-	public static function get_trackable_fields()
+	public static function get_fields()
 	{
 		return array(
 			'post_title' => array(
 				'label' => 'Title',
-				'type' => 'string',
-				'sync_from' => 'title',
+				'data_type' => 'string',
+				'sync' => array('source' => 'title'),
+				'ui' => false,
 			),
 			'trvlr_description' => array(
 				'label' => 'Description',
-				'type' => 'string',
-				'sync_from' => 'description',
+				'data_type' => 'string',
+				'sync' => array('from' => 'description', 'transform' => 'editor'),
+				'ui' => array('control' => 'richtext', 'span' => 6, 'rows' => 10),
 			),
 			'trvlr_short_description' => array(
 				'label' => 'Short Description',
-				'type' => 'string',
-				'sync_from' => 'short_description',
+				'data_type' => 'string',
+				'sync' => array('from' => 'short_description', 'transform' => 'editor'),
+				'ui' => array('control' => 'richtext', 'span' => 6, 'rows' => 3, 'teeny' => true),
 			),
 			'trvlr_inclusions' => array(
 				'label' => 'Inclusions',
-				'type' => 'string',
-				'sync_from' => 'inclusions',
+				'data_type' => 'string',
+				'sync' => array('from' => 'inclusions', 'transform' => 'list'),
+				'ui' => array('control' => 'richtext', 'span' => 12, 'rows' => 5),
 			),
 			'trvlr_highlights' => array(
 				'label' => 'Highlights',
-				'type' => 'string',
-				'sync_from' => 'highlights',
-			),
-			'trvlr_pricing' => array(
-				'label' => 'Pricing',
-				'type' => 'array',
-				'sync_from' => 'pricing',
-			),
-			'trvlr_locations' => array(
-				'label' => 'Locations',
-				'type' => 'array',
-				'sync_from' => null,
-			),
-			'trvlr_media' => array(
-				'label' => 'Gallery Images',
-				'type' => 'array',
-				'sync_from' => null,
-			),
-			'trvlr_duration' => array(
-				'label' => 'Duration',
-				'type' => 'string',
-				'sync_from' => 'duration',
-			),
-			'trvlr_start_time' => array(
-				'label' => 'Start Time',
-				'type' => 'string',
-				'sync_from' => 'start_time',
-			),
-			'trvlr_end_time' => array(
-				'label' => 'End Time',
-				'type' => 'string',
-				'sync_from' => 'end_time',
-			),
-			'trvlr_additional_info' => array(
-				'label' => 'Additional Info',
-				'type' => 'string',
-				'sync_from' => 'additional_info',
+				'data_type' => 'string',
+				'sync' => array('from' => 'highlights', 'transform' => 'list'),
+				'ui' => array('control' => 'richtext', 'span' => 12, 'rows' => 5),
 			),
 			'trvlr_is_on_sale' => array(
 				'label' => 'Is On Sale',
-				'type' => 'boolean',
-				'sync_from' => null,
+				'data_type' => 'boolean',
+				'sync' => false,
+				'ui' => array('control' => 'checkbox', 'span' => 6),
 			),
 			'trvlr_sale_description' => array(
 				'label' => 'Sale Description',
-				'type' => 'string',
-				'sync_from' => null,
+				'data_type' => 'string',
+				'sync' => false,
+				'ui' => array('control' => 'text', 'span' => 6),
 			),
-			'_thumbnail_id' => array(
-				'label' => 'Featured Image',
-				'type' => 'string',
-				'sync_from' => null,
+			'trvlr_pricing' => array(
+				'label' => 'Attraction Pricing',
+				'data_type' => 'array',
+				'sync' => array('source' => 'pricing'),
+				'ui' => array(
+					'control' => 'repeater',
+					'span' => 12,
+					'repeater' => array(
+						array('id' => 'type', 'label' => 'Price Type'),
+						array('id' => 'price', 'label' => 'Price'),
+						array('id' => 'sale_price', 'label' => 'Sale Price'),
+					),
+				),
+			),
+			'trvlr_locations' => array(
+				'label' => 'Locations',
+				'data_type' => 'array',
+				'sync' => array('source' => 'locations'),
+				'ui' => array(
+					'control' => 'repeater',
+					'span' => 12,
+					'repeater' => array(
+						array('id' => 'type', 'label' => 'Type (Start/End)'),
+						array('id' => 'address', 'label' => 'Address'),
+						array('id' => 'lat', 'label' => 'Latitude'),
+						array('id' => 'lng', 'label' => 'Longitude'),
+					),
+				),
+			),
+			'trvlr_media' => array(
+				'label' => 'Media Gallery',
+				'data_type' => 'array',
+				'sync' => array('source' => 'images'),
+				'ui' => array('control' => 'gallery', 'span' => 12),
+			),
+			'trvlr_duration' => array(
+				'label' => 'Duration',
+				'data_type' => 'string',
+				'sync' => array('from' => 'duration', 'transform' => 'text'),
+				'ui' => array('control' => 'text', 'span' => 4),
+			),
+			'trvlr_start_time' => array(
+				'label' => 'Start Time',
+				'data_type' => 'string',
+				'sync' => array('from' => 'start_time', 'transform' => 'text'),
+				'ui' => array('control' => 'time', 'span' => 4),
+			),
+			'trvlr_end_time' => array(
+				'label' => 'End Time',
+				'data_type' => 'string',
+				'sync' => array('from' => 'end_time', 'transform' => 'text'),
+				'ui' => array('control' => 'time', 'span' => 4),
+			),
+			'trvlr_additional_info' => array(
+				'label' => 'Additional Info',
+				'data_type' => 'string',
+				'sync' => array('from' => 'additional_info', 'transform' => 'editor'),
+				'ui' => array('control' => 'richtext', 'span' => 12, 'rows' => 5),
 			),
 			'trvlr_simple_location' => array(
 				'label' => 'Simple Location',
-				'type' => 'string',
-				'sync_from' => null,
+				'data_type' => 'string',
+				'sync' => false,
+				'ui' => array(
+					'control' => 'text',
+					'span' => 4,
+					'description' => 'Short location name shown in the summary bar (e.g. "Cairns")',
+				),
 			),
 			'trvlr_suitable_ages' => array(
 				'label' => 'Suitable Ages',
-				'type' => 'string',
-				'sync_from' => null,
+				'data_type' => 'string',
+				'sync' => false,
+				'ui' => array(
+					'control' => 'text',
+					'span' => 4,
+					'description' => 'Age suitability text shown in the summary bar (e.g. "All ages")',
+				),
 			),
 			'trvlr_cancellation_policy' => array(
 				'label' => 'Cancellation Policy',
-				'type' => 'string',
-				'sync_from' => null,
+				'data_type' => 'string',
+				'sync' => false,
+				'ui' => array(
+					'control' => 'text',
+					'span' => 4,
+					'description' => 'Cancellation policy text shown in the summary bar (e.g. "Free cancellation")',
+				),
+			),
+			'trvlr_faqs' => array(
+				'label' => 'FAQs',
+				'data_type' => 'array',
+				'sync' => false,
+				'ui' => array(
+					'control' => 'repeater',
+					'span' => 12,
+					'repeater' => array(
+						array('id' => 'question', 'label' => 'Question'),
+						array('id' => 'answer', 'label' => 'Answer', 'type' => 'textarea'),
+					),
+				),
+			),
+			'trvlr_important_information' => array(
+				'label' => 'Important Information',
+				'data_type' => 'string',
+				'sync' => false,
+				'ui' => array('control' => 'text', 'span' => 12),
+			),
+			'_thumbnail_id' => array(
+				'label' => 'Featured Image',
+				'data_type' => 'string',
+				'sync' => array('source' => 'thumbnail'),
+				'ui' => false,
 			),
 		);
 	}
 
 	/**
-	 * Get human-readable label for a field
-	 * 
-	 * @param string $field_name Field name
-	 * @return string Label
+	 * @deprecated Use get_fields()
+	 */
+	public static function get_trackable_fields()
+	{
+		return self::get_fields();
+	}
+
+	/**
+	 * @param string $field_name
+	 * @return array|null
+	 */
+	public static function get_field($field_name)
+	{
+		$fields = self::get_fields();
+		return isset($fields[$field_name]) ? $fields[$field_name] : null;
+	}
+
+	/**
+	 * @param string $field_name
+	 * @return bool
+	 */
+	public static function is_syncable($field_name)
+	{
+		$field = self::get_field($field_name);
+		return $field && !empty($field['sync']);
+	}
+
+	/**
+	 * @return array
+	 */
+	public static function get_syncable_fields()
+	{
+		$out = array();
+		foreach (self::get_fields() as $name => $config) {
+			if (!empty($config['sync'])) {
+				$out[$name] = $config;
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * @return string[]
+	 */
+	public static function get_syncable_field_names()
+	{
+		return array_keys(self::get_syncable_fields());
+	}
+
+	/**
+	 * @return array
+	 */
+	public static function get_meta_ui_fields()
+	{
+		$out = array();
+		foreach (self::get_fields() as $name => $config) {
+			if (!empty($config['ui']) && is_array($config['ui'])) {
+				$out[$name] = $config;
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * @param string $field_name
+	 * @return string
 	 */
 	public static function get_field_label($field_name)
 	{
-		$fields = self::get_trackable_fields();
-		return isset($fields[$field_name]['label']) ? $fields[$field_name]['label'] : $field_name;
+		$field = self::get_field($field_name);
+		return $field && isset($field['label']) ? $field['label'] : $field_name;
 	}
 
 	/**
-	 * Get field type
-	 * 
-	 * @param string $field_name Field name
-	 * @return string Type (string, array, boolean)
+	 * @param string $field_name
+	 * @return string
 	 */
 	public static function get_field_type($field_name)
 	{
-		$fields = self::get_trackable_fields();
-		return isset($fields[$field_name]['type']) ? $fields[$field_name]['type'] : 'string';
+		$field = self::get_field($field_name);
+		if ($field && isset($field['data_type'])) {
+			return $field['data_type'];
+		}
+		if ($field && isset($field['type'])) {
+			return $field['type'];
+		}
+		return 'string';
 	}
 
 	/**
-	 * Generate hash for a field value
-	 * Handles different data types consistently
-	 * 
-	 * @param mixed $value Field value
-	 * @param string $field_name Field name (for type detection)
+	 * @param mixed  $value
+	 * @param string $field_name
 	 * @return string MD5 hash
 	 */
 	public static function hash_field_value($value, $field_name)
@@ -159,7 +285,6 @@ class Trvlr_Field_Map
 				return md5('');
 
 			case 'boolean':
-				// Normalize boolean values
 				return md5($value ? '1' : '0');
 
 			case 'string':
@@ -176,16 +301,17 @@ class Trvlr_Field_Map
 		}
 	}
 
-	private static function is_rich_text_meta_field($field_name)
+	/**
+	 * @param string $field_name
+	 * @return bool
+	 */
+	public static function is_rich_text_meta_field($field_name)
 	{
-		static $fields = array(
-			'trvlr_description',
-			'trvlr_short_description',
-			'trvlr_inclusions',
-			'trvlr_highlights',
-			'trvlr_additional_info',
-		);
-		return in_array($field_name, $fields, true);
+		$field = self::get_field($field_name);
+		if (!$field || empty($field['ui']['control'])) {
+			return false;
+		}
+		return $field['ui']['control'] === 'richtext';
 	}
 
 	private static function normalize_editor_html_for_hash($html)
@@ -207,12 +333,6 @@ class Trvlr_Field_Map
 		return trim($html);
 	}
 
-	/**
-	 * Normalize array for consistent hashing
-	 * 
-	 * @param array $array Array to normalize
-	 * @return array Normalized array
-	 */
 	private static function normalize_array($array)
 	{
 		if (!is_array($array)) {
@@ -226,12 +346,10 @@ class Trvlr_Field_Map
 			return $value !== null;
 		});
 
-		// Sort by keys for associative arrays
 		if (self::is_assoc($array)) {
 			ksort($array);
 		}
 
-		// Recursively normalize nested arrays and convert numeric strings to integers
 		foreach ($array as $key => $value) {
 			if (is_array($value)) {
 				$array[$key] = self::normalize_array($value);
@@ -245,24 +363,18 @@ class Trvlr_Field_Map
 		return $array;
 	}
 
-	/**
-	 * Check if array is associative
-	 * 
-	 * @param array $array Array to check
-	 * @return bool
-	 */
 	private static function is_assoc($array)
 	{
-		if (array() === $array) return false;
+		if (array() === $array) {
+			return false;
+		}
 		return array_keys($array) !== range(0, count($array) - 1);
 	}
 
 	/**
-	 * Get current value of a field from a post
-	 * 
-	 * @param int $post_id Post ID
-	 * @param string $field_name Field name
-	 * @return mixed Field value
+	 * @param int    $post_id
+	 * @param string $field_name
+	 * @return mixed
 	 */
 	public static function get_field_value($post_id, $field_name)
 	{
@@ -282,27 +394,63 @@ class Trvlr_Field_Map
 	}
 
 	/**
-	 * Get all field names
-	 * 
-	 * @return array Field names
+	 * @return string[]
 	 */
 	public static function get_field_names()
 	{
-		return array_keys(self::get_trackable_fields());
+		return array_keys(self::get_fields());
 	}
 
 	/**
-	 * Get all field labels indexed by field name
-	 * 
-	 * @return array ['field_name' => 'Label']
+	 * @return array<string,string>
 	 */
 	public static function get_field_labels()
 	{
-		$fields = self::get_trackable_fields();
 		$labels = array();
-		foreach ($fields as $name => $config) {
+		foreach (self::get_fields() as $name => $config) {
 			$labels[$name] = $config['label'];
 		}
 		return $labels;
+	}
+
+	/**
+	 * @param array $data API attraction payload
+	 * @return array meta_input entries from sync.from fields
+	 */
+	public static function build_sync_meta_from_api($data)
+	{
+		$meta = array();
+
+		foreach (self::get_syncable_fields() as $field_name => $config) {
+			$sync = $config['sync'];
+			if (empty($sync['from'])) {
+				continue;
+			}
+
+			$key = $sync['from'];
+			$raw = isset($data[$key]) ? $data[$key] : null;
+			$transform = isset($sync['transform']) ? $sync['transform'] : 'text';
+
+			switch ($transform) {
+				case 'editor':
+					$meta[$field_name] = $raw !== null && $raw !== ''
+						? Trvlr_Data_Transform::prepare_for_wp_editor($raw)
+						: '';
+					break;
+				case 'list':
+					$meta[$field_name] = !empty($raw)
+						? Trvlr_Data_Transform::transform_list_field($raw)
+						: '';
+					break;
+				case 'text':
+				default:
+					$meta[$field_name] = $raw !== null && $raw !== ''
+						? sanitize_text_field($raw)
+						: '';
+					break;
+			}
+		}
+
+		return $meta;
 	}
 }

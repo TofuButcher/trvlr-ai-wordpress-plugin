@@ -1,22 +1,15 @@
 <?php
 
 /**
- * Helper functions for accessing attraction custom field data
- * 
- * All functions follow WordPress conventions:
- * - Accept optional $post_id parameter, defaults to global $post
- * - Return empty string for non-existent fields (allows !function() conditionals)
- * - Apply filters for customization: trvlr_{field_name}
- * 
+ * Attraction field helpers (optional $post_id, empty string when missing, trvlr_{field} filters).
+ *
  * @package Trvlr
  */
 
 if (! defined('ABSPATH')) exit;
 
 /**
- * Get the Organisation ID
- * 
- * @return string Organisation ID
+ * @return string
  */
 function get_trvlr_organisation_id()
 {
@@ -24,10 +17,8 @@ function get_trvlr_organisation_id()
 }
 
 /**
- * Get the Base Domain for TRVLR API/Iframes
- * 
- * @param string|null $org_id Optional Organisation ID
- * @return string Base domain URL
+ * @param string|null $org_id Optional organisation ID (or full URL)
+ * @return string Base domain URL for API/iframes
  */
 function get_trvlr_base_domain($org_id = null)
 {
@@ -39,12 +30,10 @@ function get_trvlr_base_domain($org_id = null)
 		return '';
 	}
 
-	// Check if org_id already contains http
 	if (strpos($org_id, 'http') !== false) {
 		return $org_id;
 	}
 
-	// Build domain
 	return 'https://' . $org_id . '.portal.traveloris.com';
 }
 
@@ -91,11 +80,35 @@ function get_trvlr_title($post_id = null)
 	return get_the_title($post_id);
 }
 
+function get_trvlr_section_heading($section, $post_id = null)
+{
+	$post_id = $post_id ?: get_the_ID();
+
+	$defaults = array(
+		'highlights' => __('Highlights', 'trvlr'),
+		'inclusions' => __('Inclusions', 'trvlr'),
+		'description' => __('Description', 'trvlr'),
+		'additional_info' => __('Additional Information', 'trvlr'),
+	);
+
+	$heading = isset($defaults[$section]) ? $defaults[$section] : '';
+	$heading = apply_filters('trvlr_section_heading', $heading, $section, $post_id);
+
+	return apply_filters("trvlr_section_heading_{$section}", $heading, $post_id);
+}
+
 function get_trvlr_description($post_id = null)
 {
 	$post_id = $post_id ?: get_the_ID();
 	$value = get_post_meta($post_id, 'trvlr_description', true);
 	return apply_filters('trvlr_description', $value ?: '', $post_id);
+}
+
+function get_trvlr_important_information($post_id = null)
+{
+	$post_id = $post_id ?: get_the_ID();
+	$value = get_post_meta($post_id, 'trvlr_important_information', true);
+	return apply_filters('trvlr_important_information', $value ?: '', $post_id);
 }
 
 function get_trvlr_short_description($post_id = null)
@@ -254,6 +267,14 @@ function get_trvlr_locations($post_id = null)
 	$value = get_post_meta($post_id, 'trvlr_locations', true);
 	$locations = is_array($value) ? $value : array();
 	return apply_filters('trvlr_locations', $locations, $post_id);
+}
+
+function get_trvlr_faqs($post_id = null)
+{
+	$post_id = $post_id ?: get_the_ID();
+	$value = get_post_meta($post_id, 'trvlr_faqs', true);
+	$faqs = is_array($value) ? $value : array();
+	return apply_filters('trvlr_faqs', $faqs, $post_id);
 }
 
 function get_trvlr_media($post_id = null, $include_featured = true)

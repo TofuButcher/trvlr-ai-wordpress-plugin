@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) exit;
  * Build a WP_Query args array from the named shortcode/API parameters.
  *
  * Accepts the same parameter set as `trvlr_attraction_cards` shortcode plus a `query_args`
- * key for a full WP_Query override. Handles `ids` â†’ `post__in` and `exclude` â†’
+ * key for a full WP_Query override. Handles `ids` → `post__in` and `exclude` →
  * `post__not_in` conversions, and builds `tax_query` from named taxonomy params.
  *
  * Pass `tax_query` or `meta_query` directly to override the built-in taxonomy/meta handling.
@@ -545,14 +545,14 @@ function trvlr_cards_maybe_inherit_archive_query($args)
  * Taxonomy filters (combined with AND across groups; within a group use the matching `*_relation`):
  * - **WordPress tags** (`post_tag`): `tag` (comma-separated slugs), `tag_id` (comma-separated term IDs),
  *   `tag_slug` (comma-separated slugs), `tag_relation` (`AND`/`OR` when multiple of these dimensions apply).
- *   Synced/API â€œattraction typeâ€ terms live on `trvlr_attraction_tag` â€” filter those with `trvlr_tag`, `trvlr_tag_slug`, or `trvlr_tag_id`, not `tag` / `tag_slug`.
+ *   Synced/API "attraction type" terms live on `trvlr_attraction_tag` — filter those with `trvlr_tag`, `trvlr_tag_slug`, or `trvlr_tag_id`, not `tag` / `tag_slug`.
  * - **Categories** (`category`): `category` (comma-separated slugs), `category_id` (comma-separated term IDs),
  *   `category_slug` (comma-separated slugs), `category_relation`.
  * - **TRVLR attraction tags** (`trvlr_attraction_tag`): `trvlr_tag` (comma-separated names),
  *   `trvlr_tag_id` (comma-separated term IDs), `trvlr_tag_slug` (comma-separated slugs), `trvlr_tag_relation`.
  *
  * Other common `$args`: `posts_per_page`, `orderby`, `order`, `post__in` (via shortcode `ids`), `exclude` (post IDs
- * â†’ `post__not_in`), `meta_key` / `meta_value` / `meta_compare`, `meta_query`, or a raw `tax_query` array (replaces
+ * → `post__not_in`), `meta_key` / `meta_value` / `meta_compare`, `meta_query`, or a raw `tax_query` array (replaces
  * all built-in taxonomy arguments above).
  *
  * Shortcode: `[trvlr_attraction_cards]` accepts the same argument names as attributes.
@@ -602,7 +602,6 @@ function trvlr_cards($args = array())
 			? sanitize_html_class($args['grid_id'])
 			: 'trvlr-grid-' . $grid_counter;
 
-		// Extract card_variant before building query args (not a WP_Query key).
 		$card_variant = 'default';
 		if (!empty($args['card_variant'])) {
 			$card_variant = sanitize_key($args['card_variant']);
@@ -611,19 +610,16 @@ function trvlr_cards($args = array())
 		$initial_query = $args;
 		unset($initial_query['grid_id']);
 
-		// Remove card_variant from args passed to trvlr_build_query_args (not a WP_Query key),
-		// but keep it in $initial_query so the JS query state includes it for AJAX fetches.
+		// Keep card_variant in $initial_query for AJAX; strip it from WP_Query args.
 		$query_build_args = $args;
 		unset($query_build_args['card_variant']);
 
 		$query_args = trvlr_build_query_args($query_build_args);
 		$result     = trvlr_build_cards_result($query_args, $card_variant);
 
-		// Derive a category--{slug} class from the active tax_query for the initial render.
 		$category_class = '';
 		if (!empty($query_args['tax_query'])) {
 			$tq = $query_args['tax_query'];
-			// Normalise: single-clause arrays are stored as [[...]], multi-clause with 'relation' key.
 			$clauses = is_array($tq) ? $tq : array();
 			foreach ($clauses as $k => $clause) {
 				if ($k === 'relation' || !is_array($clause) || empty($clause['taxonomy'])) continue;

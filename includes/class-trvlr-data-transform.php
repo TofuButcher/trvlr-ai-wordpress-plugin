@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Static data transformation utilities for TRVLR attraction fields
+ * Data transforms for attraction field sync/storage.
  *
  * @package    Trvlr
  * @subpackage Trvlr/includes

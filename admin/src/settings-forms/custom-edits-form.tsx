@@ -4,25 +4,13 @@ import { __ } from '@wordpress/i18n';
 import { Button, Notice, Spinner } from '@wordpress/components';
 import apiFetch from '@wordpress/api-fetch';
 
-declare global {
-   interface Window {
-      trvlrInitialData?: {
-         restNonce?: string;
-         [key: string]: any;
-      };
-      wp?: any;
-   }
-}
-
 interface CustomEdit {
    id: number;
    title: string;
    edit_url: string;
    modified: string;
    edited_fields: string[];
-   force_sync_fields: string[];
    edited_fields_labels: string[];
-   force_sync_fields_labels: string[];
 }
 
 const asStringArray = (v: unknown): string[] => {
@@ -38,8 +26,7 @@ const asStringArray = (v: unknown): string[] => {
 export const CustomEditsForm = () => {
    const [customEdits, setCustomEdits] = useState<CustomEdit[]>([]);
    const [loading, setLoading] = useState(true);
-   const [forceSyncSettings, setForceSyncSettings] = useState<Record<number, string[]>>({});
-   const [saving, setSaving] = useState(false);
+   const [busy, setBusy] = useState(false);
    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
    useEffect(() => {
@@ -52,17 +39,9 @@ export const CustomEditsForm = () => {
          const edits = raw.map((edit) => ({
             ...edit,
             edited_fields: asStringArray(edit.edited_fields),
-            force_sync_fields: asStringArray(edit.force_sync_fields),
             edited_fields_labels: asStringArray(edit.edited_fields_labels),
-            force_sync_fields_labels: asStringArray(edit.force_sync_fields_labels),
          }));
          setCustomEdits(edits);
-
-         const initial: Record<number, string[]> = {};
-         edits.forEach((edit) => {
-            initial[edit.id] = edit.force_sync_fields;
-         });
-         setForceSyncSettings(initial);
       } catch (error: any) {
          console.error('Error loading custom edits:', error);
          if (error?.data?.status === 403 || error?.code === 'rest_cookie_invalid_nonce') {
@@ -76,104 +55,26 @@ export const CustomEditsForm = () => {
       }
    };
 
-   const toggleForceSync = (postId: number, fieldName: string) => {
-      setForceSyncSettings(prev => {
-         const current = prev[postId] || [];
-         const updated = current.includes(fieldName)
-            ? current.filter(f => f !== fieldName)
-            : [...current, fieldName];
-         return { ...prev, [postId]: updated };
-      });
-   };
+   const clearEdits = async (payload: { post_id?: number; fields?: string[] }, confirmText: string) => {
+      if (!confirm(confirmText)) return;
 
-   const toggleSelectAll = (postId: number, allFields: string[]) => {
-      setForceSyncSettings(prev => {
-         const current = prev[postId] || [];
-         const allSelected = allFields.every(f => current.includes(f));
-         return {
-            ...prev,
-            [postId]: allSelected ? [] : allFields,
-         };
-      });
-   };
-
-   const handleSave = async () => {
-      setSaving(true);
+      setBusy(true);
       setMessage(null);
 
       try {
          const response = await apiFetch({
-            path: '/trvlr/v1/sync/force-sync',
+            path: '/trvlr/v1/sync/clear-custom-edits',
             method: 'POST',
-            data: { force_sync_fields: forceSyncSettings },
+            data: payload,
          }) as { message: string };
 
          setMessage({ type: 'success', text: response.message });
+         await loadCustomEdits();
       } catch (error) {
-         setMessage({ type: 'error', text: __('Failed to save force sync settings.', 'trvlr') });
+         setMessage({ type: 'error', text: __('Failed to clear custom edits.', 'trvlr') });
       }
 
-      setSaving(false);
-   };
-
-   const handleMarkAllForForceSync = async () => {
-      if (
-         !confirm(
-            __(
-               'Mark every edited field on every listed attraction to be overwritten from the API on the next sync? This replaces your current force sync selections.',
-               'trvlr'
-            )
-         )
-      ) {
-         return;
-      }
-
-      const all: Record<number, string[]> = {};
-      customEdits.forEach((edit) => {
-         all[edit.id] = [...edit.edited_fields];
-      });
-      setForceSyncSettings(all);
-
-      setSaving(true);
-      setMessage(null);
-
-      try {
-         const response = await apiFetch({
-            path: '/trvlr/v1/sync/force-sync',
-            method: 'POST',
-            data: { force_sync_fields: all },
-         }) as { message: string };
-
-         setMessage({ type: 'success', text: response.message });
-      } catch (error) {
-         setMessage({
-            type: 'error',
-            text: __('Failed to save force sync settings.', 'trvlr'),
-         });
-      }
-
-      setSaving(false);
-   };
-
-   const handleClear = async () => {
-      if (!confirm(__('Clear all force sync settings?', 'trvlr'))) return;
-
-      try {
-         const response = await apiFetch({
-            path: '/trvlr/v1/sync/clear-force-sync',
-            method: 'POST',
-         }) as { message: string };
-
-         const cleared: Record<number, string[]> = {};
-         customEdits.forEach((edit) => {
-            cleared[edit.id] = [];
-         });
-         setForceSyncSettings(cleared);
-
-         setMessage({ type: 'success', text: response.message });
-      } catch (error) {
-         setMessage({ type: 'error', text: __('Failed to clear force sync settings.', 'trvlr') });
-      }
+      setBusy(false);
    };
 
    if (loading) {
@@ -181,11 +82,22 @@ export const CustomEditsForm = () => {
    }
 
    if (customEdits.length === 0) {
-      return null;
+      return (
+         <p style={{ color: '#666', margin: 0 }}>
+            {__('No attractions currently have Custom Edit fields.', 'trvlr')}
+         </p>
+      );
    }
 
    return (
       <div className="trvlr-settings-form">
+         <p className="trvlr-settings-form-description" style={{ marginTop: 0 }}>
+            {__(
+               'Fields in Custom Edit mode are kept in WordPress and skipped on sync. Clearing a field returns it to Synced so the next sync can overwrite it from Traveloris.',
+               'trvlr'
+            )}
+         </p>
+
          {message && (
             <Notice
                status={message.type}
@@ -196,14 +108,14 @@ export const CustomEditsForm = () => {
             </Notice>
          )}
 
-         <div style={{ overflowX: 'auto' }}>
+         <div style={{ overflowX: 'auto', width: '100%' }}>
             <table className="wp-list-table widefat fixed striped">
                <thead>
                   <tr>
                      <th style={{ width: '35%' }}>{__('Attraction', 'trvlr')}</th>
-                     <th style={{ width: '25%' }}>{__('Edited Fields', 'trvlr')}</th>
+                     <th style={{ width: '30%' }}>{__('Custom Edit Fields', 'trvlr')}</th>
                      <th style={{ width: '15%' }}>{__('Last Modified', 'trvlr')}</th>
-                     <th style={{ width: '25%' }}>{__('Force Sync Fields', 'trvlr')}</th>
+                     <th style={{ width: '20%' }}>{__('Actions', 'trvlr')}</th>
                   </tr>
                </thead>
                <tbody>
@@ -218,61 +130,60 @@ export const CustomEditsForm = () => {
                               </strong>
                            </td>
                            <td>
-                              <span style={{ background: '#f0f0f1', padding: '4px 8px', borderRadius: '3px', fontSize: '12px' }}>
-                                 {edit.edited_fields_labels.join(', ')}
-                              </span>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                 {edit.edited_fields.map((field, index) => (
+                                    <span
+                                       key={field}
+                                       style={{
+                                          background: '#f0f0f1',
+                                          padding: '4px 8px',
+                                          borderRadius: '3px',
+                                          fontSize: '12px',
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          gap: '6px',
+                                       }}
+                                    >
+                                       {edit.edited_fields_labels[index] || field}
+                                       <Button
+                                          variant="link"
+                                          isDestructive
+                                          disabled={busy}
+                                          onClick={() =>
+                                             clearEdits(
+                                                { post_id: edit.id, fields: [field] },
+                                                __(
+                                                   'Enable Traveloris sync for this field? The next sync will restore Traveloris content.',
+                                                   'trvlr'
+                                                )
+                                             )
+                                          }
+                                          style={{ padding: 0, height: 'auto' }}
+                                       >
+                                          {__('Clear', 'trvlr')}
+                                       </Button>
+                                    </span>
+                                 ))}
+                              </div>
                            </td>
                            <td>{edit.modified}</td>
                            <td>
-                              {forceSyncSettings[edit.id]?.length > 0 && (
-                                 <div style={{ marginBottom: '8px', fontSize: '12px' }}>
-                                    <span className="dashicons dashicons-yes-alt" style={{ color: '#00a32a' }}></span>
-                                    <strong>{__('Will overwrite:', 'trvlr')}</strong> {forceSyncSettings[edit.id].map(f =>
-                                       edit.edited_fields_labels[edit.edited_fields.indexOf(f)]
-                                    ).join(', ')}
-                                 </div>
-                              )}
                               <Button
                                  variant="secondary"
                                  size="small"
-                                 onClick={() => {
-                                    const row = document.getElementById(`fields-${edit.id}`);
-                                    if (row) {
-                                       row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
-                                    }
-                                 }}
+                                 disabled={busy}
+                                 onClick={() =>
+                                    clearEdits(
+                                       { post_id: edit.id },
+                                       __(
+                                          'Clear all Custom Edit fields for this attraction? The next sync will restore Traveloris content for those fields.',
+                                          'trvlr'
+                                       )
+                                    )
+                                 }
                               >
-                                 <span className="dashicons dashicons-arrow-down-alt2" style={{ fontSize: '16px' }}></span>
-                                 {__('Select Fields', 'trvlr')}
+                                 {__('Clear All', 'trvlr')}
                               </Button>
-                           </td>
-                        </tr>
-                        <tr id={`fields-${edit.id}`} style={{ display: 'none' }}>
-                           <td colSpan={4} style={{ background: '#f9f9f9', padding: '15px' }}>
-                              <div>
-                                 <label style={{ fontWeight: 'bold', marginRight: '20px', display: 'block', marginBottom: '10px' }}>
-                                    <input
-                                       type="checkbox"
-                                       checked={edit.edited_fields.every(f => forceSyncSettings[edit.id]?.includes(f))}
-                                       onChange={() => toggleSelectAll(edit.id, edit.edited_fields)}
-                                       style={{ marginRight: '5px' }}
-                                    />
-                                    {__('Select All Fields', 'trvlr')}
-                                 </label>
-                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
-                                    {edit.edited_fields.map((field, index) => (
-                                       <label key={field} style={{ display: 'flex', alignItems: 'center' }}>
-                                          <input
-                                             type="checkbox"
-                                             checked={forceSyncSettings[edit.id]?.includes(field) || false}
-                                             onChange={() => toggleForceSync(edit.id, field)}
-                                             style={{ marginRight: '5px' }}
-                                          />
-                                          {edit.edited_fields_labels[index]}
-                                       </label>
-                                    ))}
-                                 </div>
-                              </div>
                            </td>
                         </tr>
                      </Fragment>
@@ -283,30 +194,22 @@ export const CustomEditsForm = () => {
 
          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
             <Button
-               variant="primary"
-               onClick={handleSave}
-               isBusy={saving}
-               disabled={saving}
-            >
-               {__('Save Force Sync Settings', 'trvlr')}
-            </Button>
-            <Button
                variant="secondary"
-               onClick={handleMarkAllForForceSync}
-               isBusy={saving}
-               disabled={saving}
+               isDestructive
+               onClick={() =>
+                  clearEdits(
+                     {},
+                     __(
+                        'Clear Custom Edit mode for every attraction on this site? The next sync will restore Traveloris content for those fields.',
+                        'trvlr'
+                     )
+                  )
+               }
+               disabled={busy}
             >
-               {__('Mark All Fields for Force Sync', 'trvlr')}
-            </Button>
-            <Button
-               variant="secondary"
-               onClick={handleClear}
-               disabled={saving}
-            >
-               {__('Clear All Force Sync Settings', 'trvlr')}
+               {__('Clear All Custom Edits (Sitewide)', 'trvlr')}
             </Button>
          </div>
       </div>
    );
 };
-

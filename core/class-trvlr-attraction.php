@@ -1,26 +1,19 @@
 <?php
 
 /**
- * The file that defines the core business logic and CPT for Attractions
+ * Attraction CPT and taxonomy registration.
  *
  * @package    Trvlr
  * @subpackage Trvlr/core
  */
-
 class Trvlr_Attraction
 {
-
-	/**
-	 * Initialize the class and set its properties.
-	 *
-	 * @since    1.0.0
-	 */
 	public function __construct() {}
 
 	/**
-	 * Register the 'trvlr_attraction' custom post type.
+	 * Register the `trvlr_attraction` custom post type.
 	 *
-	 * @since    1.0.0
+	 * @return void
 	 */
 	public function register_post_type()
 	{
@@ -83,9 +76,9 @@ class Trvlr_Attraction
 	}
 
 	/**
-	 * Register the 'trvlr_attraction_tag' taxonomy.
+	 * Register the `trvlr_attraction_tag` taxonomy.
 	 *
-	 * @since    1.0.0
+	 * @return void
 	 */
 	public function register_taxonomy()
 	{

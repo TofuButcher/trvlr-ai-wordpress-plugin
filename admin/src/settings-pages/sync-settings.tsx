@@ -35,7 +35,6 @@ export const SyncSettings = () => {
          <PageHeading text={'Your TRVLR Products'} />
          <div className="trvlr-settings-section-spacer">
             <div style={{ display: 'grid', gap: '20px' }}>
-               {/* Sync Statistics */}
                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
                   {syncStatsElements.map((element) => {
                      return (
@@ -52,7 +51,6 @@ export const SyncSettings = () => {
                      );
                   })}
                </div>
-               {/* Manual Sync Button */}
                <ManualSyncForm />
             </div>
 
@@ -62,13 +60,11 @@ export const SyncSettings = () => {
             </div>
 
 
-            {/* Custom Edits Management */}
             <div style={{ display: 'grid', gap: '10px', justifyItems: 'start', width: '100%' }}>
                <PageHeading text={'Attractions with Custom Edits'} />
                <CustomEditsForm />
             </div>
 
-            {/* Danger Zone */}
             <Card style={{ borderColor: '#d63638' }}>
                <div style={{ padding: '20px' }}>
                   <h3 className="trvlr-settings-form-heading" >{__('Danger Zone', 'trvlr')}</h3>

@@ -10,7 +10,6 @@ import { AttractionCardPreview } from '../components/theme-preview';
 export const ThemeSettings = () => {
    const { themeSettings, saveThemeSettings, saving, themeConfig, processedThemeConfig, templateChoices } = useTrvlr();
 
-   // Initialize state with merged defaults + saved settings
    const [settings, setSettings] = useState(() =>
       mergeWithDefaults(themeSettings, themeConfig)
    );
@@ -19,7 +18,6 @@ export const ThemeSettings = () => {
       setSettings(mergeWithDefaults(themeSettings, themeConfig));
    }, [themeSettings, themeConfig]);
 
-   // Update a single field
    const updateField = (key: string, value: string | number) => {
       setSettings(prev => ({
          ...prev,
@@ -27,7 +25,6 @@ export const ThemeSettings = () => {
       }));
    };
 
-   // Reset to defaults
    const resetToDefaults = () => {
       if (confirm(__('Reset all theme settings to defaults?', 'trvlr'))) {
          setSettings((prev) => {
@@ -40,7 +37,6 @@ export const ThemeSettings = () => {
       }
    };
 
-   // Save settings
    const handleSave = async () => {
       const result = await saveThemeSettings(settings);
 
@@ -52,7 +48,6 @@ export const ThemeSettings = () => {
       }
    };
 
-   // Apply CSS variables to preview in real-time
    useEffect(() => {
       applyCSSVariables();
    }, [settings]);
@@ -71,10 +66,8 @@ export const ThemeSettings = () => {
       });
    };
 
-   // Render a field or group
    const renderFieldOrGroup = (item: any) => {
       if (item.type === 'group') {
-         // Render a cols-X wrapper
          return (
             <div key={item.colsClass} className={`trvlr-${item.colsClass}`}>
                {item.label && (
@@ -98,7 +91,6 @@ export const ThemeSettings = () => {
             </div>
          );
       } else {
-         // Regular field
          return (
             <ThemeField
                key={item.key}
@@ -116,7 +108,6 @@ export const ThemeSettings = () => {
             <PageHeading
                text="Customise appearance of components"
             />
-            {/* Settings Panels */}
             <div>
                <Panel>
                   {Object.entries(processedThemeConfig).map(([groupKey, group]: [string, any]) => (
@@ -131,7 +122,6 @@ export const ThemeSettings = () => {
                            </p>
                         )}
 
-                        {/* Render fields and groups */}
                         <div>
                            {group.fields.map((item: any) => renderFieldOrGroup(item))}
                         </div>
@@ -173,7 +163,6 @@ export const ThemeSettings = () => {
             </div>
          </div>
 
-         {/* Live Preview (Sticky) */}
          <div>
             <PageHeading
                text="Preview"

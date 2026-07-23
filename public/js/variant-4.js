@@ -1,12 +1,12 @@
 /**
- * Theme 3 — Overflow Trim
+ * Theme 4 — Overflow Trim
  *
- * The .trvlr-highlights container inside collapsed theme-3 cards is bound to a
- * max-height of 222px.  This script finds any li children that visually extend
+ * The .trvlr-highlights container inside collapsed theme-4 cards is bound to a
+ * max-height.  This script finds any li children that visually extend
  * beyond that clipped box and hides them, so they don't consume DOM space or
  * create accessibility issues.
  *
- * Triggered on DOMContentLoaded.  Exposed as window.trvlrTheme3Trim so it can
+ * Triggered on DOMContentLoaded.  Exposed as window.trvlrTheme4Trim so it can
  * be re-run after dynamic content updates.
  */
 (function () {
@@ -14,7 +14,7 @@
 
 	function trimOverflowingItems() {
 		var containers = document.querySelectorAll(
-			'.trvlr-card--theme-3:not(.trvlr-card--variant-expanded) .trvlr-highlights'
+			'.trvlr-card--theme-4:not(.trvlr-card--variant-expanded) .trvlr-highlights'
 		);
 
 		Array.prototype.forEach.call(containers, function (container) {
@@ -45,7 +45,7 @@
 	} else {
 		trimOverflowingItems();
 	}
-	document.addEventListener('trvlr:loaded', trimOverflowingItems);
+    document.addEventListener('trvlr:loaded', trimOverflowingItems);
 
-	window.trvlrTheme3Trim = trimOverflowingItems;
+	window.trvlrTheme4Trim = trimOverflowingItems;
 })();

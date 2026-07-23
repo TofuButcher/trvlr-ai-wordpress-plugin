@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Scheduled sync functionality for TRVLR
+ * Scheduled attraction sync (via Trvlr_Async driver).
  *
  * @package    Trvlr
  * @subpackage Trvlr/includes
@@ -14,22 +14,17 @@ if (!class_exists('Trvlr_Async')) {
 class Trvlr_Scheduler
 {
 	/**
-	 * Schedule automatic sync
-	 * 
-	 * @param string $frequency Recurrence: hourly, twicedaily, daily, weekly
+	 * @param string $frequency hourly|twicedaily|daily|weekly
 	 */
 	public static function schedule_sync($frequency = 'daily')
 	{
-		// Unschedule existing first
 		self::unschedule_sync();
 
-		// Validate frequency
 		$valid_frequencies = array('hourly', 'twicedaily', 'daily', 'weekly');
 		if (!in_array($frequency, $valid_frequencies)) {
 			$frequency = 'daily';
 		}
 
-		// Schedule new event (Action Scheduler when available, else WP-Cron)
 		Trvlr_Async::schedule_recurring_sync($frequency);
 		update_option('trvlr_sync_frequency', $frequency);
 		update_option('trvlr_sync_enabled', '1');
@@ -37,9 +32,6 @@ class Trvlr_Scheduler
 		Trvlr_Logger::log('system', "Scheduled sync enabled: {$frequency} (" . Trvlr_Async::driver() . ")");
 	}
 
-	/**
-	 * Unschedule automatic sync
-	 */
 	public static function unschedule_sync()
 	{
 		Trvlr_Async::unschedule_recurring_sync();
@@ -47,8 +39,6 @@ class Trvlr_Scheduler
 	}
 
 	/**
-	 * Check if scheduled sync is enabled
-	 * 
 	 * @return bool
 	 */
 	public static function is_sync_enabled()
@@ -57,8 +47,6 @@ class Trvlr_Scheduler
 	}
 
 	/**
-	 * Get current sync frequency
-	 * 
 	 * @return string
 	 */
 	public static function get_sync_frequency()
@@ -67,18 +55,13 @@ class Trvlr_Scheduler
 	}
 
 	/**
-	 * Get next scheduled sync time
-	 * 
-	 * @return int|false Timestamp or false
+	 * @return int|false
 	 */
 	public static function get_next_sync_time()
 	{
 		return Trvlr_Async::next_sync_time();
 	}
 
-	/**
-	 * Run scheduled sync (callback for WP-Cron)
-	 */
 	public static function run_scheduled_sync()
 	{
 		if (function_exists('trvlr_is_attraction_sync_disabled') && trvlr_is_attraction_sync_disabled()) {
@@ -108,20 +91,17 @@ class Trvlr_Scheduler
 	}
 
 	/**
-	 * Add custom cron schedules
-	 * 
-	 * @param array $schedules Existing schedules
-	 * @return array Modified schedules
+	 * @param array $schedules
+	 * @return array
 	 */
 	public static function add_cron_schedules($schedules)
 	{
 		if (!isset($schedules['weekly'])) {
 			$schedules['weekly'] = array(
-				'interval' => 604800, // 7 days in seconds
+				'interval' => 604800, // 7 days
 				'display'  => __('Once Weekly', 'trvlr')
 			);
 		}
 		return $schedules;
 	}
 }
-

@@ -4,13 +4,15 @@ import apiFetch from '@wordpress/api-fetch';
 const TrvlrContext = createContext();
 
 /**
- * Get all fields from theme config (flattened)
+ * Flatten theme config fields, including those nested under `cols-*` wrappers.
+ *
+ * @param {Record<string, any>} config
+ * @returns {Array<{key: string} & Record<string, any>>}
  */
 const getAllFieldsFromConfig = (config) => {
     const fields = [];
 
     Object.values(config || {}).forEach(group => {
-        // Direct fields
         if (group.fields) {
             Object.entries(group.fields).forEach(([key, field]) => {
                 fields.push({
@@ -20,7 +22,7 @@ const getAllFieldsFromConfig = (config) => {
             });
         }
 
-        // Fields inside cols-X wrappers (at group level)
+        // Theme config nests multi-column layouts under keys like `cols-3`.
         Object.entries(group).forEach(([key, value]) => {
             if (key.startsWith('cols-') && value.fields) {
                 Object.entries(value.fields).forEach(([fieldKey, field]) => {
@@ -37,7 +39,8 @@ const getAllFieldsFromConfig = (config) => {
 };
 
 /**
- * Get default values from theme config
+ * @param {Record<string, any>} config
+ * @returns {Record<string, any>}
  */
 const getThemeDefaults = (config) => {
     const defaults = {};
@@ -53,7 +56,9 @@ const getThemeDefaults = (config) => {
 };
 
 /**
- * Merge user settings with defaults from config
+ * @param {Record<string, any>} userSettings
+ * @param {Record<string, any>} config
+ * @returns {Record<string, any>}
  */
 const mergeWithDefaults = (userSettings, config) => {
     const defaults = getThemeDefaults(config);
@@ -68,8 +73,10 @@ const mergeWithDefaults = (userSettings, config) => {
 };
 
 /**
- * Process theme config fields for rendering
- * Handles cols-X groupings
+ * Normalize theme config into renderable field/group lists (handles `cols-*`).
+ *
+ * @param {Record<string, any>} config
+ * @returns {Record<string, {label: string, description: string, fields: Array}>}
  */
 const processConfigForRendering = (config) => {
     const processed = {};
@@ -81,7 +88,6 @@ const processConfigForRendering = (config) => {
             fields: []
         };
 
-        // Add direct fields first
         if (group.fields) {
             Object.entries(group.fields).forEach(([key, field]) => {
                 processed[groupKey].fields.push({
@@ -92,13 +98,11 @@ const processConfigForRendering = (config) => {
             });
         }
 
-        // Add cols-X groupings (at group level)
         Object.entries(group).forEach(([key, value]) => {
             if (key.startsWith('cols-') && value.fields) {
-                const colsClass = key; // e.g., "cols-3"
                 processed[groupKey].fields.push({
                     type: 'group',
-                    colsClass,
+                    colsClass: key,
                     label: value.label,
                     description: value.description,
                     fields: Object.entries(value.fields || {}).map(([fieldKey, field]) => ({
@@ -114,7 +118,7 @@ const processConfigForRendering = (config) => {
 };
 
 export const TrvlrProvider = ({ children }) => {
-    // Load initial data from window object (localized by PHP)
+    // Localized by PHP via wp_localize_script('trvlr-admin-root', 'trvlrInitialData', …)
     const initialData = window.trvlrInitialData || {
         settings: {},
         sync: {},
@@ -124,13 +128,9 @@ export const TrvlrProvider = ({ children }) => {
         nonce: '',
     };
 
-    // Get theme config from localized data
     const themeConfig = initialData.themeConfig || {};
-
-    // Process config for rendering (memoized)
     const processedThemeConfig = useMemo(() => processConfigForRendering(themeConfig), [themeConfig]);
 
-    // State management (merge with defaults to ensure all fields exist)
     const [themeSettings, setThemeSettings] = useState(() =>
         mergeWithDefaults(initialData.settings?.theme || {}, themeConfig)
     );
@@ -145,7 +145,6 @@ export const TrvlrProvider = ({ children }) => {
     const [saving, setSaving] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
 
-    // Settings Methods
     const saveThemeSettings = useCallback(async (settings) => {
         setSaving(true);
         try {
@@ -205,7 +204,6 @@ export const TrvlrProvider = ({ children }) => {
         }
     }, []);
 
-    // Sync Methods
     const refreshSyncStats = useCallback(async () => {
         setRefreshing(true);
         try {
@@ -280,7 +278,6 @@ export const TrvlrProvider = ({ children }) => {
                 path: `/trvlr/v1/sync/delete?include_media=${includeMedia}`,
                 method: 'POST',
             });
-            // Refresh stats after deletion
             await refreshSyncStats();
             return { success: true, data: response };
         } catch (error) {
@@ -288,7 +285,6 @@ export const TrvlrProvider = ({ children }) => {
         }
     }, [refreshSyncStats]);
 
-    // System Methods
     const refreshSystemStatus = useCallback(async () => {
         setRefreshing(true);
         try {
@@ -308,7 +304,6 @@ export const TrvlrProvider = ({ children }) => {
                 path: '/trvlr/v1/setup/payment-page',
                 method: 'POST',
             });
-            // Refresh system status after creation
             await refreshSystemStatus();
             return { success: true, data: response };
         } catch (error) {
@@ -329,20 +324,15 @@ export const TrvlrProvider = ({ children }) => {
     }, []);
 
     const value = {
-        // Settings
         themeSettings,
         connectionSettings,
         notificationSettings,
         saveThemeSettings,
         saveConnectionSettings,
         saveNotificationSettings,
-
-        // Theme Config
         themeConfig,
         processedThemeConfig,
         templateChoices: initialData.templateChoices || { cards: [], singles: [], presentationThemes: [] },
-
-        // Sync
         syncStats,
         scheduleSettings,
         customEditsCount,
@@ -352,14 +342,10 @@ export const TrvlrProvider = ({ children }) => {
         cancelSync,
         saveScheduleSettings,
         deleteData,
-
-        // System
         systemStatus,
         refreshSystemStatus,
         createPaymentPage,
         testApiConnection,
-
-        // UI State
         saving,
         refreshing,
         nonce: initialData.nonce,
@@ -372,6 +358,9 @@ export const TrvlrProvider = ({ children }) => {
     );
 };
 
+/**
+ * @returns {Record<string, any>}
+ */
 export const useTrvlr = () => {
     const context = useContext(TrvlrContext);
     if (!context) {
@@ -381,7 +370,9 @@ export const useTrvlr = () => {
 };
 
 /**
- * Generate CSS variables string from settings and config
+ * @param {Record<string, any>} settings
+ * @param {Record<string, any>} config
+ * @returns {string}
  */
 export const generateCSSVariables = (settings, config) => {
     let css = ':root {\n';
@@ -399,6 +390,4 @@ export const generateCSSVariables = (settings, config) => {
     return css;
 };
 
-// Export helper functions for use outside context
 export { getAllFieldsFromConfig, getThemeDefaults, mergeWithDefaults, processConfigForRendering };
-

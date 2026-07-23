@@ -2,10 +2,12 @@
 
 /~api/
 /~dev/
+/~skills/
 package-lock.json
 trvlr.zip
 trvlr_*.zip
 trvlr-*.zip
+dev-*.zip
 attraction-api-response-example.json
 trvlr-next-steps.md
 trvlr-dev-modules-fees.md

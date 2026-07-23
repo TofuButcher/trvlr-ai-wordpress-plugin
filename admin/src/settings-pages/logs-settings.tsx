@@ -59,7 +59,6 @@ export const LogsSettings = () => {
       } catch (error: any) {
          console.error('TRVLR Logs: Error loading logs:', error);
 
-         // Check if it's a 403 authentication error
          if (error?.data?.status === 403 || error?.code === 'rest_cookie_invalid_nonce') {
             setMessage({
                type: 'error',
@@ -78,7 +77,6 @@ export const LogsSettings = () => {
       console.log('TRVLR Initial Data:', window.trvlrInitialData);
       console.log('WP API Fetch available:', typeof window.wp?.apiFetch);
 
-      // Only load if we have proper authentication
       if (window.trvlrInitialData?.restNonce) {
          loadLogs();
       } else {
@@ -217,7 +215,6 @@ export const LogsSettings = () => {
             </Notice>
          )}
 
-         {/* Actions */}
          <Card style={{ marginBottom: '15px' }}>
             <CardBody>
                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -249,7 +246,6 @@ export const LogsSettings = () => {
             </CardBody>
          </Card>
 
-         {/* Sync Sessions */}
          {sessions.length === 0 ? (
             <Card className="trvlr-card">
                <CardBody>
@@ -332,7 +328,6 @@ export const LogsSettings = () => {
             </div>
          )}
 
-         {/* Log Details Modal */}
          {selectedLog && (
             <div
                className="trvlr-modal"

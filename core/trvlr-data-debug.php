@@ -4,7 +4,6 @@ if (!isset($_GET['trvlr_test']) || $_GET['trvlr_test'] !== 'true') {
 	return;
 }
 
-// Resolve TRVLR ID and post ID
 $post_id  = null;
 $trvlr_id = null;
 $group_id = null;
@@ -40,6 +39,11 @@ if (!$org_id) {
 	die();
 }
 
+/**
+ * @param int|string $attraction_id
+ * @param string     $org_id
+ * @return array
+ */
 function trvlr_debug_fetch_from_api($attraction_id, $org_id)
 {
 	$api_url = 'https://sl.portal.traveloris.com/api/process/webapi_handler/generic_attraction_with_id';
@@ -79,7 +83,6 @@ if (isset($api_data['error'])) {
 	die();
 }
 
-// Resolve post ID if we didn't get it from the URL
 if (!$post_id) {
 	$query = new WP_Query(array(
 		'post_type'      => 'trvlr_attraction',
@@ -94,8 +97,6 @@ if (!$post_id) {
 	}
 }
 
-// Field map — 'transform' is an optional callable applied to the raw API value.
-// Fields without 'transform' show raw data only (no "after transform" box).
 $field_map = array(
 	'post_title' => array(
 		'label'     => 'Title',
@@ -155,6 +156,11 @@ $field_map = array(
 	),
 );
 
+/**
+ * @param int    $post_id
+ * @param string $field_name
+ * @return mixed
+ */
 function trvlr_debug_get_db_value($post_id, $field_name)
 {
 	if ($field_name === 'post_title') {
@@ -163,12 +169,20 @@ function trvlr_debug_get_db_value($post_id, $field_name)
 	return get_post_meta($post_id, $field_name, true);
 }
 
+/**
+ * @param string $plaintext
+ * @return void
+ */
 function trvlr_debug_copy_btn($plaintext)
 {
 	$b64 = base64_encode((string) $plaintext);
 	echo '<button type="button" class="copy-btn-small" title="Copy" aria-label="Copy" data-trvlr-copy-b64="' . esc_attr($b64) . '">Copy</button>';
 }
 
+/**
+ * @param mixed $value
+ * @return string
+ */
 function trvlr_debug_format_display($value)
 {
 	if (is_array($value)) {
@@ -177,6 +191,10 @@ function trvlr_debug_format_display($value)
 	return trim((string) $value, " \t\n\r\0\x0B");
 }
 
+/**
+ * @param string|array $img
+ * @return string
+ */
 function trvlr_debug_api_image_url($img)
 {
 	if (is_string($img)) {
@@ -200,6 +218,10 @@ function trvlr_debug_api_image_url($img)
 	return '';
 }
 
+/**
+ * @param array $api_data
+ * @return array
+ */
 function trvlr_debug_build_images_to_process($api_data)
 {
 	if (!is_array($api_data)) {
@@ -218,6 +240,10 @@ function trvlr_debug_build_images_to_process($api_data)
 	return $out;
 }
 
+/**
+ * @param array $images_to_process
+ * @return array{gallery_ids: int[], featured_id: int|null}
+ */
 function trvlr_debug_resolve_media_from_images_to_process($images_to_process)
 {
 	$gallery_ids    = array();
@@ -262,6 +288,10 @@ function trvlr_debug_resolve_media_from_images_to_process($images_to_process)
 
 $raw_api_json = json_encode($api_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
+/**
+ * @param string $org_id
+ * @return array{ok: bool, message: string, code: int, raw: string, data?: array}
+ */
 function trvlr_debug_fetch_all_from_api($org_id)
 {
 	$api_url         = 'https://sl.portal.traveloris.com/api/process/webapi_handler/generic_attractions';
@@ -325,6 +355,11 @@ function trvlr_debug_fetch_all_from_api($org_id)
 	);
 }
 
+/**
+ * @param array      $all_attractions_data
+ * @param int|string $trvlr_id
+ * @return array|null
+ */
 function trvlr_debug_find_list_item($all_attractions_data, $trvlr_id)
 {
 	if (empty($all_attractions_data['results']) || !is_array($all_attractions_data['results'])) {
@@ -341,6 +376,12 @@ function trvlr_debug_find_list_item($all_attractions_data, $trvlr_id)
 	return null;
 }
 
+/**
+ * @param int|string   $group_id
+ * @param int|string   $organisation
+ * @param string       $org_id
+ * @return array{ok: bool, message: string, code: int, raw: string, data?: array}
+ */
 function trvlr_debug_fetch_group_from_api($group_id, $organisation, $org_id)
 {
 	$api_url = 'https://sl.portal.traveloris.com/api/process/webapi_handler/fetch-group-attractions';

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * The admin-specific functionality of the plugin.
+ * Admin area: enqueue, settings REST, meta boxes, AJAX handlers.
  *
  * @package    Trvlr
  * @subpackage Trvlr/admin
@@ -10,41 +10,29 @@
 class Trvlr_Admin
 {
 
-	/**
-	 * The ID of this plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 * @var      string    $plugin_name    The ID of this plugin.
-	 */
+	/** @var string */
 	private $plugin_name;
 
-	/**
-	 * The version of this plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 * @var      string    $version    The current version of this plugin.
-	 */
+	/** @var string */
 	private $version;
 
-	/**
-	 * Initialize the class and set its properties.
-	 *
-	 * @since    1.0.0
-	 * @param    string    $plugin_name       The name of this plugin.
-	 * @param    string    $version           The version of this plugin.
-	 */
+	/** @var Trvlr_Admin_Dev|null */
 	private $dev_instance;
 
+	/**
+	 * @param string $plugin_name
+	 * @param string $version
+	 */
 	public function __construct($plugin_name, $version)
 	{
-
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 		$this->init_dev_environment();
 	}
 
+	/**
+	 * @return void
+	 */
 	private function init_dev_environment()
 	{
 		$dev_class_file = TRVLR_PLUGIN_DIR . '~dev/dev-class-trvlr-admin.php';
@@ -60,9 +48,7 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * Register the stylesheets for the admin area.
-	 *
-	 * @since    1.0.0
+	 * @return void
 	 */
 	public function enqueue_styles()
 	{
@@ -99,9 +85,7 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * Register the JavaScript for the admin area.
-	 *
-	 * @since    1.0.0
+	 * @return void
 	 */
 	public function enqueue_scripts()
 	{
@@ -113,7 +97,40 @@ class Trvlr_Admin
 
 		$screen = get_current_screen();
 
-		// Enqueue React settings components on settings page
+		if ($screen && in_array($screen->base, array('post', 'post-new'), true) && $screen->post_type === 'trvlr_attraction') {
+			$post_id = isset($_GET['post']) ? absint($_GET['post']) : 0;
+			$has_trvlr_id = $post_id && get_post_meta($post_id, 'trvlr_id', true);
+			if ($has_trvlr_id) {
+				$custom_fields = trvlr_get_custom_edit_fields($post_id);
+				$labels = class_exists('Trvlr_Field_Map') ? Trvlr_Field_Map::get_field_labels() : array();
+
+				wp_enqueue_script(
+					'trvlr-field-sync-ui',
+					plugin_dir_url(__FILE__) . 'js/trvlr-field-sync-ui.js',
+					array('jquery'),
+					$this->version,
+					true
+				);
+
+				wp_localize_script('trvlr-field-sync-ui', 'trvlrFieldSyncUI', array(
+					'ajaxUrl' => admin_url('admin-ajax.php'),
+					'nonce' => wp_create_nonce('trvlr_field_edit_mode'),
+					'postId' => $post_id,
+					'customFields' => $custom_fields,
+					'i18n' => array(
+						'badgeSynced' => __('Synced to Traveloris', 'trvlr'),
+						'badgeCustom' => __('Not Synced - WP Edit', 'trvlr'),
+						'customEdit' => __('Custom Edit', 'trvlr'),
+						'enableSync' => __('Enable Traveloris Sync', 'trvlr'),
+						'confirmEnableSync' => __('Enable Traveloris sync for this field? The next sync will restore Traveloris content.', 'trvlr'),
+						'error' => __('Could not update field sync mode.', 'trvlr'),
+						'titleLabel' => isset($labels['post_title']) ? $labels['post_title'] : __('Title', 'trvlr'),
+						'featuredLabel' => isset($labels['_thumbnail_id']) ? $labels['_thumbnail_id'] : __('Featured Image', 'trvlr'),
+					),
+				));
+			}
+		}
+
 		if ($screen && $screen->id === 'toplevel_page_trvlr_settings') {
 			$asset_file = plugin_dir_path(__FILE__) . 'build/trvlr-admin-root.jsx.asset.php';
 
@@ -143,18 +160,14 @@ class Trvlr_Admin
 				$theme_asset['version']
 			);
 
-			// Get initial data
 			$initial_data = $this->get_initial_data();
 
-			// Set up WordPress REST API settings for apiFetch
-			// This is the correct way to configure wp.apiFetch
 			wp_localize_script('trvlr-admin-root', 'wpApiSettings', array(
 				'root' => esc_url_raw(rest_url()),
 				'nonce' => wp_create_nonce('wp_rest'),
 				'versionString' => 'wp/v2/'
 			));
 
-			// Localize all initial data for React app
 			wp_localize_script('trvlr-admin-root', 'trvlrInitialData', $initial_data);
 
 			wp_enqueue_style('wp-components');
@@ -162,27 +175,20 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * Register the administration menu for this plugin into the WordPress Dashboard menu.
-	 *
-	 * @since    1.0.0
+	 * @return void
 	 */
 	public function add_plugin_admin_menu()
 	{
-
-		/*
-		 * Add a top-level settings page for TRVLR
-		 */
 		add_menu_page(
-			__('TRVLR Settings', 'trvlr'),       // Page title
-			__('TRVLR', 'trvlr'),                // Menu title
-			'manage_options',                       // Capability
-			'trvlr_settings',                       // Menu slug
-			array($this, 'display_plugin_settings_page'), // Callback function
-			'dashicons-location-alt',               // Icon
-			30                                      // Position
+			__('TRVLR Settings', 'trvlr'),
+			__('TRVLR', 'trvlr'),
+			'manage_options',
+			'trvlr_settings',
+			array($this, 'display_plugin_settings_page'),
+			'dashicons-location-alt',
+			30
 		);
 
-		// Add Settings submenu (same page, just for better UX)
 		add_submenu_page(
 			'trvlr_settings',
 			__('Settings', 'trvlr'),
@@ -193,7 +199,9 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * Output SVG icons for attraction card preview
+	 * SVG sprite for attraction card preview on the settings page.
+	 *
+	 * @return void
 	 */
 	public function output_admin_svg_icons()
 	{
@@ -224,7 +232,7 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * Inject Google Fonts
+	 * @return void
 	 */
 	public function add_admin_google_fonts()
 	{
@@ -236,9 +244,7 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * Render the settings page for this plugin.
-	 *
-	 * @since    1.0.0
+	 * @return void
 	 */
 	public function display_plugin_settings_page()
 	{
@@ -246,7 +252,7 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * Register meta boxes (Delegates to meta-fields.php which we include here)
+	 * @return void
 	 */
 	public function init_meta_boxes()
 	{
@@ -258,13 +264,10 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * Register settings, sections and fields.
-	 *
-	 * @since    1.0.0
+	 * @return void
 	 */
 	public function register_settings()
 	{
-		// Core settings (traditional form + REST API)
 		register_setting('trvlr_settings_group', 'trvlr_api_key', array(
 			'type' => 'string',
 			'default' => '',
@@ -295,7 +298,6 @@ class Trvlr_Admin
 			'show_in_rest' => true,
 		));
 
-		// Notification settings for React component
 		register_setting('trvlr_settings_group', 'trvlr_notification_settings', array(
 			'type' => 'object',
 			'default' => array(),
@@ -312,7 +314,6 @@ class Trvlr_Admin
 			),
 		));
 
-		// Theme settings for React component (must be registered with proper REST schema)
 		register_setting('trvlr_theme_settings', 'trvlr_theme_settings', array(
 			'type' => 'object',
 			'default' => array(),
@@ -344,7 +345,8 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * Sanitize theme settings
+	 * @param mixed $settings
+	 * @return array
 	 */
 	public function sanitize_theme_settings($settings)
 	{
@@ -356,7 +358,9 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * Get all initial data for React app (localized to avoid multiple API calls)
+	 * Bootstrap payload localized to the React admin app (avoids multiple round-trips on load).
+	 *
+	 * @return array
 	 */
 	private function get_initial_data()
 	{
@@ -364,7 +368,6 @@ class Trvlr_Admin
 			require_once plugin_dir_path(dirname(__FILE__)) . 'includes/trvlr-feature-flags.php';
 		}
 
-		// Get sync statistics
 		$post_counts = wp_count_posts('trvlr_attraction');
 		$total_attractions = $post_counts->publish + $post_counts->draft + $post_counts->pending + $post_counts->private;
 
@@ -378,12 +381,10 @@ class Trvlr_Admin
 		));
 		$custom_edit_count = count($custom_edit_posts);
 
-		// Get schedule settings
 		$sync_enabled = Trvlr_Scheduler::is_sync_enabled();
 		$sync_frequency = Trvlr_Scheduler::get_sync_frequency();
 		$next_sync = Trvlr_Scheduler::get_next_sync_time();
 
-		// Get system status
 		$payment_page_id = get_option('trvlr_payment_page_id');
 		$payment_page_exists = false;
 		$payment_page_url = '';
@@ -448,11 +449,10 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * Register custom REST API endpoints for settings
+	 * @return void
 	 */
 	public function register_theme_rest_routes()
 	{
-		// Theme settings
 		register_rest_route('trvlr/v1', '/theme-settings', array(
 			'methods' => 'GET',
 			'callback' => array($this, 'get_theme_settings_rest'),
@@ -469,7 +469,6 @@ class Trvlr_Admin
 			},
 		));
 
-		// Connection settings
 		register_rest_route('trvlr/v1', '/connection-settings', array(
 			'methods' => 'GET',
 			'callback' => array($this, 'get_connection_settings_rest'),
@@ -486,7 +485,6 @@ class Trvlr_Admin
 			},
 		));
 
-		// Notification settings
 		register_rest_route('trvlr/v1', '/notification-settings', array(
 			'methods' => 'GET',
 			'callback' => array($this, 'get_notification_settings_rest'),
@@ -513,7 +511,8 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * REST API: Get theme settings
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response
 	 */
 	public function get_theme_settings_rest($request)
 	{
@@ -528,7 +527,8 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * REST API: Update theme settings
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response|WP_Error
 	 */
 	public function update_theme_settings_rest($request)
 	{
@@ -569,7 +569,8 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * REST API: Get connection settings
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response
 	 */
 	public function get_connection_settings_rest($request)
 	{
@@ -580,7 +581,8 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * REST API: Update connection settings
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response
 	 */
 	public function update_connection_settings_rest($request)
 	{
@@ -612,7 +614,8 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * REST API: Get notification settings
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response
 	 */
 	public function get_notification_settings_rest($request)
 	{
@@ -621,7 +624,8 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * REST API: Update notification settings
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response|WP_Error
 	 */
 	public function update_notification_settings_rest($request)
 	{
@@ -640,7 +644,8 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * REST API: Get sync progress
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response
 	 */
 	public function get_sync_progress_rest($request)
 	{
@@ -651,7 +656,7 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * AJAX Handler: Manual Sync
+	 * @return void
 	 */
 	public function ajax_manual_sync()
 	{
@@ -691,23 +696,24 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * AJAX Handler: Delete All Data (Posts + Images)
+	 * @return void
 	 */
 	public function ajax_delete_all_data()
 	{
-		$this->process_deletion(true); // True = Delete Images too
+		$this->process_deletion(true);
 	}
 
 	/**
-	 * AJAX Handler: Delete Posts Only (Keep Images)
+	 * @return void
 	 */
 	public function ajax_delete_posts_only()
 	{
-		$this->process_deletion(false); // False = Keep Images
+		$this->process_deletion(false);
 	}
 
 	/**
-	 * Helper for deletion
+	 * @param bool $delete_media When true, also deletes featured image and gallery attachments.
+	 * @return void
 	 */
 	private function process_deletion($delete_media = false)
 	{
@@ -725,14 +731,11 @@ class Trvlr_Admin
 
 		foreach ($posts as $post) {
 			if ($delete_media) {
-				// Find all media attached to this post (Featured + Gallery)
-				// 1. Featured Image
 				$thumb_id = get_post_thumbnail_id($post->ID);
 				if ($thumb_id) {
 					wp_delete_attachment($thumb_id, true);
 				}
 
-				// 2. Gallery Images (from our meta)
 				$gallery_ids = get_post_meta($post->ID, 'trvlr_gallery_ids', true);
 				if (is_array($gallery_ids)) {
 					foreach ($gallery_ids as $att_id) {
@@ -748,7 +751,7 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * AJAX Handler: Sync single attraction
+	 * @return void
 	 */
 	public function ajax_sync_single()
 	{
@@ -784,7 +787,7 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * AJAX Handler: Create Payment Confirmation Page
+	 * @return void
 	 */
 	public function ajax_create_payment_page()
 	{
@@ -794,7 +797,6 @@ class Trvlr_Admin
 			wp_send_json_error('Insufficient permissions.');
 		}
 
-		// Use the same method from activator
 		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-activator.php';
 
 		$page_id = Trvlr_Activator::create_payment_confirmation_page();
@@ -811,51 +813,47 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * AJAX Handler: Save Force Sync Settings
+	 * Toggle Synced / Custom Edit for one attraction field.
+	 *
+	 * @return void
 	 */
-	public function ajax_save_force_sync_settings()
+	public function ajax_set_field_edit_mode()
 	{
-		check_ajax_referer('trvlr_admin_nonce', 'nonce');
+		check_ajax_referer('trvlr_field_edit_mode', 'nonce');
 
-		if (! current_user_can('manage_options')) {
-			wp_send_json_error('Insufficient permissions.');
+		$post_id = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;
+		$field = isset($_POST['field']) ? sanitize_text_field(wp_unslash($_POST['field'])) : '';
+		$enabled = !empty($_POST['enabled']) && $_POST['enabled'] !== '0';
+
+		if (!$post_id || get_post_type($post_id) !== 'trvlr_attraction') {
+			wp_send_json_error(array('message' => __('Invalid attraction.', 'trvlr')));
 		}
 
-		$force_sync_fields = isset($_POST['force_sync_fields']) ? $_POST['force_sync_fields'] : array();
-
-		// First, clear all force sync fields
-		$all_edited = get_posts(array(
-			'post_type' => 'trvlr_attraction',
-			'meta_key' => '_trvlr_has_custom_edits',
-			'meta_value' => '1',
-			'fields' => 'ids',
-			'posts_per_page' => -1,
-			'post_status' => 'any'
-		));
-
-		foreach ($all_edited as $pid) {
-			delete_post_meta($pid, '_trvlr_force_sync_fields');
+		if (!current_user_can('edit_post', $post_id)) {
+			wp_send_json_error(array('message' => __('Insufficient permissions.', 'trvlr')));
 		}
 
-		// Set force sync fields for selected posts
-		$count = 0;
-		foreach ($force_sync_fields as $post_id => $fields) {
-			$post_id = absint($post_id);
-			$fields = array_map('sanitize_text_field', $fields);
-
-			if (!empty($fields)) {
-				update_post_meta($post_id, '_trvlr_force_sync_fields', $fields);
-				$count++;
-			}
+		if (!Trvlr_Field_Map::is_syncable($field)) {
+			wp_send_json_error(array('message' => __('Invalid field.', 'trvlr')));
 		}
+
+		trvlr_set_custom_edit($post_id, $field, $enabled);
+
+		$custom_fields = trvlr_get_custom_edit_fields($post_id);
+		$labels = Trvlr_Field_Map::get_field_labels();
 
 		wp_send_json_success(array(
-			'message' => sprintf(__('%d attraction(s) configured for field-level sync.', 'trvlr'), $count)
+			'custom_fields' => $custom_fields,
+			'labels' => $labels,
+			'field' => $field,
+			'enabled' => $enabled,
 		));
 	}
 
 	/**
-	 * AJAX Handler: Clear All Force Sync Settings
+	 * Clear Custom Edit flags for all attractions.
+	 *
+	 * @return void
 	 */
 	public function ajax_clear_all_custom_edits()
 	{
@@ -865,30 +863,15 @@ class Trvlr_Admin
 			wp_send_json_error('Insufficient permissions.');
 		}
 
-		$all_edited = get_posts(array(
-			'post_type' => 'trvlr_attraction',
-			'meta_key' => '_trvlr_has_custom_edits',
-			'fields' => 'ids',
-			'posts_per_page' => -1,
-			'post_status' => 'any'
-		));
-
-		$count = 0;
-		foreach ($all_edited as $pid) {
-			// Only clear force sync settings, NOT the edit flags themselves
-			if (get_post_meta($pid, '_trvlr_force_sync_fields', true)) {
-				delete_post_meta($pid, '_trvlr_force_sync_fields');
-				$count++;
-			}
-		}
+		$count = Trvlr_Custom_Edits::clear_all_sitewide();
 
 		wp_send_json_success(array(
-			'message' => 'Cleared force sync settings from ' . $count . ' attraction(s).'
+			'message' => sprintf(__('Cleared custom edits from %d attraction(s).', 'trvlr'), $count)
 		));
 	}
 
 	/**
-	 * AJAX Handler: Clear Old Logs
+	 * @return void
 	 */
 	public function ajax_clear_old_logs()
 	{
@@ -906,7 +889,7 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * AJAX Handler: Clear All Logs
+	 * @return void
 	 */
 	public function ajax_clear_all_logs()
 	{
@@ -924,7 +907,7 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * AJAX Handler: Save Schedule Settings
+	 * @return void
 	 */
 	public function ajax_save_schedule_settings()
 	{
@@ -954,7 +937,7 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * AJAX Handler: Save Notification Settings
+	 * @return void
 	 */
 	public function ajax_save_notifications()
 	{
@@ -970,7 +953,6 @@ class Trvlr_Admin
 		update_option('trvlr_notification_email', $email);
 		update_option('trvlr_enabled_notifications', $enabled_types);
 
-		// Schedule/unschedule weekly summary based on setting
 		if (in_array('weekly_summary', $enabled_types)) {
 			Trvlr_Notifier::schedule_weekly_summary();
 		} else {
@@ -983,7 +965,7 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * AJAX Handler: Send Test Email
+	 * @return void
 	 */
 	public function ajax_send_test_email()
 	{
@@ -1017,11 +999,12 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * Handle CSV export download
+	 * Stream sync logs as a CSV download when `trvlr_export_logs` is present in the query.
+	 *
+	 * @return void
 	 */
 	public function handle_export_logs()
 	{
-		// Verify nonce and permissions
 		if (!isset($_GET['trvlr_export_logs']) || !isset($_GET['_wpnonce'])) {
 			return;
 		}
@@ -1034,23 +1017,19 @@ class Trvlr_Admin
 			wp_die('Insufficient permissions');
 		}
 
-		// Get filter parameters
 		$limit = isset($_GET['limit']) ? absint($_GET['limit']) : null;
 		$type = isset($_GET['type']) ? sanitize_text_field($_GET['type']) : null;
 		$date_from = isset($_GET['date_from']) ? sanitize_text_field($_GET['date_from']) : null;
 		$date_to = isset($_GET['date_to']) ? sanitize_text_field($_GET['date_to']) : null;
 
-		// Generate CSV
 		$csv = Trvlr_Logger::export_to_csv($limit, $type, $date_from, $date_to);
 		$filename = Trvlr_Logger::get_csv_filename($type);
 
-		// Set headers for download
 		header('Content-Type: text/csv; charset=utf-8');
 		header('Content-Disposition: attachment; filename="' . $filename . '"');
 		header('Pragma: no-cache');
 		header('Expires: 0');
 
-		// Output CSV
 		echo $csv;
 		exit;
 	}

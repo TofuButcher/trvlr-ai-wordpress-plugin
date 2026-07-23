@@ -1,10 +1,7 @@
 <?php
 
 /**
- * REST API Controller
- * 
- * Handles all REST API endpoints for the TRVLR plugin.
- * Organized by feature area for better maintainability.
+ * REST API controller for TRVLR admin and public card endpoints.
  *
  * @package    Trvlr
  * @subpackage Trvlr/includes
@@ -14,9 +11,6 @@ class Trvlr_REST_API
 {
 	private $namespace = 'trvlr/v1';
 
-	/**
-	 * Register all REST API routes
-	 */
 	public function register_routes()
 	{
 		$this->register_settings_routes();
@@ -26,12 +20,8 @@ class Trvlr_REST_API
 		$this->register_cards_routes();
 	}
 
-	/**
-	 * Settings Routes
-	 */
 	private function register_settings_routes()
 	{
-		// Theme settings
 		register_rest_route($this->namespace, '/settings/theme', array(
 			array(
 				'methods' => 'GET',
@@ -45,7 +35,6 @@ class Trvlr_REST_API
 			),
 		));
 
-		// Connection settings
 		register_rest_route($this->namespace, '/settings/connection', array(
 			array(
 				'methods' => 'GET',
@@ -59,7 +48,6 @@ class Trvlr_REST_API
 			),
 		));
 
-		// Notification settings
 		register_rest_route($this->namespace, '/settings/notifications', array(
 			array(
 				'methods' => 'GET',
@@ -74,40 +62,32 @@ class Trvlr_REST_API
 		));
 	}
 
-	/**
-	 * Sync Routes
-	 */
 	private function register_sync_routes()
 	{
-		// Get sync statistics
 		register_rest_route($this->namespace, '/sync/stats', array(
 			'methods' => 'GET',
 			'callback' => array($this, 'get_sync_stats'),
 			'permission_callback' => array($this, 'check_admin_permission'),
 		));
 
-		// Manual sync
 		register_rest_route($this->namespace, '/sync/manual', array(
 			'methods' => 'POST',
 			'callback' => array($this, 'trigger_manual_sync'),
 			'permission_callback' => array($this, 'check_admin_permission'),
 		));
 
-		// Manual sync (no media)
 		register_rest_route($this->namespace, '/sync/manual-no-media', array(
 			'methods' => 'POST',
 			'callback' => array($this, 'trigger_manual_sync_no_media'),
 			'permission_callback' => array($this, 'check_admin_permission'),
 		));
 
-		// Cancel in-progress sync
 		register_rest_route($this->namespace, '/sync/cancel', array(
 			'methods' => 'POST',
 			'callback' => array($this, 'cancel_sync'),
 			'permission_callback' => array($this, 'check_admin_permission'),
 		));
 
-		// Schedule settings
 		register_rest_route($this->namespace, '/sync/schedule', array(
 			array(
 				'methods' => 'GET',
@@ -121,28 +101,18 @@ class Trvlr_REST_API
 			),
 		));
 
-		// Custom edits
 		register_rest_route($this->namespace, '/sync/custom-edits', array(
 			'methods' => 'GET',
 			'callback' => array($this, 'get_custom_edits'),
 			'permission_callback' => array($this, 'check_admin_permission'),
 		));
 
-		// Force sync settings
-		register_rest_route($this->namespace, '/sync/force-sync', array(
+		register_rest_route($this->namespace, '/sync/clear-custom-edits', array(
 			'methods' => 'POST',
-			'callback' => array($this, 'save_force_sync_settings'),
+			'callback' => array($this, 'clear_custom_edits'),
 			'permission_callback' => array($this, 'check_admin_permission'),
 		));
 
-		// Clear force sync
-		register_rest_route($this->namespace, '/sync/clear-force-sync', array(
-			'methods' => 'POST',
-			'callback' => array($this, 'clear_force_sync_settings'),
-			'permission_callback' => array($this, 'check_admin_permission'),
-		));
-
-		// Delete data
 		register_rest_route($this->namespace, '/sync/delete', array(
 			'methods' => 'POST',
 			'callback' => array($this, 'delete_data'),
@@ -156,12 +126,8 @@ class Trvlr_REST_API
 		));
 	}
 
-	/**
-	 * Logs Routes
-	 */
 	private function register_logs_routes()
 	{
-		// Get logs (grouped by sync session)
 		register_rest_route($this->namespace, '/logs', array(
 			'methods' => 'GET',
 			'callback' => array($this, 'get_logs'),
@@ -178,21 +144,18 @@ class Trvlr_REST_API
 			),
 		));
 
-		// Clear old logs
 		register_rest_route($this->namespace, '/logs/clear-old', array(
 			'methods' => 'POST',
 			'callback' => array($this, 'clear_old_logs'),
 			'permission_callback' => array($this, 'check_admin_permission'),
 		));
 
-		// Clear all logs
 		register_rest_route($this->namespace, '/logs/clear-all', array(
 			'methods' => 'POST',
 			'callback' => array($this, 'clear_all_logs'),
 			'permission_callback' => array($this, 'check_admin_permission'),
 		));
 
-		// Export logs (returns CSV data for download)
 		register_rest_route($this->namespace, '/logs/export', array(
 			'methods' => 'GET',
 			'callback' => array($this, 'export_logs'),
@@ -206,26 +169,20 @@ class Trvlr_REST_API
 		));
 	}
 
-	/**
-	 * Setup/Status Routes
-	 */
 	private function register_setup_routes()
 	{
-		// Get system status
 		register_rest_route($this->namespace, '/setup/status', array(
 			'methods' => 'GET',
 			'callback' => array($this, 'get_system_status'),
 			'permission_callback' => array($this, 'check_admin_permission'),
 		));
 
-		// Create payment page
 		register_rest_route($this->namespace, '/setup/payment-page', array(
 			'methods' => 'POST',
 			'callback' => array($this, 'create_payment_page'),
 			'permission_callback' => array($this, 'check_admin_permission'),
 		));
 
-		// Test API connection
 		register_rest_route($this->namespace, '/setup/test-connection', array(
 			'methods' => 'POST',
 			'callback' => array($this, 'test_api_connection'),
@@ -233,9 +190,6 @@ class Trvlr_REST_API
 		));
 	}
 
-	/**
-	 * Public Cards Routes
-	 */
 	private function register_cards_routes()
 	{
 		$string_param = array('type' => 'string', 'sanitize_callback' => 'sanitize_text_field');
@@ -287,12 +241,10 @@ class Trvlr_REST_API
 	 *
 	 * Public endpoint — returns rendered attraction card HTML plus pagination metadata.
 	 * Accepts the same named params as `trvlr_attraction_cards` shortcode via GET query
-	 * string. POST requests may additionally include a `query_args` object in the JSON
-	 * body for a full WP_Query override (same as the `query_args` key accepted by
-	 * `trvlr_cards()` / `trvlr_build_query_args()`).
+	 * string. POST may include a `query_args` object for a full WP_Query override
+	 * (same as `trvlr_cards()` / `trvlr_build_query_args()`).
 	 *
-	 * The `trvlr_ajax_query_args` filter fires before execution, giving server-side code
-	 * full control over the final WP_Query args.
+	 * The `trvlr_ajax_query_args` filter fires before execution.
 	 *
 	 * Response shape:
 	 *   html         string  Inner `<div class="trvlr-cards">` element.
@@ -332,7 +284,6 @@ class Trvlr_REST_API
 			$args['paged'] = max(1, intval($args['paged']));
 		}
 
-		// Validate card_variant — fall back to 'default' if not in supported list.
 		$supported_card_variants = array('default', 'expanded');
 		$card_variant = 'default';
 		if (!empty($args['card_variant']) && in_array($args['card_variant'], $supported_card_variants, true)) {
@@ -361,25 +312,17 @@ class Trvlr_REST_API
 		return rest_ensure_response($result);
 	}
 
-	/**
-	 * Permission Callback
-	 */
 	public function check_admin_permission()
 	{
 		$can_manage = current_user_can('manage_options');
 
-		// Only log on actual denials, and only when debugging is enabled, to
-		// avoid spamming the error log on every (2s) progress poll.
+		// Only log denials when WP_DEBUG is on — progress polls hit this every ~2s.
 		if (!$can_manage && defined('WP_DEBUG') && WP_DEBUG) {
 			error_log('TRVLR REST API: Permission denied for user ' . get_current_user_id() . ' on ' . ($_SERVER['REQUEST_URI'] ?? ''));
 		}
 
 		return $can_manage;
 	}
-
-	// ========================================
-	// SETTINGS ENDPOINTS
-	// ========================================
 
 	public function get_theme_settings($request)
 	{
@@ -479,10 +422,6 @@ class Trvlr_REST_API
 		update_option('trvlr_notification_settings', $settings);
 		return rest_ensure_response(array('success' => true, 'settings' => $settings));
 	}
-
-	// ========================================
-	// SYNC ENDPOINTS
-	// ========================================
 
 	public function get_sync_stats($request)
 	{
@@ -687,6 +626,12 @@ class Trvlr_REST_API
 		}
 	}
 
+	/**
+	 * List attractions that currently have Custom Edit fields.
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response
+	 */
 	public function get_custom_edits($request)
 	{
 		$posts = get_posts(array(
@@ -703,19 +648,7 @@ class Trvlr_REST_API
 		$results = array();
 
 		foreach ($posts as $post) {
-			$edited_fields = get_post_meta($post->ID, '_trvlr_edited_fields', true);
-			$force_sync_fields = get_post_meta($post->ID, '_trvlr_force_sync_fields', true);
-
-			if (!is_array($edited_fields)) {
-				$edited_fields = array();
-			} else {
-				$edited_fields = array_values($edited_fields);
-			}
-			if (!is_array($force_sync_fields)) {
-				$force_sync_fields = array();
-			} else {
-				$force_sync_fields = array_values($force_sync_fields);
-			}
+			$edited_fields = trvlr_get_custom_edit_fields($post->ID);
 
 			$results[] = array(
 				'id' => $post->ID,
@@ -723,77 +656,57 @@ class Trvlr_REST_API
 				'edit_url' => get_edit_post_link($post->ID, 'raw'),
 				'modified' => get_the_modified_date('Y-m-d H:i', $post->ID),
 				'edited_fields' => $edited_fields,
-				'force_sync_fields' => $force_sync_fields,
 				'edited_fields_labels' => array_values(array_map(function ($field) use ($field_labels) {
 					return isset($field_labels[$field]) ? $field_labels[$field] : $field;
 				}, $edited_fields)),
-				'force_sync_fields_labels' => array_values(array_map(function ($field) use ($field_labels) {
-					return isset($field_labels[$field]) ? $field_labels[$field] : $field;
-				}, $force_sync_fields)),
 			);
 		}
 
 		return rest_ensure_response($results);
 	}
 
-	public function save_force_sync_settings($request)
+	/**
+	 * Clear Custom Edit fields for one post, selected fields, or the whole site.
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function clear_custom_edits($request)
 	{
 		$data = $request->get_json_params();
-		$force_sync_fields = isset($data['force_sync_fields']) ? $data['force_sync_fields'] : array();
-
-		// Clear all force sync fields first
-		$all_edited = get_posts(array(
-			'post_type' => 'trvlr_attraction',
-			'meta_key' => '_trvlr_has_custom_edits',
-			'meta_value' => '1',
-			'fields' => 'ids',
-			'posts_per_page' => -1,
-			'post_status' => 'any'
-		));
-
-		foreach ($all_edited as $pid) {
-			delete_post_meta($pid, '_trvlr_force_sync_fields');
+		if (!is_array($data)) {
+			$data = array();
 		}
 
-		// Set force sync fields for selected posts
-		$count = 0;
-		foreach ($force_sync_fields as $post_id => $fields) {
-			$post_id = absint($post_id);
-			$fields = array_map('sanitize_text_field', $fields);
+		$post_id = isset($data['post_id']) ? absint($data['post_id']) : 0;
+		$fields = isset($data['fields']) && is_array($data['fields'])
+			? array_map('sanitize_text_field', $data['fields'])
+			: array();
 
-			if (!empty($fields)) {
-				update_post_meta($post_id, '_trvlr_force_sync_fields', $fields);
-				$count++;
+		if ($post_id) {
+			if (get_post_type($post_id) !== 'trvlr_attraction') {
+				return new WP_Error('invalid_post', 'Invalid attraction.', array('status' => 400));
 			}
+
+			Trvlr_Custom_Edits::clear_fields($post_id, $fields);
+
+			return rest_ensure_response(array(
+				'success' => true,
+				'message' => empty($fields)
+					? __('Cleared all custom edits for this attraction.', 'trvlr')
+					: sprintf(
+						_n('Cleared %d custom edit field.', 'Cleared %d custom edit fields.', count($fields), 'trvlr'),
+						count($fields)
+					),
+				'edited_fields' => trvlr_get_custom_edit_fields($post_id),
+			));
 		}
+
+		$count = Trvlr_Custom_Edits::clear_all_sitewide();
 
 		return rest_ensure_response(array(
 			'success' => true,
-			'message' => sprintf('%d attraction(s) configured for field-level sync.', $count),
-		));
-	}
-
-	public function clear_force_sync_settings($request)
-	{
-		$all_edited = get_posts(array(
-			'post_type' => 'trvlr_attraction',
-			'meta_key' => '_trvlr_has_custom_edits',
-			'fields' => 'ids',
-			'posts_per_page' => -1,
-			'post_status' => 'any'
-		));
-
-		$count = 0;
-		foreach ($all_edited as $pid) {
-			if (get_post_meta($pid, '_trvlr_force_sync_fields', true)) {
-				delete_post_meta($pid, '_trvlr_force_sync_fields');
-				$count++;
-			}
-		}
-
-		return rest_ensure_response(array(
-			'success' => true,
-			'message' => 'Cleared force sync settings from ' . $count . ' attraction(s).',
+			'message' => sprintf(__('Cleared custom edits from %d attraction(s).', 'trvlr'), $count),
 		));
 	}
 
@@ -830,10 +743,6 @@ class Trvlr_REST_API
 			'message' => 'Data deleted successfully.',
 		));
 	}
-
-	// ========================================
-	// LOGS ENDPOINTS
-	// ========================================
 
 	public function get_logs($request)
 	{
@@ -883,10 +792,6 @@ class Trvlr_REST_API
 			'filename' => Trvlr_Logger::get_csv_filename($type),
 		));
 	}
-
-	// ========================================
-	// SETUP ENDPOINTS
-	// ========================================
 
 	public function get_system_status($request)
 	{

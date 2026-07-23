@@ -1,10 +1,7 @@
 <?php
 
 /**
- * Theme Configuration
- * 
- * Single source of truth for theme settings (PHP version).
- * See docs/reference/theme-config.md for the React side.
+ * Theme settings config (PHP). See docs/reference/theme-config.md for the React side.
  *
  * @package    Trvlr
  * @subpackage Trvlr/includes
@@ -123,7 +120,7 @@ class Trvlr_Theme_Config
 	}
 
 	/**
-	 * Get default values for all theme settings
+	 * @return array
 	 */
 	public static function get_defaults()
 	{
@@ -141,7 +138,8 @@ class Trvlr_Theme_Config
 	}
 
 	/**
-	 * Merge user settings with defaults
+	 * @param array|mixed $user_settings
+	 * @return array
 	 */
 	public static function merge_with_defaults($user_settings)
 	{
@@ -152,7 +150,8 @@ class Trvlr_Theme_Config
 	}
 
 	/**
-	 * Generate CSS variables string from settings
+	 * @param array $settings
+	 * @return string
 	 */
 	public static function generate_css_variables($settings)
 	{
@@ -213,7 +212,7 @@ class Trvlr_Theme_Config
 	}
 
 	/**
-	 * Get all fields as flat array
+	 * @return array
 	 */
 	public static function get_all_fields()
 	{
@@ -232,20 +231,19 @@ class Trvlr_Theme_Config
 	}
 
 	/**
-	 * Extract all fields from a group, handling both direct fields and cols-X wrappers
-	 * @param array $group Group configuration
-	 * @return array Flat array of fields
+	 * Flatten fields from a group, including cols-X wrappers.
+	 *
+	 * @param array $group
+	 * @return array
 	 */
 	private static function extract_fields_from_group($group)
 	{
 		$all_fields = array();
 
-		// Check for direct fields
 		if (isset($group['fields'])) {
 			$all_fields = array_merge($all_fields, $group['fields']);
 		}
 
-		// Check for cols-X wrappers
 		foreach ($group as $key => $value) {
 			if (strpos($key, 'cols-') === 0 && isset($value['fields'])) {
 				$all_fields = array_merge($all_fields, $value['fields']);

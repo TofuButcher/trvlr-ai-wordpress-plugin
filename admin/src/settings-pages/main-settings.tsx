@@ -93,7 +93,6 @@ export const MainSettings = () => {
                   <div
                      key={tab.key}
                      className={`trvlr-tab-pane ${activeTab === tab.key ? 'active' : ''} ${positionClass}`}
-                  // style={{ display: activeTab === tab.key ? 'block' : 'none' }}
                   >
                      <tab.component />
                   </div>

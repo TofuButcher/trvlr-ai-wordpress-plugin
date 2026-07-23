@@ -124,30 +124,29 @@ POST /sync/schedule
 GET /sync/custom-edits
 ```
 
-Returns an array of attractions with manual edits (titles, edit links, modified date, edited field keys, force-sync selections, human-readable labels).
+Returns an array of attractions with Custom Edit fields (titles, edit links, modified date, edited field keys, human-readable labels).
 
-### Force sync
+### Clear custom edits
 
 ```
-POST /sync/force-sync
+POST /sync/clear-custom-edits
 ```
 
-**POST body example:**
+**POST body examples:**
 
 ```json
-{
-  "force_sync_fields": {
-    "123": ["post_title", "trvlr_description"],
-    "456": ["trvlr_media"]
-  }
-}
+{ "post_id": 123, "fields": ["trvlr_description"] }
 ```
 
-### Clear force sync
+```json
+{ "post_id": 123 }
+```
 
+```json
+{}
 ```
-POST /sync/clear-force-sync
-```
+
+Omitting `post_id` clears Custom Edit mode for all attractions. Omitting `fields` clears every Custom Edit field on that post. Cleared fields return to Synced (next sync overwrites from Traveloris).
 
 ### Delete data
 

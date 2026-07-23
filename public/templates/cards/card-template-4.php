@@ -10,6 +10,7 @@ if (!in_array($trvlr_card_variant, $trvlr_card_supported_variants, true)) {
 	$trvlr_card_variant = 'default';
 }
 
+$post_id = isset($post_id) && is_numeric($post_id) ? $post_id : get_the_ID();
 $permalink = get_permalink($post_id);
 $title = get_trvlr_title($post_id);
 $price = get_trvlr_advertised_price_value($post_id);

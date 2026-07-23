@@ -4,13 +4,16 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
+$post_id = get_the_ID();
 $hero_image_id = get_post_thumbnail_id($post_id);
 $hero_image = wp_get_attachment_image($hero_image_id, 'full');
-$highlights_out = trvlr_highlights($post_id);
-$inclusions_out = trvlr_inclusions($post_id);
+$short_description_out = trvlr_short_description($post_id);
+$important_information_out = trvlr_important_information($post_id);
 $gallery_out = trvlr_gallery($post_id, array('type' => 'slider', 'variant' => 'theme-4'));
 $has_gallery = $gallery_out !== '';
-$loc_out = trvlr_locations($post_id);
+$highlights_out = trvlr_highlights($post_id);
+$inclusions_out = trvlr_inclusions($post_id);
+$locations_out = trvlr_locations($post_id);
 $add_info_out = trvlr_additional_info($post_id);
 $price_value = get_trvlr_advertised_price_value($post_id);
 $price_type = get_trvlr_advertised_price_type($post_id);
@@ -57,40 +60,57 @@ $cancellation_icon = '<svg class="trvlr-sa4__summary-icon" width="20" height="20
 					</div>
 				</div>
 			</section>
+			<div class="trvlr-sa4__intro">
+				<?php if ($important_information_out !== '') : ?>
+					<section class="trvlr-sa4__important-information">
+						<?php echo $important_information_out; ?>
+					</section>
+				<?php endif; ?>
+				<?php if ($short_description_out !== '') : ?>
+					<section class="trvlr-sa4__short-description">
+						<?php echo $short_description_out; ?>
+					</section>
+				<?php endif; ?>
+			</div>
 			<div class="trvlr-sa4__content">
 				<div class="trvlr-sa4__content-container">
+					<?php do_action('trvlr_after_section_short_description', $post_id); ?>
 					<?php if ($has_gallery) : ?>
 						<section class="trvlr-sa4__gallery">
 							<?php echo $gallery_out; ?>
 						</section>
 					<?php endif; ?>
-					<section class="trvlr-sa4__intro">
-						<?php echo trvlr_short_description($post_id); ?>
-					</section>
+					<?php do_action('trvlr_after_section_important_information', $post_id); ?>
 					<?php if ($highlights_out !== '') : ?>
 						<section class="trvlr-sa4__section">
-							<h2><?php esc_html_e('Highlights', 'trvlr'); ?></h2>
+							<h2><?php echo esc_html(get_trvlr_section_heading('highlights', $post_id)); ?></h2>
 							<?php echo $highlights_out; ?>
 						</section>
 					<?php endif; ?>
+					<?php do_action('trvlr_after_section_highlights', $post_id); ?>
 					<?php if ($inclusions_out !== '') : ?>
 						<section class="trvlr-sa4__section">
-							<h2><?php esc_html_e('Inclusions', 'trvlr'); ?></h2>
+							<h2><?php echo esc_html(get_trvlr_section_heading('inclusions', $post_id)); ?></h2>
 							<?php echo $inclusions_out; ?>
 						</section>
 					<?php endif; ?>
+					<?php do_action('trvlr_after_section_inclusions', $post_id); ?>
 					<section class="trvlr-sa4__section">
-						<h2><?php esc_html_e('Description', 'trvlr'); ?></h2>
-						<?php echo trvlr_description($post_id); ?>
-						<?php the_content(); ?>
+						<h2><?php echo esc_html(get_trvlr_section_heading('description', $post_id)); ?></h2>
+						$short_description_out = trvlr_get_short
 					</section>
-					<?php if ($loc_out !== '' || $add_info_out !== '') : ?>
-						<section class="trvlr-sa4__section">
-							<h2><?php esc_html_e('Additional Information', 'trvlr'); ?></h2>
-							<?php echo $loc_out; ?>
+					<?php do_action('trvlr_after_section_description', $post_id); ?>
+					<?php echo trvlr_description($post_id); ?>
+					$short_description_out = trvlr_get_short
+					<section class="trvlr-sa4__section">
+						<h2><?php echo esc_html(get_trvlr_section_heading('additional_info', $post_id)); ?></h2>
+						<?php the_content(); ?>
+						<?php if ($locations_out !== '' || $add_info_out !== '') : ?>
+							<?php echo $locations_out; ?>
 							<?php echo $add_info_out; ?>
-						</section>
-					<?php endif; ?>
+					</section>
+				<?php endif; ?>
+				<?php do_action('trvlr_after_section_additional_info', $post_id); ?>
 				</div>
 			</div>
 		</div>
