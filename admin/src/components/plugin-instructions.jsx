@@ -10,7 +10,7 @@ import {
 
 const getInstructionSteps = () => [
    {
-      title: __('1. Connect to TRVLR', 'trvlr'),
+      title: __('1. Connect to Traveloris', 'trvlr'),
       content: () => (
          <>
             <Text>
@@ -29,7 +29,7 @@ const getInstructionSteps = () => [
       content: () => (
          <>
             <Text>
-               {__('Navigate to the Sync tab to import your attractions from TRVLR.', 'trvlr')}
+               {__('Navigate to the Sync tab to import your attractions from Traveloris.', 'trvlr')}
             </Text>
             <div style={{ marginTop: '12px', marginBottom: '12px' }}>
                <strong>{__('Manual Sync:', 'trvlr')}</strong>
@@ -40,7 +40,7 @@ const getInstructionSteps = () => [
                <Text> {__('Enable scheduled syncing to keep attractions updated automatically.', 'trvlr')}</Text>
             </div>
             <Notice status="warning" isDismissible={false}>
-               {__('Manual edits made in WordPress are preserved during sync. Review them in the Custom Edits section or use the "Sync from TRVLR" button on individual attraction pages to override.', 'trvlr')}
+               {__('Manual edits made in WordPress are preserved during sync. Review them in the Custom Edits section or use the "Sync from Traveloris" button on individual attraction pages to override.', 'trvlr')}
             </Notice>
          </>
       ),
@@ -55,7 +55,7 @@ const getInstructionSteps = () => [
             </Text>
             <ul style={{ marginTop: '12px', marginBottom: '12px' }}>
                <li><code>class="trvlr-book-now"</code></li>
-               <li><code>attraction-id="YOUR_TRVLR_ID"</code></li>
+               <li><code>attraction-id="YOUR_TRAVELORIS_ID"</code></li>
             </ul>
          </>
       ),
@@ -416,7 +416,7 @@ echo trvlr_cards($args);`}
                   fontSize: '13px',
                   whiteSpace: 'pre-wrap'
                }}>
-                  {`// Get TRVLR ID (for booking)
+                  {`// Get Traveloris ID (for booking)
 get_trvlr_id($post_id);
 get_trvlr_attraction_id($post_id);
 

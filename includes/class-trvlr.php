@@ -91,6 +91,10 @@ class Trvlr
 
 		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/trvlr-attraction-helpers.php';
 
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-seo.php';
+
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-icons.php';
+
 		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/trvlr-template-functions.php';
 
 		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/trvlr-shortcodes.php';
@@ -113,6 +117,8 @@ class Trvlr
 		$this->loader->add_action('trvlr_daily_log_cleanup', 'Trvlr_Logger', 'run_daily_cleanup');
 		$this->loader->add_action('trvlr_scheduled_sync', 'Trvlr_Scheduler', 'run_scheduled_sync');
 		$this->loader->add_action('trvlr_process_sync_batch', 'Trvlr_Scheduler', 'run_sync_batch');
+		$this->loader->add_action('wp_ajax_trvlr_run_sync_batch', 'Trvlr_Scheduler', 'ajax_run_sync_batch');
+		$this->loader->add_action('wp_ajax_nopriv_trvlr_run_sync_batch', 'Trvlr_Scheduler', 'ajax_run_sync_batch');
 		$this->loader->add_action('trvlr_weekly_summary', 'Trvlr_Notifier', 'send_weekly_summary');
 
 		$this->loader->add_filter('cron_schedules', 'Trvlr_Scheduler', 'add_cron_schedules');
@@ -138,6 +144,7 @@ class Trvlr
 		$this->loader->add_action('admin_menu', $plugin_admin, 'add_plugin_admin_menu');
 		$this->loader->add_action('admin_init', $plugin_admin, 'register_settings');
 		$this->loader->add_action('admin_head', $plugin_admin, 'add_admin_google_fonts');
+		$this->loader->add_action('admin_footer', $plugin_admin, 'output_admin_svg_icons');
 
 		$rest_api = new Trvlr_REST_API();
 		$this->loader->add_action('rest_api_init', $rest_api, 'register_routes');
@@ -168,6 +175,8 @@ class Trvlr
 	{
 
 		$plugin_public = new Trvlr_Public($this->get_plugin_name(), $this->get_version());
+		$plugin_seo = new Trvlr_SEO();
+		$plugin_seo->register_hooks();
 
 		$this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_styles');
 		$this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_scripts');
@@ -186,6 +195,7 @@ class Trvlr
 		$this->loader->add_filter('trvlr_pricing', $plugin_public, 'filter_trvlr_pricing', 10, 2);
 
 		$this->loader->add_filter('body_class', $plugin_public, 'add_payment_page_body_class');
+		$this->loader->add_filter('body_class', $plugin_public, 'add_presentation_theme_body_class');
 		$this->loader->add_filter('redirect_canonical', $plugin_public, 'disable_redirect_for_payment_page', 10, 2);
 		$this->loader->add_filter('the_content', $plugin_public, 'render_payment_confirmation_content');
 	}

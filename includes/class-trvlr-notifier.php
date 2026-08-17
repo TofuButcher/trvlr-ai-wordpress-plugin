@@ -43,9 +43,9 @@ class Trvlr_Notifier
 			return;
 		}
 
-		$subject = '[TRVLR] Sync Error - ' . get_bloginfo('name');
+		$subject = '[Traveloris] Sync Error - ' . get_bloginfo('name');
 		
-		$message = '<h2>TRVLR Sync Error</h2>';
+		$message = '<h2>Traveloris Sync Error</h2>';
 		$message .= '<p><strong>Error:</strong> ' . esc_html($error_message) . '</p>';
 		$message .= '<p><strong>Time:</strong> ' . current_time('Y-m-d H:i:s') . '</p>';
 		
@@ -54,7 +54,7 @@ class Trvlr_Notifier
 			$message .= '<pre>' . esc_html(print_r($context, true)) . '</pre>';
 		}
 		
-		$message .= '<p><a href="' . admin_url('admin.php?page=trvlr-settings&tab=logs') . '">View Full Logs</a></p>';
+		$message .= '<p><a href="' . admin_url('admin.php?page=trvlr_settings&tab=logs') . '">View Full Logs</a></p>';
 
 		self::send_email($subject, $message);
 		
@@ -81,9 +81,9 @@ class Trvlr_Notifier
 			return;
 		}
 
-		$subject = '[TRVLR] Sync Complete - ' . get_bloginfo('name');
+		$subject = '[Traveloris] Sync Complete - ' . get_bloginfo('name');
 		
-		$message = '<h2>TRVLR Sync Completed</h2>';
+		$message = '<h2>Traveloris Sync Completed</h2>';
 		$message .= '<p><strong>Time:</strong> ' . current_time('Y-m-d H:i:s') . '</p>';
 		$message .= '<h3>Summary:</h3>';
 		$message .= '<ul>';
@@ -95,7 +95,7 @@ class Trvlr_Notifier
 		}
 		$message .= '</ul>';
 		
-		$message .= '<p><a href="' . admin_url('admin.php?page=trvlr-settings&tab=sync') . '">View Sync Stats</a></p>';
+		$message .= '<p><a href="' . admin_url('admin.php?page=trvlr_settings&tab=sync') . '">View Sync Stats</a></p>';
 
 		self::send_email($subject, $message);
 	}
@@ -117,9 +117,9 @@ class Trvlr_Notifier
 			$week_ago
 		));
 
-		$subject = '[TRVLR] Weekly Summary - ' . get_bloginfo('name');
+		$subject = '[Traveloris] Weekly Summary - ' . get_bloginfo('name');
 		
-		$message = '<h2>TRVLR Weekly Summary</h2>';
+		$message = '<h2>Traveloris Weekly Summary</h2>';
 		$message .= '<p><strong>Period:</strong> ' . date('Y-m-d', strtotime('-7 days')) . ' to ' . date('Y-m-d') . '</p>';
 		
 		if (empty($stats)) {
@@ -153,7 +153,7 @@ class Trvlr_Notifier
 		$message .= '<li><strong>Synced (No Edits):</strong> ' . ($total - count($with_edits)) . '</li>';
 		$message .= '</ul>';
 		
-		$message .= '<p><a href="' . admin_url('admin.php?page=trvlr-settings&tab=sync') . '">View Sync Settings</a></p>';
+		$message .= '<p><a href="' . admin_url('admin.php?page=trvlr_settings&tab=sync') . '">View Sync Settings</a></p>';
 
 		self::send_email($subject, $message);
 		

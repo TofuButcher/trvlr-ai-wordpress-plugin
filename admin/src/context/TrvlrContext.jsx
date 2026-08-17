@@ -323,11 +323,16 @@ export const TrvlrProvider = ({ children }) => {
         }
     }, []);
 
+    const applyThemeSettingsLocally = useCallback((settings) => {
+        setThemeSettings(mergeWithDefaults(settings || {}, themeConfig));
+    }, [themeConfig]);
+
     const value = {
         themeSettings,
         connectionSettings,
         notificationSettings,
         saveThemeSettings,
+        applyThemeSettingsLocally,
         saveConnectionSettings,
         saveNotificationSettings,
         themeConfig,

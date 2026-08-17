@@ -1,9 +1,10 @@
 <?php
-
 if (!defined('ABSPATH')) {
 	exit;
 }
 
+$post_id = isset($post_id) ? $post_id : get_the_ID();
+$post_id = absint($post_id);
 $permalink = get_permalink($post_id);
 $title = get_trvlr_title($post_id);
 $trvlr_id = get_trvlr_id($post_id);
@@ -54,9 +55,7 @@ if ($duration) {
 				<?php endif; ?>
 			>
 				<span>Book Now</span>
-				<svg>
-					<use href="#icon-arrow-right"></use>
-				</svg>
+				<?php echo trvlr_icon('arrow-right', true); ?>
 			</button>
 		</div>
 	</div>

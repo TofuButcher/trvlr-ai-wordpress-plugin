@@ -35,6 +35,42 @@ class Trvlr_REST_API
 			),
 		));
 
+		register_rest_route($this->namespace, '/settings/theme/export', array(
+			'methods' => 'GET',
+			'callback' => array($this, 'export_theme_settings'),
+			'permission_callback' => array($this, 'check_admin_permission'),
+		));
+
+		register_rest_route($this->namespace, '/settings/theme/import', array(
+			'methods' => 'POST',
+			'callback' => array($this, 'import_theme_settings'),
+			'permission_callback' => array($this, 'check_admin_permission'),
+		));
+
+		register_rest_route($this->namespace, '/settings/theme/preview-card', array(
+			'methods' => 'GET',
+			'callback' => array($this, 'get_theme_preview_card'),
+			'permission_callback' => array($this, 'check_admin_permission'),
+			'args' => array(
+				'presentationTheme' => array(
+					'required' => true,
+					'type' => 'string',
+					'sanitize_callback' => 'sanitize_key',
+				),
+				'postId' => array(
+					'required' => false,
+					'type' => 'integer',
+					'default' => 0,
+					'sanitize_callback' => 'absint',
+				),
+				'random' => array(
+					'required' => false,
+					'type' => 'boolean',
+					'default' => false,
+				),
+			),
+		));
+
 		register_rest_route($this->namespace, '/settings/connection', array(
 			array(
 				'methods' => 'GET',
@@ -85,6 +121,12 @@ class Trvlr_REST_API
 		register_rest_route($this->namespace, '/sync/cancel', array(
 			'methods' => 'POST',
 			'callback' => array($this, 'cancel_sync'),
+			'permission_callback' => array($this, 'check_admin_permission'),
+		));
+
+		register_rest_route($this->namespace, '/sync/reset', array(
+			'methods' => 'POST',
+			'callback' => array($this, 'reset_sync'),
 			'permission_callback' => array($this, 'check_admin_permission'),
 		));
 
@@ -326,14 +368,7 @@ class Trvlr_REST_API
 
 	public function get_theme_settings($request)
 	{
-		$stored = get_option('trvlr_theme_settings', array());
-		$merged = Trvlr_Theme_Config::merge_with_defaults(is_array($stored) ? $stored : array());
-		if (class_exists('Trvlr_Template_Registry')) {
-			$merged['presentationTheme'] = Trvlr_Template_Registry::get_active_presentation_theme_slug();
-			$merged['cardTemplate'] = Trvlr_Template_Registry::get_active_card_slug();
-			$merged['attractionPageTemplate'] = Trvlr_Template_Registry::get_active_single_slug();
-		}
-		return rest_ensure_response($merged);
+		return rest_ensure_response(Trvlr_Theme_Config::get_merged_settings_for_response());
 	}
 
 	public function update_theme_settings($request)
@@ -343,31 +378,117 @@ class Trvlr_REST_API
 			return new WP_Error('invalid_data', 'Invalid settings data', array('status' => 400));
 		}
 
-		if (class_exists('Trvlr_Template_Registry')) {
-			if (array_key_exists('presentationTheme', $settings)) {
-				$pt = sanitize_key((string) $settings['presentationTheme']);
-				if ($pt !== '' && isset(Trvlr_Template_Registry::get_presentation_themes()[$pt])) {
-					Trvlr_Template_Registry::set_active_presentation_theme($pt);
-				}
-			}
-		}
-
-		$theme_only = $settings;
-		unset(
-			$theme_only['presentationTheme'],
-			$theme_only['cardTemplate'],
-			$theme_only['attractionPageTemplate']
-		);
-		update_option('trvlr_theme_settings', $theme_only);
-
-		$returned = Trvlr_Theme_Config::merge_with_defaults($theme_only);
-		if (class_exists('Trvlr_Template_Registry')) {
-			$returned['presentationTheme'] = Trvlr_Template_Registry::get_active_presentation_theme_slug();
-			$returned['cardTemplate'] = Trvlr_Template_Registry::get_active_card_slug();
-			$returned['attractionPageTemplate'] = Trvlr_Template_Registry::get_active_single_slug();
-		}
+		$returned = Trvlr_Theme_Config::save_settings($settings);
 
 		return rest_ensure_response(array('success' => true, 'settings' => $returned));
+	}
+
+	public function export_theme_settings($request)
+	{
+		return rest_ensure_response(Trvlr_Theme_Config::build_export_payload());
+	}
+
+	/**
+	 * GET /trvlr/v1/settings/theme/preview-card
+	 *
+	 * Renders a real attraction card for the given presentation theme.
+	 * When random=true (or postId omitted/0), picks a random published attraction
+	 * (excluding postId when provided). Otherwise re-renders the same postId.
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function get_theme_preview_card($request)
+	{
+		if (!class_exists('Trvlr_Template_Registry') || !function_exists('trvlr_card')) {
+			return new WP_Error('preview_unavailable', __('Card preview is unavailable.', 'trvlr'), array('status' => 500));
+		}
+
+		$theme = sanitize_key((string) $request->get_param('presentationTheme'));
+		$themes = Trvlr_Template_Registry::get_presentation_themes();
+		if ($theme === '' || !isset($themes[$theme])) {
+			return new WP_Error('invalid_theme', __('Unknown presentation theme.', 'trvlr'), array('status' => 400));
+		}
+
+		$post_id = absint($request->get_param('postId'));
+		$random = (bool) $request->get_param('random');
+
+		if ($random || $post_id === 0) {
+			$query_args = array(
+				'post_type' => 'trvlr_attraction',
+				'post_status' => 'publish',
+				'posts_per_page' => 1,
+				'orderby' => 'rand',
+				'fields' => 'ids',
+				'no_found_rows' => true,
+			);
+			if ($post_id > 0) {
+				$query_args['post__not_in'] = array($post_id);
+			}
+			$ids = get_posts($query_args);
+			if (empty($ids) && $post_id > 0) {
+				unset($query_args['post__not_in']);
+				$ids = get_posts($query_args);
+			}
+			$post_id = !empty($ids) ? absint($ids[0]) : 0;
+		}
+
+		if ($post_id === 0 || get_post_type($post_id) !== 'trvlr_attraction') {
+			return new WP_Error('no_attraction', __('No published attractions available for preview.', 'trvlr'), array('status' => 404));
+		}
+
+		Trvlr_Template_Registry::set_request_presentation_theme_override($theme);
+		$html = trvlr_card($post_id);
+		Trvlr_Template_Registry::set_request_presentation_theme_override(null);
+
+		if ($html === '') {
+			return new WP_Error('render_failed', __('Could not render attraction card.', 'trvlr'), array('status' => 500));
+		}
+
+		return rest_ensure_response(array(
+			'html' => $html,
+			'postId' => $post_id,
+			'presentationTheme' => $theme,
+		));
+	}
+
+	public function import_theme_settings($request)
+	{
+		$body = $request->get_json_params();
+		if (!is_array($body)) {
+			return new WP_Error('invalid_import', __('Invalid import payload.', 'trvlr'), array('status' => 400));
+		}
+
+		$skip_invalid = !empty($body['skipInvalid']);
+		$payload = isset($body['payload']) ? $body['payload'] : $body;
+
+		$settings = Trvlr_Theme_Config::normalize_import_payload($payload);
+		if (is_wp_error($settings)) {
+			return $settings;
+		}
+
+		$result = Trvlr_Theme_Config::validate_import_settings($settings);
+		$valid = $result['valid'];
+		$invalid = $result['invalid'];
+
+		if (!empty($invalid) && !$skip_invalid) {
+			return rest_ensure_response(array(
+				'success' => false,
+				'needsConfirmation' => true,
+				'invalid' => $invalid,
+				'valid' => $valid,
+				'message' => __('Some settings in the import file are invalid or unknown.', 'trvlr'),
+			));
+		}
+
+		$applied = Trvlr_Theme_Config::apply_import($valid);
+
+		return rest_ensure_response(array(
+			'success' => true,
+			'settings' => $applied,
+			'skipped' => $invalid,
+			'importedKeys' => array_keys($valid),
+		));
 	}
 
 	public function get_connection_settings($request)
@@ -453,7 +574,7 @@ class Trvlr_REST_API
 		if (trvlr_is_attraction_sync_disabled()) {
 			return new WP_Error(
 				'sync_disabled',
-				__('Attraction syncing is disabled in TRVLR settings.', 'trvlr'),
+				__('Attraction syncing is disabled in Traveloris settings.', 'trvlr'),
 				array('status' => 403)
 			);
 		}
@@ -468,10 +589,11 @@ class Trvlr_REST_API
 			$result = $syncer->start_sync();
 
 			if (!$result['success']) {
+				$status = !empty($result['already_in_progress']) ? 409 : 400;
 				return new WP_Error(
 					'sync_start_failed',
 					$result['message'],
-					array('status' => 400)
+					array_merge(array('status' => $status), $result)
 				);
 			}
 
@@ -500,7 +622,7 @@ class Trvlr_REST_API
 		if (trvlr_is_attraction_sync_disabled()) {
 			return new WP_Error(
 				'sync_disabled',
-				__('Attraction syncing is disabled in TRVLR settings.', 'trvlr'),
+				__('Attraction syncing is disabled in Traveloris settings.', 'trvlr'),
 				array('status' => 403)
 			);
 		}
@@ -515,10 +637,11 @@ class Trvlr_REST_API
 			$result = $syncer->start_sync_no_media();
 
 			if (!$result['success']) {
+				$status = !empty($result['already_in_progress']) ? 409 : 400;
 				return new WP_Error(
 					'sync_start_failed',
 					$result['message'],
-					array('status' => 400)
+					array_merge(array('status' => $status), $result)
 				);
 			}
 
@@ -548,20 +671,32 @@ class Trvlr_REST_API
 			$syncer = new Trvlr_Sync();
 			$result = $syncer->cancel_sync();
 
-			if (!$result['success']) {
-				return new WP_Error(
-					'cancel_failed',
-					$result['message'],
-					array('status' => 400)
-				);
-			}
-
 			return rest_ensure_response($result);
 		} catch (Exception $e) {
 			error_log('TRVLR Cancel Sync Error: ' . $e->getMessage());
 			return new WP_Error(
 				'cancel_failed',
 				'Cancel failed: ' . $e->getMessage(),
+				array('status' => 500)
+			);
+		}
+	}
+
+	public function reset_sync($request)
+	{
+		try {
+			require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-logger.php';
+			require_once plugin_dir_path(dirname(__FILE__)) . 'core/class-trvlr-sync.php';
+
+			$syncer = new Trvlr_Sync();
+			$result = $syncer->cancel_sync();
+			$result['message'] = 'Sync state reset.';
+			return rest_ensure_response($result);
+		} catch (Exception $e) {
+			error_log('TRVLR Reset Sync Error: ' . $e->getMessage());
+			return new WP_Error(
+				'reset_failed',
+				'Reset failed: ' . $e->getMessage(),
 				array('status' => 500)
 			);
 		}
@@ -599,7 +734,7 @@ class Trvlr_REST_API
 		if (trvlr_is_attraction_sync_disabled()) {
 			return new WP_Error(
 				'sync_disabled',
-				__('Attraction syncing is disabled in TRVLR settings.', 'trvlr'),
+				__('Attraction syncing is disabled in Traveloris settings.', 'trvlr'),
 				array('status' => 403)
 			);
 		}

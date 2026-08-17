@@ -6,6 +6,23 @@ import { useTrvlr } from '../context/TrvlrContext';
 
 type Progress = { processed: number; total: number; percentage: number; message: string };
 
+type ProgressResponse = {
+   in_progress?: boolean;
+   is_active?: boolean;
+   can_start?: boolean;
+   status?: string | null;
+   progress?: Progress | null;
+   results?: {
+      created?: number;
+      updated?: number;
+      skipped?: number;
+      errors?: number;
+   } | null;
+   driver?: string;
+   schema?: number;
+   notice?: { type?: string; message?: string; reason?: string } | null;
+};
+
 export const ManualSyncForm = () => {
    const { refreshSyncStats, cancelSync } = useTrvlr();
    const [syncing, setSyncing] = useState(false);
@@ -13,6 +30,8 @@ export const ManualSyncForm = () => {
    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
    const [progress, setProgress] = useState<Progress | null>(null);
    const pollingInterval = useRef<number | null>(null);
+   const actionLock = useRef(false);
+   const expectSyncUntil = useRef(0);
 
    const stopPolling = () => {
       if (pollingInterval.current) {
@@ -21,8 +40,27 @@ export const ManualSyncForm = () => {
       }
    };
 
-   const finishWithResults = (response: any) => {
+   const clearLocalSyncUi = (notice?: { type: 'success' | 'error'; text: string }) => {
       stopPolling();
+      expectSyncUntil.current = 0;
+      setSyncing(false);
+      setCancelling(false);
+      setProgress(null);
+      if (notice) setMessage(notice);
+   };
+
+   const applyNotice = (response: ProgressResponse) => {
+      if (response.notice?.message) {
+         setMessage({
+            type: response.notice.type === 'error' ? 'error' : 'success',
+            text: response.notice.message,
+         });
+      }
+   };
+
+   const finishWithResults = (response: ProgressResponse) => {
+      stopPolling();
+      expectSyncUntil.current = 0;
       setSyncing(false);
       setCancelling(false);
       setProgress(null);
@@ -30,13 +68,13 @@ export const ManualSyncForm = () => {
       if (response.results) {
          const r = response.results;
          const parts: string[] = [];
-         if (r.created > 0) parts.push(`${r.created} created`);
-         if (r.updated > 0) parts.push(`${r.updated} updated`);
-         if (r.skipped > 0) parts.push(`${r.skipped} skipped`);
-         if (r.errors > 0) parts.push(`${r.errors} errors`);
+         if ((r.created ?? 0) > 0) parts.push(`${r.created} created`);
+         if ((r.updated ?? 0) > 0) parts.push(`${r.updated} updated`);
+         if ((r.skipped ?? 0) > 0) parts.push(`${r.skipped} skipped`);
+         if ((r.errors ?? 0) > 0) parts.push(`${r.errors} errors`);
 
          setMessage({
-            type: r.errors > 0 ? 'error' : 'success',
+            type: (r.errors ?? 0) > 0 ? 'error' : 'success',
             text: parts.length > 0
                ? `Sync completed: ${parts.join(', ')}.`
                : __('Sync completed successfully!', 'trvlr'),
@@ -46,37 +84,46 @@ export const ManualSyncForm = () => {
       }
    };
 
+   const beginTracking = (nextProgress?: Progress | null) => {
+      expectSyncUntil.current = Date.now() + 120000;
+      setSyncing(true);
+      if (nextProgress) setProgress(nextProgress);
+      startPolling();
+   };
+
    const pollProgress = async () => {
+      if (actionLock.current) return;
+
       try {
-         const response: any = await apiFetch({ path: '/trvlr/v1/sync/progress' });
+         const response: ProgressResponse = await apiFetch({ path: '/trvlr/v1/sync/progress' });
+         if (actionLock.current) return;
 
          if (response.in_progress) {
+            expectSyncUntil.current = Date.now() + 120000;
             setSyncing(true);
             if (response.progress) setProgress(response.progress);
             return;
          }
 
-         if (response.status === 'stale') {
-            stopPolling();
-            setSyncing(false);
-            setCancelling(false);
-            setProgress(null);
-            setMessage({ type: 'error', text: __('Sync appears to have stalled. You can cancel it and start again.', 'trvlr') });
-            return;
-         }
-
-         if (response.status === 'cancelled') {
-            stopPolling();
-            setSyncing(false);
-            setCancelling(false);
-            setProgress(null);
-            setMessage({ type: 'error', text: __('Sync was cancelled.', 'trvlr') });
+         if (response.status === 'completed') {
+            finishWithResults(response);
             await refreshSyncStats();
             return;
          }
 
-         finishWithResults(response);
-         await refreshSyncStats();
+         // After Sync Now, progress can briefly lag behind the claim write — keep UI.
+         if (Date.now() < expectSyncUntil.current) {
+            return;
+         }
+
+         clearLocalSyncUi(
+            response.notice?.message
+               ? {
+                    type: response.notice.type === 'error' ? 'error' : 'success',
+                    text: response.notice.message,
+                 }
+               : undefined
+         );
       } catch (error) {
          console.error('Error polling sync progress:', error);
       }
@@ -87,51 +134,83 @@ export const ManualSyncForm = () => {
       pollingInterval.current = window.setInterval(pollProgress, 2000);
    };
 
-   // Attach the UI to whatever the server reports is currently happening.
-   // Used both on mount and as a fallback when a start request is rejected.
-   const attachToExistingSync = async (): Promise<boolean> => {
+   const attachToActiveSync = async (): Promise<boolean> => {
       try {
-         const response: any = await apiFetch({ path: '/trvlr/v1/sync/progress' });
+         const response: ProgressResponse = await apiFetch({ path: '/trvlr/v1/sync/progress' });
+         applyNotice(response);
          if (response.in_progress) {
-            setSyncing(true);
-            setProgress(response.progress || null);
-            startPolling();
-            return true;
-         }
-         if (response.status === 'stale') {
-            setSyncing(true);
-            setProgress(response.progress || null);
-            startPolling();
-            setMessage({ type: 'error', text: __('A previous sync appears to have stalled. You can cancel it and start again.', 'trvlr') });
+            beginTracking(response.progress || null);
             return true;
          }
       } catch (e) {}
       return false;
    };
 
-   const startSync = async (path: string, startingMessage: string) => {
+   const startSync = async (path: string, startingMessage: string, allowRetry = true) => {
+      actionLock.current = true;
+      stopPolling();
       setSyncing(true);
+      setCancelling(false);
       setMessage(null);
-      setProgress(null);
+      setProgress({ processed: 0, total: 0, percentage: 0, message: startingMessage });
+      expectSyncUntil.current = Date.now() + 120000;
 
       try {
          const response: any = await apiFetch({ path, method: 'POST' });
 
          if (response.total) {
-            setProgress({ processed: 0, total: response.total, percentage: 0, message: startingMessage });
+            setProgress({
+               processed: 0,
+               total: response.total,
+               percentage: 0,
+               message: response.message || startingMessage,
+            });
          }
-         startPolling();
+         actionLock.current = false;
+         beginTracking(
+            response.total
+               ? {
+                    processed: 0,
+                    total: response.total,
+                    percentage: 0,
+                    message: response.message || startingMessage,
+                 }
+               : { processed: 0, total: 0, percentage: 0, message: startingMessage }
+         );
+         await pollProgress();
       } catch (error: any) {
-         // A common rejection is "a sync is already in progress" (often started
-         // elsewhere). Rather than just erroring, attach to the live run so the
-         // user sees progress and gets a Cancel control.
-         const attached = await attachToExistingSync();
-         if (!attached) {
-            setSyncing(false);
-            const errorMessage = error?.message || error?.data?.message || __('Sync failed. Please check logs.', 'trvlr');
-            setMessage({ type: 'error', text: errorMessage });
-            console.error('Sync error:', error);
+         actionLock.current = false;
+         const errorMessage = error?.message || error?.data?.message || __('Sync failed. Please check logs.', 'trvlr');
+         const already = error?.data?.already_in_progress || /already in progress/i.test(errorMessage);
+         const embeddedProgress = error?.data?.progress as Progress | undefined;
+
+         if (already && embeddedProgress) {
+            beginTracking(embeddedProgress);
+            setMessage({ type: 'success', text: __('Connected to the sync already in progress.', 'trvlr') });
+            return;
          }
+
+         const attached = await attachToActiveSync();
+         if (attached) {
+            setMessage({ type: 'success', text: __('Connected to the sync already in progress.', 'trvlr') });
+            return;
+         }
+
+         if (already && allowRetry) {
+            try {
+               await apiFetch({ path: '/trvlr/v1/sync/reset', method: 'POST' });
+               await startSync(path, startingMessage, false);
+               return;
+            } catch (e) {
+               console.error('Reset-and-retry failed:', e);
+            }
+         }
+
+         expectSyncUntil.current = 0;
+         setSyncing(false);
+         setProgress(null);
+         setMessage({ type: 'error', text: errorMessage });
+         console.error('Sync error:', error);
       }
    };
 
@@ -139,18 +218,43 @@ export const ManualSyncForm = () => {
    const handleManualSyncNoMedia = () => startSync('/trvlr/v1/sync/manual-no-media', __('Starting sync (no media)...', 'trvlr'));
 
    const handleCancel = async () => {
+      actionLock.current = true;
+      stopPolling();
+      expectSyncUntil.current = 0;
       setCancelling(true);
       try {
-         await cancelSync();
-         await pollProgress();
-      } catch (error) {
+         await apiFetch({ path: '/trvlr/v1/sync/reset', method: 'POST' });
+         clearLocalSyncUi({ type: 'success', text: __('Sync cleared. You can start a new sync.', 'trvlr') });
+         actionLock.current = false;
+         await refreshSyncStats();
+      } catch (error: any) {
          console.error('Cancel sync error:', error);
-         setCancelling(false);
+         try {
+            await cancelSync();
+            clearLocalSyncUi({ type: 'success', text: __('Sync cleared. You can start a new sync.', 'trvlr') });
+         } catch (e) {
+            setMessage({
+               type: 'error',
+               text: error?.message || __('Could not clear sync. Try again.', 'trvlr'),
+            });
+            setCancelling(false);
+         }
+         actionLock.current = false;
       }
    };
 
    useEffect(() => {
-      attachToExistingSync();
+      (async () => {
+         const response: ProgressResponse = await apiFetch({ path: '/trvlr/v1/sync/progress' }).catch(() => null);
+         if (!response) return;
+         applyNotice(response);
+         if (response.in_progress) {
+            beginTracking(response.progress || null);
+            return;
+         }
+         setSyncing(false);
+         setProgress(null);
+      })();
       return () => stopPolling();
    }, []);
 
@@ -175,7 +279,9 @@ export const ManualSyncForm = () => {
                marginBottom: '16px'
             }}>
                <div style={{ marginBottom: '12px', fontWeight: 600 }}>
-                  {progress ? `${progress.percentage}% Complete` : __('Sync in progress…', 'trvlr')}
+                  {progress
+                     ? (progress.total > 0 ? `${progress.percentage}% Complete` : (progress.message || __('Starting…', 'trvlr')))
+                     : __('Sync in progress…', 'trvlr')}
                </div>
                <div style={{
                   background: '#fff',
@@ -194,18 +300,20 @@ export const ManualSyncForm = () => {
                </div>
                <div style={{ fontSize: '13px', color: '#50575e' }}>
                   {progress
-                     ? `${progress.processed} of ${progress.total} attractions synced`
+                     ? (progress.total > 0
+                        ? `${progress.processed} of ${progress.total} attractions synced`
+                        : (progress.message || __('Fetching attractions list…', 'trvlr')))
                      : __('Connecting to the running sync…', 'trvlr')}
                </div>
             </div>
          )}
 
-         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
             <Button
                variant="primary"
                onClick={handleManualSync}
                isBusy={syncing}
-               disabled={syncing}
+               disabled={syncing || cancelling}
             >
                {syncing ? __('Syncing...', 'trvlr') : __('Sync Now', 'trvlr')}
             </Button>
@@ -214,22 +322,20 @@ export const ManualSyncForm = () => {
                variant="secondary"
                onClick={handleManualSyncNoMedia}
                isBusy={syncing}
-               disabled={syncing}
+               disabled={syncing || cancelling}
             >
                {__('Sync ( no media )', 'trvlr')}
             </Button>
 
-            {syncing && (
-               <Button
-                  variant="tertiary"
-                  isDestructive
-                  onClick={handleCancel}
-                  isBusy={cancelling}
-                  disabled={cancelling}
-               >
-                  {cancelling ? __('Cancelling...', 'trvlr') : __('Cancel', 'trvlr')}
-               </Button>
-            )}
+            <Button
+               variant="tertiary"
+               isDestructive
+               onClick={handleCancel}
+               isBusy={cancelling}
+               disabled={cancelling}
+            >
+               {cancelling ? __('Clearing...', 'trvlr') : (syncing ? __('Cancel / Clear', 'trvlr') : __('Clear sync state', 'trvlr'))}
+            </Button>
          </div>
       </div>
    );

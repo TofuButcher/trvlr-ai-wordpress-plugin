@@ -4,6 +4,7 @@ import { ConnectionSettings } from './connection-settings';
 import { ThemeSettings } from './theme-settings';
 import { SyncSettings } from './sync-settings';
 import { LogsSettings } from './logs-settings';
+import { ToolsSettings } from './tools-settings';
 
 interface Tab {
    key: string;
@@ -43,6 +44,12 @@ export const MainSettings = () => {
          label: 'Logs',
          icon: 'dashicons-list-view',
          component: LogsSettings,
+      },
+      {
+         key: 'tools',
+         label: 'Tools',
+         icon: 'dashicons-admin-tools',
+         component: ToolsSettings,
       },
    ];
 

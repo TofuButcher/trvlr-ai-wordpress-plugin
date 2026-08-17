@@ -1,24 +1,25 @@
 {
   "name": "trvlr",
   "version": "1.0.0",
-  "description": "A generalized WordPress plugin for integrating the trvlr.ai booking system into any WordPress site.",
-  "main": "index.js",
+  "description": "A generalized WordPress plugin for integrating the Traveloris booking system into any WordPress site.",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "start": "wp-scripts start",
-    "build": "wp-scripts build",
-    "dist": "npm run build && node scripts/dist-zip.cjs"
+    "dev": "vite",
+    "start": "vite",
+    "build": "node scripts/vite-build.mjs",
+    "build:icons": "php scripts/build-icons.php",
+    "dist": "npm run build:icons && npm run build && node scripts/dist-zip.cjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@wordpress/scripts": "^31.1.0",
+    "@vitejs/plugin-basic-ssl": "^2.0.0",
+    "@vitejs/plugin-react": "^4.7.0",
     "archiver": "^7.0.1",
-    "css-loader": "^7.1.2",
-    "mini-css-extract-plugin": "^2.9.4",
     "sass": "^1.96.0",
-    "sass-loader": "^16.0.6",
-    "style-loader": "^4.0.0"
+    "vite": "^7.0.0"
   },
   "dependencies": {
     "@splidejs/splide": "^4.1.3",

@@ -1,0 +1,147 @@
+/**
+  * ----------------------------------------
+  * Style Mixins
+  * ----------------------------------------
+  */
+
+@mixin custom-svg-list-marker($icon, $color) {
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.66em;
+    margin: 0 0 0.58em;
+    padding: 0;
+
+    &::before {
+      content: "";
+      flex: 0 0 1.125em;
+      width: 1.125em;
+      height: 1.125em;
+      margin-top: 0.3em;
+      background-color: $color;
+      -webkit-mask-image: $icon;
+      mask-image: $icon;
+      -webkit-mask-size: contain;
+      mask-size: contain;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-position: center;
+      mask-position: center;
+    }
+  }
+}
+
+@mixin base-list-styling {
+  ul {
+    list-style: disc;
+  }
+  ol {
+    list-style: decimal;
+  }
+  ul,
+  ol {
+    padding-left: 1.3em;
+    margin: 1em 0;
+
+    &:first-child:last-child {
+      margin: 0;
+    }
+  }
+
+  li {
+    margin: 0 0 0.58em;
+  }
+}
+
+@mixin rich-text-content-styling {
+  & > strong {
+    font-size: 1.125em;
+    font-weight: bold;
+    &::before,
+    &::after {
+      content: "";
+      display: block;
+      height: 0;
+    }
+    &:not(:first-child) {
+      &::before {
+        margin-top: 0.6em;
+      }
+    }
+    &:not(:last-child) {
+      &::after {
+        margin-bottom: 0.4em;
+      }
+    }
+  }
+
+  p:not(:last-child) {
+    margin: 0 0 1em;
+  }
+}
+
+@mixin trvlr-card-compact-mode {
+  display: flex;
+  flex-direction: column;
+  min-height: unset;
+
+  &__main-content {
+    flex-direction: row;
+  }
+
+  &__image-wrap {
+    min-height: 100%;
+    aspect-ratio: var(--trvlr-card-compact-image-aspect-ratio);
+    width: var(--trvlr-card-compact-image-width);
+    max-height: var(--trvlr-card-compact-image-max-height);
+  }
+}
+
+/**
+* ----------------------------------------
+* Responsive Framework Variables
+* ----------------------------------------
+*/
+
+// Outputs CSS var that smoothly transitions between px values
+// set at minimum viewport (screen) width and maximum width
+@mixin responsive_value($value, $min, $max) {
+  $scale: 100; // Scale factor for achieving 2 decimal places
+
+  // Scale up, round, and then scale down
+  $min-scaled: calc(round($min * $scale) / $scale);
+  $max-scaled: calc(round($max * $scale) / $scale);
+  $diff-scaled: $max-scaled - $min-scaled;
+
+  #{$value}: clamp(
+    #{$min-scaled}px,
+    calc(
+      #{$min-scaled}px + #{$diff-scaled} * var(--trvlr-responsive-viewport-calc)
+    ),
+    #{$max-scaled}px
+  );
+}
+
+:root {
+  --trvlr-responsive-viewport-min: 360; // px
+  --trvlr-responsive-viewport-max: 1520; // px
+
+  --trvlr-responsive-viewport-calc: calc(
+    (100vw - var(--trvlr-responsive-viewport-min) * 1px) /
+      (
+        var(--trvlr-responsive-viewport-max) - var(
+            --trvlr-responsive-viewport-min
+          )
+      )
+  );
+
+  @include responsive_value(--trvlr-h1, 24, 50);
+  @include responsive_value(--trvlr-h2, 22, 37);
+  @include responsive_value(--trvlr-h3, 20, 28);
+}

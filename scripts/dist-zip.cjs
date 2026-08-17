@@ -50,7 +50,15 @@ function shouldIgnoreFile(relPosix) {
 	if (!relPosix.includes('/') && relPosix.endsWith('.zip')) {
 		return true;
 	}
-	if (relPosix === 'package-lock.json' || relPosix === 'webpack.config.js') {
+	if (
+		relPosix === 'package-lock.json' ||
+		relPosix === 'vite.config.js' ||
+		relPosix === 'vite.shared.js' ||
+		relPosix === 'vite.local.json' ||
+		relPosix === 'vite.local.example.json' ||
+		relPosix === 'hot' ||
+		relPosix.startsWith('vite-shims/')
+	) {
 		return true;
 	}
 	if (relPosix === '.DS_Store') {

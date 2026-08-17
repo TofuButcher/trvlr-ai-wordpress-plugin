@@ -22,6 +22,11 @@ function trvlr_is_frontend_booking_disabled(): bool
 	return (bool) get_option('trvlr_disable_frontend_booking', false);
 }
 
+function trvlr_is_attraction_seo_schema_disabled(): bool
+{
+	return (bool) get_option('trvlr_disable_attraction_seo_schema', false);
+}
+
 function trvlr_get_connection_settings_array(): array
 {
 	$disable_pt = trvlr_is_attraction_post_type_disabled();
@@ -33,6 +38,7 @@ function trvlr_get_connection_settings_array(): array
 		'disable_attraction_post_type' => $disable_pt,
 		'disable_attraction_sync' => $disable_pt ? true : $disable_sync_stored,
 		'disable_frontend_booking' => trvlr_is_frontend_booking_disabled(),
+		'disable_attraction_seo_schema' => trvlr_is_attraction_seo_schema_disabled(),
 	);
 }
 
@@ -52,6 +58,9 @@ function trvlr_update_connection_settings_from_request(array $data): void
 	}
 	if (array_key_exists('disable_frontend_booking', $data)) {
 		update_option('trvlr_disable_frontend_booking', (bool) $data['disable_frontend_booking']);
+	}
+	if (array_key_exists('disable_attraction_seo_schema', $data)) {
+		update_option('trvlr_disable_attraction_seo_schema', (bool) $data['disable_attraction_seo_schema']);
 	}
 
 	if (trvlr_is_attraction_post_type_disabled()) {

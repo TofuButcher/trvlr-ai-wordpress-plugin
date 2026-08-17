@@ -15,9 +15,11 @@
 
 class Trvlr_Async
 {
-	const GROUP       = 'trvlr';
-	const BATCH_HOOK  = 'trvlr_process_sync_batch';
-	const SYNC_HOOK   = 'trvlr_scheduled_sync';
+	const GROUP        = 'trvlr';
+	const BATCH_HOOK   = 'trvlr_process_sync_batch';
+	const SYNC_HOOK    = 'trvlr_scheduled_sync';
+	const RUNNER_TOKEN = 'trvlr_sync_runner_token';
+	const RUNNER_ACTION = 'trvlr_run_sync_batch';
 
 	/**
 	 * @return bool
@@ -39,39 +41,111 @@ class Trvlr_Async
 
 	/**
 	 * Queue the next sync batch. No-op if one is already pending.
+	 *
+	 * @param string|null $session_id Sync session; late-fired jobs no-op on mismatch.
 	 */
-	public static function queue_batch(): void
+	public static function queue_batch(?string $session_id = null): void
 	{
 		if (self::has_batch()) {
 			return;
 		}
 
+		$args = self::batch_args($session_id);
+
 		if (self::is_available()) {
-			// AS async actions self-propagate via loopback; no visitor traffic needed.
-			as_enqueue_async_action(self::BATCH_HOOK, array(), self::GROUP);
+			as_enqueue_async_action(self::BATCH_HOOK, $args, self::GROUP);
 		} else {
-			wp_schedule_single_event(time() + 1, self::BATCH_HOOK);
+			wp_schedule_single_event(time() + 1, self::BATCH_HOOK, $args);
 		}
 	}
 
 	/**
 	 * Queue a batch and nudge a runner now (dashboard self-heal for stalled runs).
+	 *
+	 * Always fires the loopback runner + spawn_cron, even when a batch event is
+	 * already pending — a pending event that never fires must not block healing.
+	 *
+	 * @param string|null $session_id Sync session; late-fired jobs no-op on mismatch.
 	 */
-	public static function queue_batch_now(): void
+	public static function queue_batch_now(?string $session_id = null): void
 	{
+		$args = self::batch_args($session_id);
+
 		if (self::is_available()) {
 			if (!self::has_batch()) {
-				as_enqueue_async_action(self::BATCH_HOOK, array(), self::GROUP);
+				as_enqueue_async_action(self::BATCH_HOOK, $args, self::GROUP);
 			}
+			self::loopback_runner($session_id);
 			return;
 		}
 
-		if (!wp_next_scheduled(self::BATCH_HOOK)) {
-			wp_schedule_single_event(time(), self::BATCH_HOOK);
+		if (!self::has_batch()) {
+			wp_schedule_single_event(time(), self::BATCH_HOOK, $args);
 		}
 		if (function_exists('spawn_cron')) {
 			spawn_cron();
 		}
+		self::loopback_runner($session_id);
+	}
+
+	/**
+	 * Fire-and-forget loopback request that runs the next batch immediately,
+	 * independent of WP-Cron. Token-gated; no-op when no sync is running.
+	 *
+	 * @param string|null $session_id
+	 */
+	public static function loopback_runner(?string $session_id = null): void
+	{
+		$token = get_option(self::RUNNER_TOKEN, '');
+		if (!is_string($token) || $token === '') {
+			return;
+		}
+
+		$url = add_query_arg(
+			array(
+				'action'  => self::RUNNER_ACTION,
+				'token'   => rawurlencode($token),
+				'session' => rawurlencode((string) $session_id),
+			),
+			admin_url('admin-ajax.php')
+		);
+
+		wp_remote_post($url, array(
+			'timeout'   => 1,
+			'blocking'  => false,
+			'sslverify' => false,
+			'headers'   => array('Connection' => 'close'),
+			'cookies'   => array(),
+			'body'      => array(),
+		));
+	}
+
+	/**
+	 * Create (or rotate) the loopback runner token for a sync run.
+	 */
+	public static function create_runner_token(): string
+	{
+		$token = wp_generate_password(40, false, false);
+		update_option(self::RUNNER_TOKEN, $token, false);
+		return $token;
+	}
+
+	/**
+	 * Remove the runner token (sync finished/cancelled/nuked).
+	 */
+	public static function delete_runner_token(): void
+	{
+		delete_option(self::RUNNER_TOKEN);
+	}
+
+	/**
+	 * @param string $token
+	 * @return bool
+	 */
+	public static function verify_runner_token(string $token): bool
+	{
+		$stored = get_option(self::RUNNER_TOKEN, '');
+		return is_string($stored) && $stored !== '' && hash_equals($stored, $token);
 	}
 
 	/**
@@ -82,7 +156,17 @@ class Trvlr_Async
 		if (self::is_available()) {
 			return (bool) as_next_scheduled_action(self::BATCH_HOOK, null, self::GROUP);
 		}
-		return (bool) wp_next_scheduled(self::BATCH_HOOK);
+
+		$crons = _get_cron_array();
+		if (!is_array($crons)) {
+			return false;
+		}
+		foreach ($crons as $hooks) {
+			if (isset($hooks[self::BATCH_HOOK])) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -91,11 +175,9 @@ class Trvlr_Async
 	public static function clear_batches(): void
 	{
 		if (self::is_available()) {
-			as_unschedule_all_actions(self::BATCH_HOOK, array(), self::GROUP);
+			as_unschedule_all_actions(self::BATCH_HOOK, null, self::GROUP);
 		}
-		while (($timestamp = wp_next_scheduled(self::BATCH_HOOK))) {
-			wp_unschedule_event($timestamp, self::BATCH_HOOK);
-		}
+		wp_clear_scheduled_hook(self::BATCH_HOOK);
 	}
 
 	/**
@@ -158,5 +240,14 @@ class Trvlr_Async
 			default:
 				return DAY_IN_SECONDS;
 		}
+	}
+
+	/**
+	 * @param string|null $session_id
+	 * @return array
+	 */
+	private static function batch_args(?string $session_id): array
+	{
+		return $session_id !== null && $session_id !== '' ? array($session_id) : array();
 	}
 }

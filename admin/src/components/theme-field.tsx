@@ -1,4 +1,5 @@
-import React, { ColorPicker, RangeControl, TextControl } from '@wordpress/components';
+import React from '@wordpress/element';
+import { ColorPicker, RangeControl, TextControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
 interface ThemeFieldConfig {

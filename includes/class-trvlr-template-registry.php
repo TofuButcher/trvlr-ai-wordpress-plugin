@@ -17,6 +17,9 @@ class Trvlr_Template_Registry
 
 	private static $presentation_state_initialized = false;
 
+	/** @var string|null Request-scoped presentation theme slug override (null = none). */
+	private static $request_presentation_theme_override = null;
+
 	public static function bootstrap()
 	{
 		if (self::$bootstrapped) {
@@ -98,7 +101,7 @@ class Trvlr_Template_Registry
 				'label' => __('Theme 1', 'trvlr'),
 				'card' => 'card-1',
 				'single' => 'page-1',
-				'stylesheet' => 'themes-variant-1.css',
+				'stylesheet' => 'themes/variant-1.css',
 			)
 		);
 		self::register_presentation_theme(
@@ -107,7 +110,7 @@ class Trvlr_Template_Registry
 				'label' => __('Theme 2', 'trvlr'),
 				'card' => 'card-2',
 				'single' => 'page-2',
-				'stylesheet' => 'themes-variant-2.css',
+				'stylesheet' => 'themes/variant-2.css',
 			)
 		);
 		self::register_presentation_theme(
@@ -116,8 +119,7 @@ class Trvlr_Template_Registry
 				'label' => __('Theme 3', 'trvlr'),
 				'card' => 'card-3',
 				'single' => 'page-3',
-				'stylesheet' => 'themes-variant-3.css',
-				'script' => 'variant-3.js',
+				'stylesheet' => 'themes/variant-3.css',
 			)
 		);
 		self::register_presentation_theme(
@@ -126,10 +128,26 @@ class Trvlr_Template_Registry
 				'label' => __('Theme 4', 'trvlr'),
 				'card' => 'card-4',
 				'single' => 'page-4',
-				'stylesheet' => 'themes-variant-4.css',
-				'script' => 'variant-4.js',
+				'stylesheet' => 'themes/variant-4.css',
 			)
 		);
+	}
+
+	/**
+	 * Allow nested asset paths like themes/variant-4.css while blocking traversal.
+	 *
+	 * @param string $path
+	 * @return string
+	 */
+	private static function sanitize_asset_rel_path($path)
+	{
+		$path = str_replace('\\', '/', (string) $path);
+		$path = ltrim($path, '/');
+		if ($path === '' || str_contains($path, '..')) {
+			return '';
+		}
+
+		return $path;
 	}
 
 	public static function register_presentation_theme($slug, $args)
@@ -145,16 +163,16 @@ class Trvlr_Template_Registry
 		}
 		$stylesheet = '';
 		if (isset($args['stylesheet']) && is_string($args['stylesheet']) && $args['stylesheet'] !== '') {
-			$stylesheet = basename($args['stylesheet']);
+			$stylesheet = self::sanitize_asset_rel_path($args['stylesheet']);
 		} elseif (preg_match('/^theme-(.+)$/u', $slug, $m)) {
 			$sfx = sanitize_key($m[1]);
 			if ($sfx !== '') {
-				$stylesheet = 'themes-variant-' . $sfx . '.css';
+				$stylesheet = 'themes/variant-' . $sfx . '.css';
 			}
 		}
 		$script = '';
 		if (isset($args['script']) && is_string($args['script']) && $args['script'] !== '') {
-			$script = basename($args['script']);
+			$script = self::sanitize_asset_rel_path($args['script']);
 		}
 		self::$presentation_themes[$slug] = array(
 			'slug' => $slug,
@@ -243,9 +261,23 @@ class Trvlr_Template_Registry
 			'presentationThemes' => array_values(
 				array_map(
 					function ($t) {
+						$stylesheet = isset($t['stylesheet']) ? (string) $t['stylesheet'] : '';
+						$stylesheet_url = '';
+						if ($stylesheet !== '') {
+							$path = TRVLR_PLUGIN_DIR . 'public/dist/css/' . $stylesheet;
+							if (is_readable($path)) {
+								$stylesheet_url = TRVLR_PLUGIN_URL . 'public/dist/css/' . $stylesheet;
+								$mtime = filemtime($path);
+								if ($mtime) {
+									$stylesheet_url = add_query_arg('ver', (string) $mtime, $stylesheet_url);
+								}
+							}
+						}
+
 						return array(
 							'slug' => $t['slug'],
 							'label' => $t['label'],
+							'stylesheetUrl' => $stylesheet_url,
 						);
 					},
 					self::$presentation_themes
@@ -303,9 +335,154 @@ class Trvlr_Template_Registry
 		return array_key_first(self::$presentation_themes);
 	}
 
+	/**
+	 * Ordered presentation theme slugs (registration order).
+	 *
+	 * @return string[]
+	 */
+	public static function get_presentation_theme_slugs()
+	{
+		return array_keys(self::$presentation_themes);
+	}
+
+	/**
+	 * Whether ?trvlr_theme_variant=none (base styles only — no presentation theme).
+	 *
+	 * @param string|null $raw Raw query value; reads $_GET when null.
+	 */
+	public static function is_presentation_theme_variant_none($raw = null)
+	{
+		if ($raw === null) {
+			if (!isset($_GET['trvlr_theme_variant']) || $_GET['trvlr_theme_variant'] === '') {
+				return false;
+			}
+			$raw = wp_unslash($_GET['trvlr_theme_variant']);
+		}
+
+		return is_string($raw) && strtolower(trim($raw)) === 'none';
+	}
+
+	/**
+	 * Resolve ?trvlr_theme_variant= to a registered theme slug.
+	 * Accepts a theme slug, or a 1-based index (wraps). Empty when unset/invalid/none.
+	 *
+	 * @param string|null $raw Raw query value; reads $_GET when null.
+	 */
+	public static function resolve_presentation_theme_variant_param($raw = null)
+	{
+		if ($raw === null) {
+			if (!isset($_GET['trvlr_theme_variant']) || $_GET['trvlr_theme_variant'] === '') {
+				return '';
+			}
+			$raw = wp_unslash($_GET['trvlr_theme_variant']);
+		}
+
+		if (!is_string($raw) && !is_numeric($raw)) {
+			return '';
+		}
+
+		$raw = trim((string) $raw);
+		if ($raw === '' || self::is_presentation_theme_variant_none($raw) || empty(self::$presentation_themes)) {
+			return '';
+		}
+
+		$slug = sanitize_key($raw);
+		if ($slug !== '' && isset(self::$presentation_themes[$slug])) {
+			return $slug;
+		}
+
+		if (!is_numeric($raw)) {
+			return '';
+		}
+
+		$slugs = array_keys(self::$presentation_themes);
+		$count = count($slugs);
+		$index = ((int) $raw - 1) % $count;
+		if ($index < 0) {
+			$index += $count;
+		}
+
+		return $slugs[$index];
+	}
+
+	/**
+	 * 1-based index of the active presentation theme, or 0 if none.
+	 */
+	public static function get_active_presentation_theme_index()
+	{
+		$slug = self::get_active_presentation_theme_slug();
+		if ($slug === '') {
+			return 0;
+		}
+		$slugs = array_keys(self::$presentation_themes);
+		$pos = array_search($slug, $slugs, true);
+
+		return $pos === false ? 0 : $pos + 1;
+	}
+
+	/**
+	 * Adjacent theme slug wrapping around the registered list.
+	 *
+	 * @param int $delta +1 next, -1 previous
+	 */
+	public static function get_adjacent_presentation_theme_slug($delta = 1)
+	{
+		$slugs = array_keys(self::$presentation_themes);
+		$count = count($slugs);
+		if ($count === 0) {
+			return '';
+		}
+
+		$current = self::get_active_presentation_theme_slug();
+		$pos = array_search($current, $slugs, true);
+		if ($pos === false) {
+			$pos = 0;
+		}
+
+		$next = ($pos + (int) $delta) % $count;
+		if ($next < 0) {
+			$next += $count;
+		}
+
+		return $slugs[$next];
+	}
+
+	/**
+	 * Temporarily force the active presentation theme for the current request
+	 * (e.g. admin theme preview). Pass empty string / null to clear.
+	 *
+	 * @param string|null $slug
+	 * @return void
+	 */
+	public static function set_request_presentation_theme_override($slug)
+	{
+		if ($slug === null || $slug === '') {
+			self::$request_presentation_theme_override = null;
+
+			return;
+		}
+
+		$slug = sanitize_key((string) $slug);
+		self::$request_presentation_theme_override = isset(self::$presentation_themes[$slug]) ? $slug : null;
+	}
+
 	public static function get_active_presentation_theme_slug()
 	{
 		self::ensure_presentation_theme_state();
+
+		if (self::is_presentation_theme_variant_none()) {
+			return '';
+		}
+
+		if (self::$request_presentation_theme_override !== null) {
+			return self::$request_presentation_theme_override;
+		}
+
+		$override = self::resolve_presentation_theme_variant_param();
+		if ($override !== '') {
+			return $override;
+		}
+
 		$opt = get_option('trvlr_presentation_theme', '');
 		$slug = is_string($opt) ? sanitize_key($opt) : '';
 		if ($slug !== '' && isset(self::$presentation_themes[$slug])) {

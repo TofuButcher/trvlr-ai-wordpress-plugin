@@ -650,7 +650,7 @@ function trvlr_cards($args = array())
 		echo '<div' . $attr_html . '>' . $result['html'] . '</div>';
 
 		if (!$script_enqueued) {
-			wp_enqueue_script('trvlr-query-manager');
+			trvlr_enqueue_front_script('trvlr-query-manager');
 			$script_enqueued = true;
 		}
 	}

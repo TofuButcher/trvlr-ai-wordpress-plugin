@@ -4,15 +4,23 @@
  */
 
 :root {
-  --trvlr-primary: hsl(216, 79%, 39%);
-  --trvlr-primary-active: hsl(216, 79%, 30%);
-  --trvlr-settings-background: hsl(0, 0%, 4%);
+  --trvlr-settings-background: transparent;
   --trvlr-settings-max-width: 1440px;
+
   --trvlr-admin-font-family: "Rethink Sans", sans-serif;
   --trvlr-admin-heading-font-family: var(--trvlr-admin-font-family);
 
-  --wp-admin-theme-color: var(--trvlr-primary);
-  --wp-admin-theme-color-darker-10: var(--trvlr-primary-active);
+  --wp-admin-theme-color: var(--trvlr-color-accent);
+  --wp-admin-theme-color-darker-10: var(--trvlr-color-accent-hover);
+}
+
+#adminmenu #toplevel_page_trvlr_settings .wp-menu-image img {
+  width: 20px;
+  height: 20px;
+  padding: 7px 0;
+  object-fit: contain;
+  border-radius: 3px;
+  opacity: 1;
 }
 
 body {
@@ -51,13 +59,13 @@ body {
   background: #fffe;
   transition: all 0.2s ease;
   position: relative;
-  border-radius: 6px 6px 0 0;
+  border-radius: 4px 4px 0 0 !important;
   font-size: 14px;
   border-bottom: 3px solid transparent;
 
   &:hover {
     background: #fff;
-    color: var(--trvlr-primary);
+    color: var(--trvlr-color-primary-500);
   }
 
   &:focus {
@@ -67,8 +75,8 @@ body {
 
   &.active {
     background: #fff;
-    color: var(--trvlr-primary);
-    border-bottom-color: var(--trvlr-primary);
+    color: oklch(0.45 0.9 156.93);
+    border-bottom-color: oklch(0.65 0.5 156.93);
   }
 
   .dashicons {
@@ -126,7 +134,7 @@ body {
 
 .trvlr-settings-sidebar-wrap {
   display: grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: 1fr 260px;
   gap: 40px;
 }
 
@@ -136,38 +144,32 @@ body {
   font-weight: 700;
   line-height: 1.4;
   color: hsl(0, 0%, 2%);
+  font-family: var(--trvlr-admin-heading-font-family);
 }
 
 .trvlr-tabs-content {
-  .trvlr-settings-heading {
-    font-family: var(--trvlr-admin-heading-font-family);
-  }
-
-  h2 {
+  .trvlr-settings-page-heading {
     @include settings-page-heading;
-    font-size: 28px;
-    margin-bottom: 10px;
 
-    &.trvlr-settings-page-heading {
-      @include settings-page-heading;
+    &:is(h2) {
+      font-size: 28px;
       margin-bottom: 24px;
       padding-bottom: 8px;
       width: 100%;
       border-bottom: 1px solid #e0e0e0;
-      font-family: var(--trvlr-admin-heading-font-family);
     }
   }
 
-  h3 {
+  .trvlr-settings-heading {
     @include settings-page-heading;
-    font-size: 18px;
-    margin-bottom: 8px;
-  }
-
-  h4 {
-    @include settings-page-heading;
-    font-size: 16px;
-    margin-bottom: 6px;
+    &:is(h3) {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    &:is(h4) {
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
   }
 }
 
@@ -265,6 +267,16 @@ body {
   background: var(--trvlr-settings-background);
   font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+
+  &::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: linear-gradient(-180deg, var(--trvlr-color-primary-800) -300px, oklch(20.503% 0 271.152) 200px);
+    z-index: -1;
+  }
 }
 
 #wpbody-content > .wrap:has(.trvlr-header) {
@@ -284,8 +296,9 @@ body {
 }
 
 .trvlr-logo {
-  height: 36px;
+  height: 40px;
   width: auto;
+  max-width: 220px;
 }
 
 h1.trvlr-title {
@@ -315,7 +328,7 @@ h1.trvlr-title {
   margin-top: 50px;
   background: #f9f9f9;
   padding: 20px;
-  border-left: 4px solid var(--trvlr-primary);
+  border-left: 4px solid var(--trvlr-color-primary);
 }
 
 .trvlr-list {
@@ -752,7 +765,6 @@ h1.trvlr-title {
   border: 2px solid transparent;
   border-radius: 6px;
   box-sizing: border-box;
-  height: 100%;
   margin-bottom: 0;
   padding: 16px;
   transition:
@@ -882,6 +894,10 @@ h1.trvlr-title {
   $tiny-btns-active-bg: #d2def1;
   $tiny-btns-active-color: #1776f3;
   $tiny-border-soft: #abc0dd;
+
+  .trvlr-field-sync {
+    height: 100%;
+  }
 
   .trvlr-media-gallery {
     display: flex;
@@ -1193,5 +1209,11 @@ h1.trvlr-title {
     background: $tiny-bg-alt-color;
     border: none;
     padding: 2px;
+  }
+}
+
+#trvlr-preview-card {
+  a {
+    pointer-events: none;
   }
 }

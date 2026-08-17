@@ -17,18 +17,30 @@ function trvlr_shortcode_duration($atts)
 {
 	$atts = shortcode_atts(array(
 		'id' => get_the_ID(),
-		'icon' => true,
+		'icon' => 'true',
 		'icon_element' => '',
 	), $atts, 'trvlr_duration');
 
-	$icon = filter_var($atts['icon'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-
 	return trvlr_duration($atts['id'], array(
-		'icon' => $icon !== false,
+		'icon' => trvlr_shortcode_icon_value($atts['icon']),
 		'icon_element' => $atts['icon_element'],
 	));
 }
 add_shortcode('trvlr_duration', 'trvlr_shortcode_duration');
+
+function trvlr_shortcode_icon_value($raw)
+{
+	if ($raw === '' || $raw === null) {
+		return true;
+	}
+
+	$bool = filter_var($raw, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+	if ($bool !== null) {
+		return $bool;
+	}
+
+	return sanitize_key((string) $raw);
+}
 
 function trvlr_shortcode_sale($atts)
 {
@@ -65,9 +77,13 @@ function trvlr_shortcode_gallery($atts)
 	$atts = shortcode_atts(array(
 		'id'   => get_the_ID(),
 		'type' => 'slider',
+		'layout' => 'nav-bottom',
 	), $atts, 'trvlr_gallery');
 
-	return trvlr_gallery($atts['id'], array('type' => $atts['type']));
+	return trvlr_gallery($atts['id'], array(
+		'type' => $atts['type'],
+		'layout' => $atts['layout'],
+	));
 }
 add_shortcode('trvlr_gallery', 'trvlr_shortcode_gallery');
 
@@ -100,6 +116,19 @@ function trvlr_shortcode_accordion($atts)
 	return trvlr_accordion($atts['id']);
 }
 add_shortcode('trvlr_accordion', 'trvlr_shortcode_accordion');
+
+function trvlr_shortcode_faqs($atts)
+{
+	$atts = shortcode_atts(array(
+		'id' => get_the_ID(),
+		'layout' => 'accordion',
+	), $atts, 'trvlr_faqs');
+
+	return trvlr_faqs($atts['id'], array(
+		'layout' => $atts['layout'],
+	));
+}
+add_shortcode('trvlr_faqs', 'trvlr_shortcode_faqs');
 
 function trvlr_shortcode_inclusions($atts)
 {
@@ -387,9 +416,13 @@ function trvlr_shortcode_attraction_gallery($atts)
 	$atts = shortcode_atts(array(
 		'id'   => get_the_ID(),
 		'type' => 'slider',
+		'layout' => 'nav-bottom',
 	), $atts, 'trvlr_attraction_gallery');
 
-	return trvlr_gallery($atts['id'], array('type' => $atts['type']));
+	return trvlr_gallery($atts['id'], array(
+		'type' => $atts['type'],
+		'layout' => $atts['layout'],
+	));
 }
 add_shortcode('trvlr_attraction_gallery', 'trvlr_shortcode_attraction_gallery');
 

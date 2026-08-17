@@ -11,49 +11,97 @@ function trvlr_title($post_id = null, $level = 1)
 	$title = get_trvlr_title($post_id);
 	$tag = 'h' . absint($level);
 
-	$output = "<{$tag} class=\"trvlr-title\">" . esc_html($title) . "</{$tag}>";
+	$output = "<{$tag} class=\"trvlr-title trvlr-heading\">" . esc_html($title) . "</{$tag}>";
 	return apply_filters('trvlr_title', $output, $post_id, $level);
+}
+
+function trvlr_icon_allowed_html()
+{
+	return array(
+		'svg' => array(
+			'aria-hidden' => true,
+			'class' => true,
+			'fill' => true,
+			'focusable' => true,
+			'height' => true,
+			'role' => true,
+			'stroke' => true,
+			'stroke-linecap' => true,
+			'stroke-linejoin' => true,
+			'stroke-width' => true,
+			'viewBox' => true,
+			'viewbox' => true,
+			'width' => true,
+			'xmlns' => true,
+		),
+		'path' => array(
+			'd' => true,
+			'fill' => true,
+			'fill-rule' => true,
+			'stroke' => true,
+			'stroke-linecap' => true,
+			'stroke-linejoin' => true,
+			'stroke-width' => true,
+		),
+		'circle' => array(
+			'cx' => true,
+			'cy' => true,
+			'r' => true,
+			'fill' => true,
+			'stroke' => true,
+			'stroke-width' => true,
+		),
+		'line' => array(
+			'x1' => true,
+			'x2' => true,
+			'y1' => true,
+			'y2' => true,
+			'stroke' => true,
+			'stroke-linecap' => true,
+			'stroke-width' => true,
+		),
+		'g' => array(
+			'clip-path' => true,
+			'fill' => true,
+			'stroke' => true,
+		),
+		'use' => array(
+			'href' => true,
+			'xlink:href' => true,
+		),
+		'span' => array(
+			'aria-hidden' => true,
+			'class' => true,
+		),
+	);
 }
 
 function trvlr_icon_element_kses($html)
 {
-	return wp_kses(
-		$html,
-		array(
-			'svg' => array(
-				'aria-hidden' => true,
-				'class' => true,
-				'fill' => true,
-				'height' => true,
-				'role' => true,
-				'stroke' => true,
-				'stroke-linecap' => true,
-				'stroke-linejoin' => true,
-				'stroke-width' => true,
-				'viewBox' => true,
-				'viewbox' => true,
-				'width' => true,
-				'xmlns' => true,
-			),
-			'path' => array(
-				'd' => true,
-				'fill' => true,
-				'fill-rule' => true,
-				'stroke' => true,
-				'stroke-linecap' => true,
-				'stroke-linejoin' => true,
-				'stroke-width' => true,
-			),
-			'use' => array(
-				'href' => true,
-				'xlink:href' => true,
-			),
-			'span' => array(
-				'aria-hidden' => true,
-				'class' => true,
-			),
-		)
-	);
+	return wp_kses($html, trvlr_icon_allowed_html());
+}
+
+function trvlr_kses_post_with_icons($html)
+{
+	$allowed = wp_kses_allowed_html('post');
+	foreach (trvlr_icon_allowed_html() as $tag => $attrs) {
+		$allowed[$tag] = isset($allowed[$tag])
+			? array_merge($allowed[$tag], $attrs)
+			: $attrs;
+	}
+	return wp_kses($html, $allowed);
+}
+
+function trvlr_back_link()
+{
+	ob_start();
+	?>
+	<a class="trvlr-back-link" href="<?php echo esc_url(home_url('/')); ?>">
+		<?php echo trvlr_icon('arrow-left', true, array('class' => 'trvlr-back-link__icon')); ?>
+		<?php esc_html_e('Back', 'trvlr'); ?>
+	</a>
+<?php
+	return apply_filters('trvlr_back_link', ob_get_clean());
 }
 
 function trvlr_duration($post_id = null, $args = array())
@@ -72,18 +120,17 @@ function trvlr_duration($post_id = null, $args = array())
 		return '';
 	}
 
+	$icon_html = '';
+	if ($args['icon_element'] !== '') {
+		$icon_html = trvlr_icon_element_kses($args['icon_element']);
+	} else {
+		$icon_html = trvlr_component_icon($args['icon'], 'clock', 'trvlr-duration__icon');
+	}
+
 	ob_start();
 ?>
-	<div class="trvlr-duration">
-		<?php if ($args['icon']) : ?>
-			<?php if ($args['icon_element'] !== '') : ?>
-				<?php echo trvlr_icon_element_kses($args['icon_element']); ?>
-			<?php else : ?>
-				<svg class="trvlr-duration__icon">
-					<use href="#icon-clock"></use>
-				</svg>
-			<?php endif; ?>
-		<?php endif; ?>
+	<div class="trvlr-duration <?php echo $icon_html ? 'trvlr-icon-text' : ''; ?>">
+		<?php echo $icon_html; ?>
 		<span class="trvlr-duration__value"><?php echo esc_html($duration); ?></span>
 	</div>
 <?php
@@ -106,16 +153,17 @@ function trvlr_suitable_ages($post_id = null, $args = array())
 		return '';
 	}
 
+	$icon_html = '';
+	if ($args['icon_element'] !== '') {
+		$icon_html = trvlr_icon_element_kses($args['icon_element']);
+	} else {
+		$icon_html = trvlr_component_icon($args['icon'], 'user', 'trvlr-suitable-ages__icon');
+	}
+
 	ob_start();
 ?>
-	<div class="trvlr-suitable-ages">
-		<?php if ($args['icon']) : ?>
-			<?php if ($args['icon_element'] !== '') : ?>
-				<?php echo trvlr_icon_element_kses($args['icon_element']); ?>
-			<?php else : ?>
-				<span class="trvlr-suitable-ages__icon" aria-hidden="true"></span>
-			<?php endif; ?>
-		<?php endif; ?>
+	<div class="trvlr-suitable-ages <?php echo $icon_html ? 'trvlr-icon-text' : ''; ?>">
+		<?php echo $icon_html; ?>
 		<span class="trvlr-suitable-ages__value"><?php echo esc_html($label); ?></span>
 	</div>
 <?php
@@ -138,16 +186,17 @@ function trvlr_simple_location($post_id = null, $args = array())
 		return '';
 	}
 
+	$icon_html = '';
+	if ($args['icon_element'] !== '') {
+		$icon_html = trvlr_icon_element_kses($args['icon_element']);
+	} else {
+		$icon_html = trvlr_component_icon($args['icon'], 'map-pin', 'trvlr-simple-location__icon');
+	}
+
 	ob_start();
 ?>
-	<div class="trvlr-simple-location">
-		<?php if ($args['icon']) : ?>
-			<?php if ($args['icon_element'] !== '') : ?>
-				<?php echo trvlr_icon_element_kses($args['icon_element']); ?>
-			<?php else : ?>
-				<span class="trvlr-simple-location__icon" aria-hidden="true"></span>
-			<?php endif; ?>
-		<?php endif; ?>
+	<div class="trvlr-simple-location <?php echo $icon_html ? 'trvlr-icon-text' : ''; ?>">
+		<?php echo $icon_html; ?>
 		<span class="trvlr-simple-location__value"><?php echo esc_html($label); ?></span>
 	</div>
 <?php
@@ -170,16 +219,17 @@ function trvlr_cancellation_policy($post_id = null, $args = array())
 		return '';
 	}
 
+	$icon_html = '';
+	if ($args['icon_element'] !== '') {
+		$icon_html = trvlr_icon_element_kses($args['icon_element']);
+	} else {
+		$icon_html = trvlr_component_icon($args['icon'], 'circle-x', 'trvlr-cancellation-policy__icon');
+	}
+
 	ob_start();
 ?>
-	<div class="trvlr-cancellation-policy">
-		<?php if ($args['icon']) : ?>
-			<?php if ($args['icon_element'] !== '') : ?>
-				<?php echo trvlr_icon_element_kses($args['icon_element']); ?>
-			<?php else : ?>
-				<span class="trvlr-cancellation-policy__icon" aria-hidden="true"></span>
-			<?php endif; ?>
-		<?php endif; ?>
+	<div class="trvlr-cancellation-policy <?php echo $icon_html ? 'trvlr-icon-text' : ''; ?>">
+		<?php echo $icon_html; ?>
 		<span class="trvlr-cancellation-policy__value"><?php echo esc_html($label); ?></span>
 	</div>
 <?php
@@ -249,11 +299,9 @@ function trvlr_popular_badge($post_id = null, $args = array())
 	$badge_text = apply_filters('trvlr_badge_text', 'Popular', $post_id);
 
 	if ($is_popular) {
-		$icon = $args['icon'] ? '<svg class="trvlr-icon trvlr-popular-badge__icon">
-			<use href="#icon-star"></use>
-		</svg>' : '';
+		$icon = $args['icon'] ? trvlr_icon('star', true, array('class' => 'trvlr-popular-badge__icon trvlr-badge__icon')) : '';
 
-		return '<div class="trvlr-popular-badge">' . $icon . '<span class="trvlr-popular-badge__text">' . $badge_text . '</span></div>';
+		return '<div class="trvlr-popular-badge trvlr-badge">' . $icon . '<span class="trvlr-popular-badge__text">' . $badge_text . '</span></div>';
 	}
 	return '';
 }
@@ -270,7 +318,7 @@ function trvlr_sale_badge($post_id = null, $always_show = false, $show_icon = tr
 		return '';
 	}
 
-	$output = '<div class="trvlr-sale__badge"><span>';
+	$output = '<div class="trvlr-sale__badge trvlr-badge"><span>';
 
 	if ($show_icon) {
 		$output .= '% Special Deal';
@@ -299,13 +347,13 @@ function trvlr_sale_description($post_id = null, $description = null)
 function trvlr_enqueue_gallery_slider_assets()
 {
 	wp_enqueue_style('trvlr-gallery-slider');
-	wp_enqueue_script('trvlr-gallery-slider');
+	trvlr_enqueue_front_script('trvlr-gallery-slider');
 }
 
 function trvlr_enqueue_gallery_masonry_assets()
 {
 	wp_enqueue_style('trvlr-gallery-masonry');
-	wp_enqueue_script('trvlr-gallery-masonry');
+	trvlr_enqueue_front_script('trvlr-gallery-masonry');
 }
 
 function trvlr_gallery_attachment_lightbox_attrs($attachment_id)
@@ -344,11 +392,22 @@ function trvlr_gallery($post_id = null, $args = array())
 		$args,
 		array(
 			'type' => 'slider',
-			'variant' => '',
+			'layout' => 'nav-bottom',
 		)
 	);
 	$type = $args['type'] === 'masonry' ? 'masonry' : 'slider';
-	$variant = sanitize_html_class((string) $args['variant']);
+
+	$layouts = array(
+		'nav-bottom' => 'nav-bottom',
+		'bottom' => 'nav-bottom',
+		'nav-right' => 'nav-right',
+		'right' => 'nav-right',
+		'nav-right-2col' => 'nav-right-2col',
+		'right-2col' => 'nav-right-2col',
+		'right-2-col' => 'nav-right-2col',
+	);
+	$layout_key = sanitize_key((string) $args['layout']);
+	$layout = isset($layouts[$layout_key]) ? $layouts[$layout_key] : 'nav-bottom';
 
 	$media_ids = get_trvlr_media($post_id, true);
 	$gallery_ids = array_unique(array_filter($media_ids));
@@ -359,14 +418,14 @@ function trvlr_gallery($post_id = null, $args = array())
 
 	if (count($gallery_ids) === 1) {
 		$output = '<div class="trvlr-gallery trvlr-gallery--single">' . wp_get_attachment_image($gallery_ids[0], 'large') . '</div>';
-		return apply_filters('trvlr_gallery', $output, $post_id, $gallery_ids, $type);
+		return apply_filters('trvlr_gallery', $output, $post_id, $gallery_ids, $type, $layout);
 	}
 
 	if ($type === 'masonry') {
 		trvlr_enqueue_gallery_masonry_assets();
 
 		ob_start();
-		$gallery_id = 'trvlr-gallery-masonry-' . $post_id;
+		$gallery_id = 'trvlr-gallery-masonry-' . $post_id . '-' . wp_unique_id();
 	?>
 		<div id="<?php echo esc_attr($gallery_id); ?>" class="trvlr-gallery trvlr-gallery--masonry">
 			<div class="trvlr-gallery__grid">
@@ -390,41 +449,47 @@ function trvlr_gallery($post_id = null, $args = array())
 			</div>
 		</div>
 	<?php
-		return apply_filters('trvlr_gallery', ob_get_clean(), $post_id, $gallery_ids, $type);
+		return apply_filters('trvlr_gallery', ob_get_clean(), $post_id, $gallery_ids, $type, $layout);
 	}
 
 	trvlr_enqueue_gallery_slider_assets();
 
 	ob_start();
-	$main_id = 'trvlr-main-slider-' . $post_id;
-	$nav_id = 'trvlr-nav-slider-' . $post_id;
+	$uid = wp_unique_id('trvlr-gallery-');
+	$main_id = $uid . '-main';
+	$nav_id = $uid . '-nav';
+	$layout_class = 'trvlr-gallery--' . $layout;
 	?>
-	<div class="trvlr-gallery trvlr-gallery--slider<?php echo $variant !== '' ? ' trvlr-gallery--' . esc_attr($variant) : ''; ?>"<?php echo $variant !== '' ? ' data-trvlr-gallery-variant="' . esc_attr($variant) . '"' : ''; ?>>
-		<div id="<?php echo esc_attr($main_id); ?>" class="trvlr-gallery__main splide">
-			<div class="splide__track">
-				<ul class="splide__list">
-					<?php foreach ($gallery_ids as $image_id) : ?>
-						<li class="splide__slide">
-							<?php echo wp_get_attachment_image($image_id, 'large'); ?>
-						</li>
-					<?php endforeach; ?>
-				</ul>
+	<div class="trvlr-container-sizer">
+		<div
+			class="trvlr-gallery trvlr-gallery--slider <?php echo esc_attr($layout_class); ?>"
+			data-trvlr-gallery-layout="<?php echo esc_attr($layout); ?>">
+			<div id="<?php echo esc_attr($main_id); ?>" class="trvlr-gallery__main splide">
+				<div class="splide__track">
+					<ul class="splide__list">
+						<?php foreach ($gallery_ids as $image_id) : ?>
+							<li class="splide__slide">
+								<?php echo wp_get_attachment_image($image_id, 'large'); ?>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				</div>
 			</div>
-		</div>
-		<div id="<?php echo esc_attr($nav_id); ?>" class="trvlr-gallery__nav splide">
-			<div class="splide__track">
-				<ul class="splide__list">
-					<?php foreach ($gallery_ids as $image_id) : ?>
-						<li class="splide__slide">
-							<?php echo wp_get_attachment_image($image_id, 'thumbnail'); ?>
-						</li>
-					<?php endforeach; ?>
-				</ul>
+			<div id="<?php echo esc_attr($nav_id); ?>" class="trvlr-gallery__nav splide">
+				<div class="splide__track">
+					<ul class="splide__list">
+						<?php foreach ($gallery_ids as $image_id) : ?>
+							<li class="splide__slide">
+								<?php echo wp_get_attachment_image($image_id, 'thumbnail'); ?>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				</div>
 			</div>
 		</div>
 	</div>
 <?php
-	return apply_filters('trvlr_gallery', ob_get_clean(), $post_id, $gallery_ids, $type);
+	return apply_filters('trvlr_gallery', ob_get_clean(), $post_id, $gallery_ids, $type, $layout);
 }
 
 function trvlr_short_description($post_id = null)
@@ -451,6 +516,7 @@ function trvlr_description($post_id = null)
 {
 	$post_id = $post_id ?: get_the_ID();
 	$content = get_trvlr_description($post_id);
+
 	
 	if (!$content) {
 		return '';
@@ -462,7 +528,7 @@ function trvlr_description($post_id = null)
 			$content = wpautop($content);
 		}
 	}
-
+			
 	$output = '<div class="trvlr-description">' . $content . '</div>';
 	return apply_filters('trvlr_description', $output, $post_id);
 }
@@ -480,7 +546,7 @@ function trvlr_important_information($post_id = null)
 	return apply_filters('trvlr_important_information', $output, $post_id);
 }
 
-function trvlr_highlights($post_id = null) {
+function trvlr_highlights($post_id = null, $class = '') {
 	$post_id = $post_id ?: get_the_ID();
 	$content = get_post_meta($post_id, 'trvlr_highlights', true);
 
@@ -488,21 +554,21 @@ function trvlr_highlights($post_id = null) {
 		return '';
 	}
 
-	$output = '<div class="trvlr-highlights">' . $content . '</div>';
-	return apply_filters('trvlr_highlights', $output, $post_id);
+	$output = '<div class="trvlr-highlights ' . esc_attr($class) . '">' . $content . '</div>';
+	return apply_filters('trvlr_highlights', $output, $post_id, $class);
 }
 
-function trvlr_inclusions($post_id = null)
+function trvlr_inclusions($post_id = null, $class = '')
 {
 	$post_id = $post_id ?: get_the_ID();
 	$content = get_trvlr_inclusions($post_id);
 
-	if (!$content) {
+	if (!$content || empty($content) || $content === '[]' || $content === '<ul></ul>') {
 		return '';
 	}
 
-	$output = '<div class="trvlr-inclusions">' . $content . '</div>';
-	return apply_filters('trvlr_inclusions', $output, $post_id);
+	$output = '<div class="trvlr-inclusions ' . esc_attr($class) . '">' . $content . '</div>';
+	return apply_filters('trvlr_inclusions', $output, $post_id, $class);
 }
 
 function trvlr_locations($post_id = null)
@@ -557,62 +623,306 @@ function trvlr_additional_info($post_id = null)
 	return apply_filters('trvlr_additional_info', $output, $post_id);
 }
 
-function trvlr_accordion($post_id = null)
+/**
+ * @param array<int, array{title?: string, content?: string}> $items
+ * @param array{class?: string} $args
+ */
+function trvlr_generate_accordion($items, $args = array())
 {
-	$post_id = $post_id ?: get_the_ID();
-	$inclusions = get_trvlr_inclusions($post_id);
-	$locations = trvlr_locations($post_id);
-	$additional_info = get_trvlr_additional_info($post_id);
-
-	$accordion_items = [];
-
-	if ($inclusions) {
-		$accordion_items[] = [
-			'title' => 'Inclusions',
-			'content' => $inclusions,
-		];
-	}
-	if ($locations) {
-		$accordion_items[] = [
-			'title' => 'Start & End Locations',
-			'content' => $locations,
-		];
-	}
-	if ($additional_info) {
-		$accordion_items[] = [
-			'title' => 'Additional Info',
-			'content' => $additional_info,
-		];
+	if (empty($items) || !is_array($items)) {
+		return '';
 	}
 
-	if (empty($accordion_items)) {
+	$args = wp_parse_args($args, array(
+		'class' => 'trvlr-accordion',
+	));
+
+	$normalized = array();
+	foreach ($items as $item) {
+		if (!is_array($item)) {
+			continue;
+		}
+		$title = isset($item['title']) ? trim((string) $item['title']) : '';
+		$content = isset($item['content']) ? (string) $item['content'] : '';
+		if ($title === '' || $content === '') {
+			continue;
+		}
+		$normalized[] = array(
+			'title' => $title,
+			'content' => $content,
+		);
+	}
+
+	if (empty($normalized)) {
 		return '';
 	}
 
 	ob_start();
-?>
-	<div class="trvlr-accordion">
-		<?php foreach ($accordion_items as $item) : ?>
+	?>
+	<div class="<?php echo esc_attr($args['class']); ?>">
+		<?php foreach ($normalized as $item) : ?>
 			<div class="trvlr-accordion__item">
-				<button class="trvlr-accordion__trigger">
+				<button type="button" class="trvlr-accordion__trigger">
 					<span class="trvlr-accordion__title"><?php echo esc_html($item['title']); ?></span>
 					<div class="trvlr-accordion__icon">
-						<svg class="trvlr-accordion__icon-open">
-							<use href="#icon-plus"></use>
-						</svg>
-						<svg class="trvlr-accordion__icon-close">
-							<use href="#icon-minus"></use>
-						</svg>
+						<?php echo trvlr_icon('plus', true, array('class' => 'trvlr-accordion__icon-open')); ?>
+						<?php echo trvlr_icon('minus', true, array('class' => 'trvlr-accordion__icon-close')); ?>
 					</div>
 				</button>
 				<div class="trvlr-accordion__content">
-					<?php echo $item['content']; ?>
+					<div class="trvlr-accordion__content-inner">
+						<?php echo $item['content']; ?>
+					</div>
 				</div>
 			</div>
 		<?php endforeach; ?>
 	</div>
-<?php
-	return apply_filters('trvlr_accordion', ob_get_clean(), $post_id);
+	<?php
+	return apply_filters('trvlr_generate_accordion', ob_get_clean(), $normalized, $args);
+}
+
+function trvlr_generate_tabs($items, $args = array())
+{
+	if (empty($items) || !is_array($items)) {
+		return '';
+	}
+
+	$args = wp_parse_args($args, array(
+		'class' => '',
+		'active_index' => 0,
+	));
+
+	$normalized = array();
+	foreach ($items as $item) {
+		if (!is_array($item)) {
+			continue;
+		}
+
+		$title = isset($item['title']) ? trim((string) $item['title']) : '';
+		$content = isset($item['content']) ? (string) $item['content'] : '';
+		if ($title === '' || trim($content) === '') {
+			continue;
+		}
+
+		$normalized[] = array(
+			'title' => $title,
+			'content' => $content,
+			'class' => isset($item['class']) ? sanitize_html_class((string) $item['class']) : '',
+		);
+	}
+
+	if (empty($normalized)) {
+		return '';
+	}
+
+	$active_index = max(0, min((int) $args['active_index'], count($normalized) - 1));
+	$base_id = wp_unique_id('trvlr-tabs-');
+	$classes = trim('trvlr-tabs ' . (string) $args['class']);
+
+	ob_start();
+	?>
+	<div class="<?php echo esc_attr($classes); ?>" data-trvlr-tabs>
+		<div class="trvlr-tabs__nav" role="tablist">
+			<?php foreach ($normalized as $index => $item) :
+				$tab_id = $base_id . '-tab-' . $index;
+				$panel_id = $base_id . '-panel-' . $index;
+				$is_active = $index === $active_index;
+			?>
+				<button
+					type="button"
+					id="<?php echo esc_attr($tab_id); ?>"
+					class="trvlr-tabs__tab<?php echo $is_active ? ' is-active' : ''; ?>"
+					role="tab"
+					aria-selected="<?php echo $is_active ? 'true' : 'false'; ?>"
+					aria-controls="<?php echo esc_attr($panel_id); ?>"
+					tabindex="<?php echo $is_active ? '0' : '-1'; ?>">
+					<?php echo esc_html($item['title']); ?>
+				</button>
+			<?php endforeach; ?>
+		</div>
+		<div class="trvlr-tabs__panels">
+			<?php foreach ($normalized as $index => $item) :
+				$tab_id = $base_id . '-tab-' . $index;
+				$panel_id = $base_id . '-panel-' . $index;
+				$is_active = $index === $active_index;
+				$panel_classes = trim('trvlr-tabs__panel ' . ($item['class'] !== '' ? 'trvlr-tabs__panel--' . $item['class'] : ''));
+			?>
+				<div
+					id="<?php echo esc_attr($panel_id); ?>"
+					class="<?php echo esc_attr($panel_classes); ?>"
+					role="tabpanel"
+					aria-labelledby="<?php echo esc_attr($tab_id); ?>"
+					tabindex="0"
+					<?php echo $is_active ? '' : 'hidden'; ?>>
+					<?php echo $item['content']; ?>
+				</div>
+			<?php endforeach; ?>
+		</div>
+	</div>
+	<?php
+
+	return apply_filters('trvlr_generate_tabs', ob_get_clean(), $normalized, $args);
+}
+
+function trvlr_accordion($post_id = null)
+{
+	$post_id = $post_id ?: get_the_ID();
+	$inclusions = trvlr_inclusions($post_id);
+	$locations = trvlr_locations($post_id);
+	$additional_info = trvlr_additional_info($post_id);
+
+	$accordion_items = array();
+
+	if ($inclusions) {
+		$accordion_items[] = array(
+			'title' => __('Inclusions', 'trvlr'),
+			'content' => $inclusions,
+		);
+	}
+	if ($locations) {
+		$accordion_items[] = array(
+			'title' => __('Start & End Locations', 'trvlr'),
+			'content' => $locations,
+		);
+	}
+	if ($additional_info) {
+		$accordion_items[] = array(
+			'title' => __('Additional Info', 'trvlr'),
+			'content' => $additional_info,
+		);
+	}
+
+	return apply_filters('trvlr_accordion', trvlr_generate_accordion($accordion_items), $post_id);
+}
+
+function trvlr_faqs($post_id = null, $args = array())
+{
+	$post_id = $post_id ?: get_the_ID();
+	$args = wp_parse_args($args, array(
+		'layout' => 'accordion',
+	));
+	$faqs = get_trvlr_faqs($post_id);
+
+	if (empty($faqs) || !is_array($faqs)) {
+		return '';
+	}
+
+	$items = array();
+	foreach ($faqs as $faq) {
+		if (!is_array($faq)) {
+			continue;
+		}
+		$question = isset($faq['question']) ? trim((string) $faq['question']) : '';
+		$answer = isset($faq['answer']) ? (string) $faq['answer'] : '';
+		if ($question === '' || trim($answer) === '') {
+			continue;
+		}
+		$items[] = array(
+			'title' => $question,
+			'content' => $answer,
+		);
+	}
+
+	if (empty($items)) {
+		return '';
+	}
+
+	$layout = sanitize_key((string) $args['layout']);
+	if ($layout === 'list' || $layout === 'expanded') {
+		ob_start();
+		?>
+		<div class="trvlr-faqs trvlr-faqs--list">
+			<?php foreach ($items as $item) : ?>
+				<div class="trvlr-faqs__item">
+					<div class="trvlr-faqs__question"><?php echo esc_html($item['title']); ?></div>
+					<div class="trvlr-faqs__answer"><?php echo wp_kses_post($item['content']); ?></div>
+				</div>
+			<?php endforeach; ?>
+		</div>
+		<?php
+		return apply_filters('trvlr_faqs_markup', ob_get_clean(), $post_id, $args, $items);
+	}
+
+	return apply_filters(
+		'trvlr_faqs_markup',
+		trvlr_generate_accordion($items),
+		$post_id,
+		$args,
+		$items
+	);
+}
+
+function trvlr_section($args = array())
+{
+	$args = wp_parse_args($args, array(
+		'section' => '',
+		'content' => null,
+		'post_id' => null,
+		'class' => '',
+		'id' => '',
+		'title' => null,
+		'title_tag' => 'h2',
+	));
+
+	$post_id = $args['post_id'] ?: get_the_ID();
+	$section = (string) $args['section'];
+
+	$resolvers = array(
+		'short_description' => 'trvlr_short_description',
+		'important_information' => 'trvlr_important_information',
+		'description' => 'trvlr_description',
+		'inclusions' => 'trvlr_inclusions',
+		'highlights' => 'trvlr_highlights',
+		'additional_info' => 'trvlr_additional_info',
+		'faqs' => 'trvlr_faqs',
+	);
+
+	$content = $args['content'];
+	if ($content === null) {
+		if ($section === '' || !isset($resolvers[$section])) {
+			return '';
+		}
+		$content = call_user_func($resolvers[$section], $post_id);
+	}
+
+	if (trim((string) $content) === '') {
+		return '';
+	}
+
+	if ($args['title'] === null) {
+		$title = $section !== '' ? get_trvlr_section_heading($section, $post_id) : '';
+	} else {
+		$title = (string) $args['title'];
+	}
+
+	$title_tag = in_array($args['title_tag'], array('h1', 'h2', 'h3', 'h4', 'h5', 'h6'), true)
+		? $args['title_tag']
+		: 'h2';
+
+	$classes = array_filter(array(
+		'trvlr-section',
+		$section !== '' ? 'trvlr-section--' . sanitize_html_class($section) : '',
+		$args['class'],
+	));
+
+	$id_attr = $args['id'] !== '' ? ' id="' . esc_attr($args['id']) . '"' : '';
+
+	$before_action = 'trvlr_before_section_' . $section;
+	$after_action = 'trvlr_after_section_' . $section;
+
+	ob_start();
+	do_action($before_action, $args['post_id']);
+	?>
+	<section class="<?php echo esc_attr(implode(' ', $classes)); ?>"<?php echo $id_attr; ?>>
+		<?php if ($title !== '') : ?>
+			<<?php echo esc_attr($title_tag); ?> class="trvlr-heading trvlr-section__title"><?php echo esc_html($title); ?></<?php echo esc_attr($title_tag); ?>>
+		<?php endif; ?>
+		<?php echo $content; ?>
+	</section>
+	<?php
+	do_action($after_action, $args['post_id']);
+	
+	return apply_filters('trvlr_section', ob_get_clean(), $args);
 }
 
 function trvlr_advertised_price($post_id = null)
@@ -644,7 +954,7 @@ function trvlr_booking_calendar($post_id = null, $args = array())
 
 	$defaults = array(
 		'width' => '450px',
-		'height' => '600px',
+		'height' => '520px',
 		'attraction_id' => get_trvlr_id($post_id),
 		'group_id' => get_trvlr_group_id($post_id),
 	);
@@ -655,7 +965,7 @@ function trvlr_booking_calendar($post_id = null, $args = array())
 	}
 
 	if (empty($args['attraction_id'])) {
-		return '<p>Sorry this attraction is not available for booking. No Trvlr AI ID found.</p>';
+		return '<p>Sorry this attraction is not available for booking. No Traveloris ID found.</p>';
 	}
 	$calendar_query = !empty($args['group_id'])
 		? 'group_id=' . esc_attr($args['group_id'])
@@ -683,25 +993,33 @@ function trvlr_booking_button($post_id = null, $args = array())
 		'attraction_id' => get_trvlr_attraction_id($post_id),
 		'class' => '',
 		'label' => 'Book Now',
+		'icon' => '',
+		'icon_position' => 'right',
+		'icon_class' => '',
 	);
 	$args = wp_parse_args($args, $defaults);
 
 	if (is_trvlr_attraction($post_id)) {
 		$args['attraction_id'] = get_trvlr_attraction_id($post_id);
 	} else {
-		return '<p>Sorry this attraction is not available for booking. No Trvlr AI ID found.</p>';
+		return '<p>Sorry this attraction is not available for booking.</p>';
 	}
 
 	$group_id = get_post_meta($post_id, 'trvlr_group_id', true);
 
+	$icon = $args['icon'] !== '' ? trvlr_icon($args['icon'], true, array('class' => 'trvlr-booking-button__icon ' . $args['icon_class'])) : '';
+	$icon_left = $args['icon_position'] === 'left' ? $icon : '';
+	$icon_right = $args['icon_position'] !== 'left' ? $icon : '';
 	ob_start();
 ?>
 	<button
-		class="trvlr-book-now<?php echo esc_attr($args['class']); ?>"
+		class="trvlr-book-now trvlr-booking-button<?php echo esc_attr($args['class']); ?>"
 		attraction-id="<?php echo esc_attr($args['attraction_id']); ?>"
 		<?php if ($group_id) : ?>attraction-group-id="<?php echo esc_attr($group_id); ?>"<?php endif; ?>
 	>
+	<?php $icon_left; ?>
 		<span><?php echo esc_html($args['label']); ?></span>
+	<?php echo $icon_right; ?>
 	</button>
 <?php
 	return apply_filters('trvlr_booking_button', ob_get_clean(), $post_id, $args);
@@ -832,7 +1150,7 @@ function trvlr_payment_confirmation_markup()
 	$org_id = get_trvlr_organisation_id();
 
 	if (empty($org_id)) {
-		return '<p>' . esc_html__('Sorry. This site has not been connected to trvlr.ai properly...  Please contact support.', 'trvlr') . '</p>';
+		return '<p>' . esc_html__('Sorry. This site has not been connected to Traveloris properly...  Please contact support.', 'trvlr') . '</p>';
 	}
 
 	$base_domain = get_trvlr_base_domain($org_id);

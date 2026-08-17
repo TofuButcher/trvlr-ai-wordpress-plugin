@@ -44,21 +44,25 @@ class Trvlr_Public
 	 */
 	public function enqueue_styles()
 	{
-		wp_enqueue_style($this->plugin_name, plugin_dir_url(__FILE__) . 'css/trvlr-public.css', array(), $this->version, 'all');
+		if (trvlr_is_vite_hot()) {
+			wp_register_style('trvlr-attraction-filter', false);
+			return;
+		}
 
-		wp_enqueue_style('trvlr-cards-styles', plugin_dir_url(__FILE__) . 'css/trvlr-cards.css', array(), $this->version, 'all');
+		wp_enqueue_style($this->plugin_name, plugin_dir_url(__FILE__) . 'dist/css/trvlr-public.css', array(), $this->version, 'all');
 
-		wp_enqueue_style('trvlr-single-attraction-styles', plugin_dir_url(__FILE__) . 'css/trvlr-single-attraction.css', array(), $this->version, 'all');
+		wp_enqueue_style('trvlr-cards-styles', plugin_dir_url(__FILE__) . 'dist/css/trvlr-cards.css', array(), $this->version, 'all');
+		wp_enqueue_style('trvlr-gallery-styles', plugin_dir_url(__FILE__) . 'dist/css/trvlr-gallery.css', array(), $this->version, 'all');
 
 		if (class_exists('Trvlr_Template_Registry')) {
 			$presentation_theme_css = Trvlr_Template_Registry::get_active_presentation_theme_stylesheet_basename();
 			if ($presentation_theme_css !== '') {
-				$presentation_theme_path = plugin_dir_path(__FILE__) . 'css/' . $presentation_theme_css;
+				$presentation_theme_path = plugin_dir_path(__FILE__) . 'dist/css/' . $presentation_theme_css;
 				if (is_readable($presentation_theme_path)) {
 					wp_enqueue_style(
 						'trvlr-presentation-theme',
-						plugin_dir_url(__FILE__) . 'css/' . $presentation_theme_css,
-						array('trvlr-cards-styles', 'trvlr-single-attraction-styles'),
+						plugin_dir_url(__FILE__) . 'dist/css/' . $presentation_theme_css,
+						array(),
 						filemtime($presentation_theme_path) ? (string) filemtime($presentation_theme_path) : $this->version,
 						'all'
 					);
@@ -68,7 +72,7 @@ class Trvlr_Public
 
 		wp_register_style(
 			'trvlr-attraction-filter',
-			plugin_dir_url(__FILE__) . 'css/trvlr-attraction-filter.css',
+			plugin_dir_url(__FILE__) . 'dist/css/trvlr-attraction-filter.css',
 			array(),
 			$this->version,
 			'all'
@@ -84,9 +88,8 @@ class Trvlr_Public
 		$user_settings = get_option('trvlr_theme_settings', array());
 		$settings = Trvlr_Theme_Config::merge_with_defaults($user_settings);
 
-		echo '<style id="trvlr-theme-variables">:root{';
-		echo esc_attr(Trvlr_Theme_Config::generate_css_variables($settings));
-		echo '}</style>';
+		$css = Trvlr_Theme_Config::generate_css_variables($settings);
+		echo '<style id="trvlr-theme-variables">:root{' . $css . '}</style>';
 	}
 
 	/**
@@ -120,18 +123,24 @@ class Trvlr_Public
 			require_once TRVLR_PLUGIN_DIR . 'includes/trvlr-feature-flags.php';
 		}
 
+		trvlr_enqueue_vite_hmr();
 		$this->register_gallery_assets();
 
-		wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/trvlr-public.js', array('jquery'), $this->version, false);
+		if (trvlr_is_vite_hot()) {
+			$this->enqueue_scripts_vite();
+			return;
+		}
+
+		wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'dist/js/trvlr-public.js', array('jquery'), $this->version, false);
 
 		if (class_exists('Trvlr_Template_Registry')) {
 			$presentation_theme_script = Trvlr_Template_Registry::get_active_presentation_theme_script_basename();
 			if ($presentation_theme_script !== '') {
-				$presentation_theme_script_path = plugin_dir_path(__FILE__) . 'js/' . $presentation_theme_script;
+				$presentation_theme_script_path = plugin_dir_path(__FILE__) . 'dist/js/' . $presentation_theme_script;
 				if (is_readable($presentation_theme_script_path)) {
 					wp_enqueue_script(
 						'trvlr-presentation-theme',
-						plugin_dir_url(__FILE__) . 'js/' . $presentation_theme_script,
+						plugin_dir_url(__FILE__) . 'dist/js/' . $presentation_theme_script,
 						array('jquery'),
 						filemtime($presentation_theme_script_path) ? (string) filemtime($presentation_theme_script_path) : $this->version,
 						true
@@ -142,7 +151,7 @@ class Trvlr_Public
 
 		wp_register_script(
 			'trvlr-query-manager',
-			plugin_dir_url(__FILE__) . 'js/trvlr-query-manager.js',
+			plugin_dir_url(__FILE__) . 'dist/js/trvlr-query-manager.js',
 			array(),
 			$this->version,
 			true
@@ -153,7 +162,7 @@ class Trvlr_Public
 
 		wp_register_script(
 			'trvlr-attraction-filter',
-			plugin_dir_url(__FILE__) . 'js/trvlr-attraction-filter.js',
+			plugin_dir_url(__FILE__) . 'dist/js/trvlr-attraction-filter.js',
 			array('trvlr-query-manager'),
 			$this->version,
 			true
@@ -163,12 +172,76 @@ class Trvlr_Public
 			return;
 		}
 
-		wp_enqueue_script('trvlr-bookings-script', plugin_dir_url(__FILE__) . 'js/trvlr-bookings.js', array(), $this->version, true);
+		wp_enqueue_script('trvlr-bookings-script', plugin_dir_url(__FILE__) . 'dist/js/trvlr-bookings.js', array(), $this->version, true);
 
 		wp_localize_script('trvlr-bookings-script', 'trvlrConfig', array(
 			'baseIframeUrl' => $this->get_trvlr_base_domain(),
 			'homeUrl' => home_url()
 		));
+	}
+
+	private function enqueue_scripts_vite()
+	{
+		$boot = trvlr_vite_boot_handle();
+
+		wp_enqueue_script_module(
+			'trvlr',
+			trvlr_vite_url('public/src/scripts/trvlr-public.js'),
+			array(),
+			null
+		);
+
+		if (class_exists('Trvlr_Template_Registry')) {
+			$presentation_theme_script = Trvlr_Template_Registry::get_active_presentation_theme_script_basename();
+			if ($presentation_theme_script !== '') {
+				$src_rel = 'public/src/scripts/' . preg_replace('/\.js$/i', '.js', $presentation_theme_script);
+				if (is_readable(TRVLR_PLUGIN_DIR . $src_rel)) {
+					wp_enqueue_script_module(
+						'trvlr-presentation-theme',
+						trvlr_vite_url($src_rel),
+						array(),
+						null
+					);
+				}
+			}
+		}
+
+		wp_register_script_module(
+			'trvlr-query-manager',
+			trvlr_vite_url('public/src/scripts/trvlr-query-manager.js')
+		);
+		wp_add_inline_script(
+			$boot,
+			'window.trvlrQueryManagerConfig = ' . wp_json_encode(array(
+				'apiUrl' => rest_url('trvlr/v1/cards'),
+			)) . ';',
+			'before'
+		);
+
+		wp_register_script_module(
+			'trvlr-attraction-filter',
+			trvlr_vite_url('public/src/scripts/trvlr-attraction-filter.js'),
+			array('trvlr-query-manager')
+		);
+
+		if (trvlr_is_frontend_booking_disabled()) {
+			return;
+		}
+
+		wp_enqueue_script_module(
+			'trvlr-bookings-script',
+			trvlr_vite_url('public/src/scripts/trvlr-bookings.js'),
+			array(),
+			null
+		);
+		wp_add_inline_script(
+			$boot,
+			'window.trvlrConfig = ' . wp_json_encode(array(
+				'baseIframeUrl' => $this->get_trvlr_base_domain(),
+				'homeUrl' => home_url(),
+			)) . ';',
+			'before'
+		);
 	}
 
 	/**
@@ -180,6 +253,20 @@ class Trvlr_Public
 
 		if ($payment_page_id && is_page($payment_page_id)) {
 			$classes[] = 'trvlr-payment-confirmation-page';
+		}
+
+		return $classes;
+	}
+
+	public function add_presentation_theme_body_class($classes)
+	{
+		if (!class_exists('Trvlr_Template_Registry')) {
+			return $classes;
+		}
+
+		$slug = Trvlr_Template_Registry::get_active_presentation_theme_slug();
+		if ($slug !== '') {
+			$classes[] = 'trvlr--' . sanitize_html_class($slug);
 		}
 
 		return $classes;
@@ -268,39 +355,11 @@ class Trvlr_Public
 	}
 
 
-	/**
-	 * Add global svg icons to the head
-	 */
 	public function add_global_svg_icons()
 	{
-	?>
-		<svg style="display: none;">
-			<symbol id="icon-star" viewBox="0 0 18 18">
-				<path d="M9.00002 0.5C9.38064 0.5 9.72803 0.716313 9.8965 1.05762L11.9805 5.28027L16.6446 5.96289C17.0211 6.01793 17.3338 6.28252 17.4512 6.64453C17.5684 7.00643 17.4698 7.40351 17.1973 7.66895L13.8242 10.9531L14.6211 15.5957C14.6855 15.9709 14.5307 16.3505 14.2227 16.5742C13.9148 16.7978 13.5067 16.8273 13.1699 16.6504L9.00002 14.457L4.8301 16.6504C4.49331 16.8273 4.0852 16.7978 3.77736 16.5742C3.46939 16.3505 3.31458 15.9709 3.37893 15.5957L4.17482 10.9531L0.802754 7.66895C0.530236 7.40351 0.431671 7.00643 0.548848 6.64453C0.666226 6.28252 0.978929 6.01793 1.35549 5.96289L6.01857 5.28027L8.10354 1.05762L8.17482 0.935547C8.35943 0.665559 8.66699 0.5 9.00002 0.5ZM7.57912 6.6377C7.43357 6.93249 7.15248 7.13702 6.82717 7.18457L3.64748 7.64844L5.94729 9.88867C6.18316 10.1184 6.29103 10.4499 6.23537 10.7744L5.6924 13.9365L8.5342 12.4424C8.82558 12.2891 9.17446 12.2891 9.46584 12.4424L12.3067 13.9365L11.7647 10.7744C11.709 10.4499 11.8169 10.1184 12.0528 9.88867L14.3516 7.64844L11.1729 7.18457C10.8476 7.13702 10.5665 6.93249 10.4209 6.6377L9.00002 3.75781L7.57912 6.6377Z" />
-			</symbol>
-			<symbol id="icon-clock" viewBox="0 0 18 18">
-				<g clip-path="url(#clip0_133_223)">
-					<path d="M15.5 9C15.5 5.41015 12.5899 2.5 9 2.5C5.41015 2.5 2.5 5.41015 2.5 9C2.5 12.5899 5.41015 15.5 9 15.5C12.5899 15.5 15.5 12.5899 15.5 9ZM17.5 9C17.5 13.6944 13.6944 17.5 9 17.5C4.30558 17.5 0.5 13.6944 0.5 9C0.5 4.30558 4.30558 0.5 9 0.5C13.6944 0.5 17.5 4.30558 17.5 9Z" />
-					<path d="M8 4.5C8 3.94772 8.44772 3.5 9 3.5C9.55228 3.5 10 3.94772 10 4.5V8.38184L12.4473 9.60547C12.9412 9.85246 13.1415 10.4533 12.8945 10.9473C12.6475 11.4412 12.0467 11.6415 11.5527 11.3945L8.55273 9.89453C8.21395 9.72514 8 9.37877 8 9V4.5Z" />
-				</g>
-				<defs>
-					<clipPath id="clip0_133_223">
-						<rect width="18" height="18" />
-					</clipPath>
-				</defs>
-			</symbol>
-			<symbol id="icon-arrow-right" viewBox="0 0 21 21">
-				<path d="M9.83496 4.29285C10.2255 3.90241 10.8585 3.90236 11.249 4.29285L16.791 9.83484C16.7969 9.84072 16.8019 9.84741 16.8076 9.8534C16.8194 9.86578 16.8307 9.87851 16.8418 9.89148C16.8509 9.90206 16.8596 9.91284 16.8682 9.92371C16.879 9.93742 16.8893 9.95142 16.8994 9.9657C17.1465 10.3148 17.143 10.7848 16.8896 11.1307C16.8847 11.1375 16.8801 11.1446 16.875 11.1512C16.8612 11.1691 16.8462 11.1859 16.8311 11.203C16.8259 11.2089 16.8208 11.2148 16.8154 11.2206C16.807 11.2297 16.7999 11.2401 16.791 11.2489L11.249 16.7899C10.8585 17.1804 10.2255 17.1804 9.83496 16.7899C9.44461 16.3994 9.44449 15.7663 9.83496 15.3759L13.668 11.5419H5C4.4478 11.5419 4.00013 11.094 4 10.5419C4 9.98959 4.44772 9.54187 5 9.54187H13.6699L9.83496 5.70691C9.44444 5.31639 9.44444 4.68337 9.83496 4.29285Z" />
-			</symbol>
-			<symbol id="icon-plus" viewBox="0 0 18 18">
-				<path d="M8 14.25V3.75C8 3.19772 8.44772 2.75 9 2.75C9.55228 2.75 10 3.19772 10 3.75V14.25C10 14.8023 9.55228 15.25 9 15.25C8.44772 15.25 8 14.8023 8 14.25Z" />
-				<path d="M14.25 8C14.8023 8 15.25 8.44772 15.25 9C15.25 9.55228 14.8023 10 14.25 10H3.75C3.19772 10 2.75 9.55228 2.75 9C2.75 8.44772 3.19772 8 3.75 8H14.25Z" />
-			</symbol>
-			<symbol id="icon-minus" viewBox="0 0 18 18">
-				<path d="M14.25 8C14.8023 8 15.25 8.44772 15.25 9C15.25 9.55228 14.8023 10 14.25 10H3.75C3.19772 10 2.75 9.55228 2.75 9C2.75 8.44772 3.19772 8 3.75 8H14.25Z" />
-			</symbol>
-		</svg>
-<?php
+		if (class_exists('Trvlr_Icons')) {
+			Trvlr_Icons::print_sprite();
+		}
 	}
 
 	/**
@@ -372,9 +431,11 @@ class Trvlr_Public
 		}
 
 		$adult_price_types = array(
-			'Adult - UDW',
-			'Single Supplement',
-			'Quantity',
+			'adult',
+			'adults',
+			'adult - udw',
+			'single supplement',
+			'quantity',
 		);
 
 		foreach ($pricing as $key => $row) {
@@ -382,9 +443,11 @@ class Trvlr_Public
 				continue;
 			}
 
-			if (in_array($row['type'], $adult_price_types) || strpos($row['type'], 'Adult') !== false) {
+			$type = strtolower(trim($row['type']));
+
+			if (in_array($type, $adult_price_types, true)) {
 				$pricing[$key]['type'] = __('per person', 'trvlr');
-			} elseif ($row['type'] === 'Child 5-16 UDW') {
+			} elseif ($type === 'child 5-16 udw') {
 				$pricing[$key]['type'] = __('per child', 'trvlr');
 			}
 		}
@@ -400,53 +463,57 @@ class Trvlr_Public
 		}
 		$registered = true;
 
-		$asset_file = plugin_dir_path(__FILE__) . 'dist/trvlr-gallery.asset.php';
-		$asset = array(
-			'dependencies' => array(),
-			'version'      => $this->version,
-		);
-		if (is_readable($asset_file)) {
-			$asset = include $asset_file;
+		if (trvlr_is_vite_hot()) {
+			wp_register_script_module(
+				'trvlr-gallery-slider',
+				trvlr_vite_url('public/src/scripts/trvlr-gallery-slider.js')
+			);
+			wp_register_style('trvlr-gallery-slider', false);
+			wp_register_script_module(
+				'trvlr-gallery-masonry',
+				trvlr_vite_url('public/src/scripts/trvlr-gallery-masonry.js')
+			);
+			wp_register_style('trvlr-gallery-masonry', false);
+			return;
 		}
+
+		$slider_js = plugin_dir_path(__FILE__) . 'dist/js/trvlr-gallery-slider.js';
+		$slider_css = plugin_dir_path(__FILE__) . 'dist/css/trvlr-gallery-slider.css';
+		$slider_ver = is_readable($slider_js) ? (string) filemtime($slider_js) : $this->version;
 
 		wp_register_script(
 			'trvlr-gallery-slider',
-			plugin_dir_url(__FILE__) . 'dist/trvlr-gallery-slider.js',
-			$asset['dependencies'],
-			$asset['version'],
+			plugin_dir_url(__FILE__) . 'dist/js/trvlr-gallery-slider.js',
+			array(),
+			$slider_ver,
 			true
 		);
 
 		wp_register_style(
 			'trvlr-gallery-slider',
-			plugin_dir_url(__FILE__) . 'dist/trvlr-gallery-slider.css',
+			plugin_dir_url(__FILE__) . 'dist/css/trvlr-gallery-slider.css',
 			array(),
-			$asset['version'],
+			is_readable($slider_css) ? (string) filemtime($slider_css) : $slider_ver,
 			'all'
 		);
 
-		$masonry_asset_file = plugin_dir_path(__FILE__) . 'dist/trvlr-gallery-masonry.asset.php';
-		$masonry_asset = array(
-			'dependencies' => array(),
-			'version'      => $this->version,
-		);
-		if (is_readable($masonry_asset_file)) {
-			$masonry_asset = include $masonry_asset_file;
-		}
+		$masonry_js = plugin_dir_path(__FILE__) . 'dist/js/trvlr-gallery-masonry.js';
+		$masonry_css = plugin_dir_path(__FILE__) . 'dist/css/trvlr-gallery-masonry.css';
+		$masonry_ver = is_readable($masonry_js) ? (string) filemtime($masonry_js) : $this->version;
 
 		wp_register_script(
 			'trvlr-gallery-masonry',
-			plugin_dir_url(__FILE__) . 'dist/trvlr-gallery-masonry.js',
-			$masonry_asset['dependencies'],
-			$masonry_asset['version'],
+			plugin_dir_url(__FILE__) . 'dist/js/trvlr-gallery-masonry.js',
+			array(),
+			$masonry_ver,
 			true
 		);
 
 		wp_register_style(
 			'trvlr-gallery-masonry',
-			plugin_dir_url(__FILE__) . 'dist/trvlr-gallery-masonry.css',
+			plugin_dir_url(__FILE__) . 'dist/css/trvlr-gallery-masonry.css',
 			array(),
-			$masonry_asset['version'],
+			is_readable($masonry_css) ? (string) filemtime($masonry_css) : $masonry_ver,
 			'all'
 		);
 	}

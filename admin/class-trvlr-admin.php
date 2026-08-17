@@ -53,28 +53,36 @@ class Trvlr_Admin
 	public function enqueue_styles()
 	{
 		$screen = get_current_screen();
+
+		if (trvlr_is_vite_hot()) {
+			trvlr_enqueue_vite_client();
+			wp_enqueue_script_module(
+				'trvlr-admin-styles',
+				trvlr_vite_url('admin/src/admin-styles.js'),
+				array(),
+				null
+			);
+			if ($screen && $screen->id === 'toplevel_page_trvlr_settings') {
+				trvlr_enqueue_admin_public_vite_styles();
+			}
+			return;
+		}
+
 		wp_enqueue_style($this->plugin_name, plugin_dir_url(__FILE__) . 'css/trvlr-admin.css', array(), $this->version, 'all');
 
 		if ($screen && $screen->id === 'toplevel_page_trvlr_settings') {
-			wp_enqueue_style('trvlr-public', plugin_dir_url(dirname(__FILE__)) . 'public/css/trvlr-public.css', array(), $this->version, 'all');
-			wp_enqueue_style('trvlr-cards', plugin_dir_url(dirname(__FILE__)) . 'public/css/trvlr-cards.css', array(), $this->version, 'all');
+			wp_enqueue_style('trvlr-public', plugin_dir_url(dirname(__FILE__)) . 'public/dist/css/trvlr-public.css', array(), $this->version, 'all');
+			wp_enqueue_style('trvlr-cards', plugin_dir_url(dirname(__FILE__)) . 'public/dist/css/trvlr-cards.css', array(), $this->version, 'all');
 
 			if (class_exists('Trvlr_Template_Registry')) {
-				wp_enqueue_style(
-					'trvlr-single-attraction-styles',
-					plugin_dir_url(dirname(__FILE__)) . 'public/css/trvlr-single-attraction.css',
-					array(),
-					$this->version,
-					'all'
-				);
 				$presentation_theme_css = Trvlr_Template_Registry::get_active_presentation_theme_stylesheet_basename();
 				if ($presentation_theme_css !== '') {
-					$presentation_theme_path = plugin_dir_path(dirname(__FILE__)) . 'public/css/' . $presentation_theme_css;
+					$presentation_theme_path = plugin_dir_path(dirname(__FILE__)) . 'public/dist/css/' . $presentation_theme_css;
 					if (is_readable($presentation_theme_path)) {
 						wp_enqueue_style(
 							'trvlr-presentation-theme',
-							plugin_dir_url(dirname(__FILE__)) . 'public/css/' . $presentation_theme_css,
-							array('trvlr-cards', 'trvlr-single-attraction-styles'),
+							plugin_dir_url(dirname(__FILE__)) . 'public/dist/css/' . $presentation_theme_css,
+							array('trvlr-cards'),
 							filemtime($presentation_theme_path) ? (string) filemtime($presentation_theme_path) : $this->version,
 							'all'
 						);
@@ -132,11 +140,17 @@ class Trvlr_Admin
 		}
 
 		if ($screen && $screen->id === 'toplevel_page_trvlr_settings') {
+			$initial_data = $this->get_initial_data();
+
+			if (trvlr_enqueue_admin_vite_hmr($initial_data)) {
+				return;
+			}
+
 			$asset_file = plugin_dir_path(__FILE__) . 'build/trvlr-admin-root.jsx.asset.php';
 
 			if (!file_exists($asset_file)) {
 				add_action('admin_notices', function () {
-					echo '<div class="notice notice-error"><p><strong>TRVLR:</strong> Build files are missing. The admin interface requires compiled assets (admin/build/). Please reinstall the plugin from a release build.</p></div>';
+					echo '<div class="notice notice-error"><p><strong>Traveloris:</strong> Build files are missing. The admin interface requires compiled assets (admin/build/). Please reinstall the plugin from a release build.</p></div>';
 				});
 				return;
 			}
@@ -153,14 +167,15 @@ class Trvlr_Admin
 				true
 			);
 
-			wp_enqueue_style(
-				'trvlr-admin-root',
-				plugin_dir_url(__FILE__) . 'build/trvlr-admin-root.jsx.css',
-				array(),
-				$theme_asset['version']
-			);
-
-			$initial_data = $this->get_initial_data();
+			$admin_css = plugin_dir_path(__FILE__) . 'build/trvlr-admin-root.jsx.css';
+			if (is_readable($admin_css)) {
+				wp_enqueue_style(
+					'trvlr-admin-root',
+					plugin_dir_url(__FILE__) . 'build/trvlr-admin-root.jsx.css',
+					array(),
+					$theme_asset['version']
+				);
+			}
 
 			wp_localize_script('trvlr-admin-root', 'wpApiSettings', array(
 				'root' => esc_url_raw(rest_url()),
@@ -179,13 +194,15 @@ class Trvlr_Admin
 	 */
 	public function add_plugin_admin_menu()
 	{
+		$menu_icon = TRVLR_PLUGIN_URL . 'media/traveloris_emblem.svg';
+
 		add_menu_page(
-			__('TRVLR Settings', 'trvlr'),
-			__('TRVLR', 'trvlr'),
+			__('Traveloris', 'trvlr'),
+			__('Traveloris', 'trvlr'),
 			'manage_options',
 			'trvlr_settings',
 			array($this, 'display_plugin_settings_page'),
-			'dashicons-location-alt',
+			$menu_icon,
 			30
 		);
 
@@ -199,35 +216,19 @@ class Trvlr_Admin
 	}
 
 	/**
-	 * SVG sprite for attraction card preview on the settings page.
+	 * SVG sprite + icon mask CSS vars for attraction card preview on the settings page.
 	 *
 	 * @return void
 	 */
 	public function output_admin_svg_icons()
 	{
 		$screen = get_current_screen();
-		if ($screen && $screen->id === 'toplevel_page_trvlr_settings') {
-?>
-			<svg style="display: none;">
-				<symbol id="icon-star" viewBox="0 0 18 18">
-					<path d="M9.00002 0.5C9.38064 0.5 9.72803 0.716313 9.8965 1.05762L11.9805 5.28027L16.6446 5.96289C17.0211 6.01793 17.3338 6.28252 17.4512 6.64453C17.5684 7.00643 17.4698 7.40351 17.1973 7.66895L13.8242 10.9531L14.6211 15.5957C14.6855 15.9709 14.5307 16.3505 14.2227 16.5742C13.9148 16.7978 13.5067 16.8273 13.1699 16.6504L9.00002 14.457L4.8301 16.6504C4.49331 16.8273 4.0852 16.7978 3.77736 16.5742C3.46939 16.3505 3.31458 15.9709 3.37893 15.5957L4.17482 10.9531L0.802754 7.66895C0.530236 7.40351 0.431671 7.00643 0.548848 6.64453C0.666226 6.28252 0.978929 6.01793 1.35549 5.96289L6.01857 5.28027L8.10354 1.05762L8.17482 0.935547C8.35943 0.665559 8.66699 0.5 9.00002 0.5Z" />
-				</symbol>
-				<symbol id="icon-clock" viewBox="0 0 18 18">
-					<g clip-path="url(#clip0_133_223)">
-						<path d="M15.5 9C15.5 5.41015 12.5899 2.5 9 2.5C5.41015 2.5 2.5 5.41015 2.5 9C2.5 12.5899 5.41015 15.5 9 15.5C12.5899 15.5 15.5 12.5899 15.5 9ZM17.5 9C17.5 13.6944 13.6944 17.5 9 17.5C4.30558 17.5 0.5 13.6944 0.5 9C0.5 4.30558 4.30558 0.5 9 0.5C13.6944 0.5 17.5 4.30558 17.5 9Z" />
-						<path d="M8 4.5C8 3.94772 8.44772 3.5 9 3.5C9.55228 3.5 10 3.94772 10 4.5V8.38184L12.4473 9.60547C12.9412 9.85246 13.1415 10.4533 12.8945 10.9473C12.6475 11.4412 12.0467 11.6415 11.5527 11.3945L8.55273 9.89453C8.21395 9.72514 8 9.37877 8 9V4.5Z" />
-					</g>
-					<defs>
-						<clipPath id="clip0_133_223">
-							<rect width="18" height="18" />
-						</clipPath>
-					</defs>
-				</symbol>
-				<symbol id="icon-arrow-right" viewBox="0 0 21 21">
-					<path d="M9.83496 4.29285C10.2255 3.90241 10.8585 3.90236 11.249 4.29285L16.791 9.83484C16.7969 9.84072 16.8019 9.84741 16.8076 9.8534C16.8194 9.86578 16.8307 9.87851 16.8418 9.89148C16.8509 9.90206 16.8596 9.91284 16.8682 9.92371C16.879 9.93742 16.8893 9.95142 16.8994 9.9657C17.1465 10.3148 17.143 10.7848 16.8896 11.1307C16.8847 11.1375 16.8801 11.1446 16.875 11.1512C16.8612 11.1691 16.8462 11.1859 16.8311 11.203C16.8259 11.2089 16.8208 11.2148 16.8154 11.2206C16.807 11.2297 16.7999 11.2401 16.791 11.2489L11.249 16.7899C10.8585 17.1804 10.2255 17.1804 9.83496 16.7899C9.44461 16.3994 9.44449 15.7663 9.83496 15.3759L13.668 11.5419H5C4.4478 11.5419 4.00013 11.094 4 10.5419C4 9.98959 4.44772 9.54187 5 9.54187H13.6699L9.83496 5.70691C9.44444 5.31639 9.44444 4.68337 9.83496 4.29285Z" />
-				</symbol>
-			</svg>
-		<?php
+		if (!$screen || $screen->id !== 'toplevel_page_trvlr_settings') {
+			return;
+		}
+
+		if (class_exists('Trvlr_Icons')) {
+			Trvlr_Icons::print_admin_assets();
 		}
 	}
 
@@ -256,6 +257,8 @@ class Trvlr_Admin
 	 */
 	public function init_meta_boxes()
 	{
+		require_once plugin_dir_path(__FILE__) . 'term-meta-faqs.php';
+
 		if (function_exists('trvlr_is_attraction_post_type_disabled') && trvlr_is_attraction_post_type_disabled()) {
 			return;
 		}
@@ -298,6 +301,12 @@ class Trvlr_Admin
 			'show_in_rest' => true,
 		));
 
+		register_setting('trvlr_settings_group', 'trvlr_disable_attraction_seo_schema', array(
+			'type' => 'boolean',
+			'default' => false,
+			'show_in_rest' => true,
+		));
+
 		register_setting('trvlr_settings_group', 'trvlr_notification_settings', array(
 			'type' => 'object',
 			'default' => array(),
@@ -323,21 +332,10 @@ class Trvlr_Admin
 				'schema' => array(
 					'type' => 'object',
 					'properties' => array(
-						'primaryColor' => array('type' => 'string', 'default' => 'hsl(245, 90%, 50%)'),
-						'primaryActiveColor' => array('type' => 'string', 'default' => 'hsl(245, 100%, 40%)'),
-						'accentColor' => array('type' => 'string', 'default' => 'hsl(57, 100%, 50%)'),
-						'textMutedColor' => array('type' => 'string', 'default' => 'hsl(0, 0%, 40%)'),
-						'headingColor' => array('type' => 'string', 'default' => 'hsl(0, 0%, 0%)'),
-						'cardBackground' => array('type' => 'string', 'default' => 'transparent'),
-						'headingLetterSpacing' => array('type' => 'number', 'default' => -0.04),
-						'attractionGridGap' => array('type' => 'number', 'default' => 40),
-						'attractionGridRowGap' => array('type' => 'number', 'default' => 80),
-						'cardPadding' => array('type' => 'number', 'default' => 4),
-						'cardBorderRadius' => array('type' => 'number', 'default' => 8),
-						'cardImageBorderRadius' => array('type' => 'number', 'default' => 8),
-						'popularBadgeColor' => array('type' => 'string', 'default' => '#fff'),
-						'popularBadgeBackground' => array('type' => 'string', 'default' => '#000'),
-						'popularBadgeFontSize' => array('type' => 'number', 'default' => 16),
+						'primaryColor' => array('type' => 'string', 'default' => 'hsl(165, 100%, 39%)'),
+						'secondaryColor' => array('type' => 'string', 'default' => 'hsl(329, 66%, 75%)'),
+						'accentColor' => array('type' => 'string', 'default' => 'hsl(157, 100%, 49%)'),
+						'alertColor' => array('type' => 'string', 'default' => 'hsl(0, 90%, 65%)'),
 					),
 				),
 			),
@@ -516,14 +514,7 @@ class Trvlr_Admin
 	 */
 	public function get_theme_settings_rest($request)
 	{
-		$stored = get_option('trvlr_theme_settings', array());
-		$merged = Trvlr_Theme_Config::merge_with_defaults(is_array($stored) ? $stored : array());
-		if (class_exists('Trvlr_Template_Registry')) {
-			$merged['presentationTheme'] = Trvlr_Template_Registry::get_active_presentation_theme_slug();
-			$merged['cardTemplate'] = Trvlr_Template_Registry::get_active_card_slug();
-			$merged['attractionPageTemplate'] = Trvlr_Template_Registry::get_active_single_slug();
-		}
-		return rest_ensure_response($merged);
+		return rest_ensure_response(Trvlr_Theme_Config::get_merged_settings_for_response());
 	}
 
 	/**
@@ -538,29 +529,7 @@ class Trvlr_Admin
 			return new WP_Error('invalid_data', 'Invalid settings data', array('status' => 400));
 		}
 
-		if (class_exists('Trvlr_Template_Registry')) {
-			if (array_key_exists('presentationTheme', $settings)) {
-				$pt = sanitize_key((string) $settings['presentationTheme']);
-				if ($pt !== '' && isset(Trvlr_Template_Registry::get_presentation_themes()[$pt])) {
-					Trvlr_Template_Registry::set_active_presentation_theme($pt);
-				}
-			}
-		}
-
-		$theme_only = $settings;
-		unset(
-			$theme_only['presentationTheme'],
-			$theme_only['cardTemplate'],
-			$theme_only['attractionPageTemplate']
-		);
-		update_option('trvlr_theme_settings', $theme_only);
-
-		$returned = Trvlr_Theme_Config::merge_with_defaults($theme_only);
-		if (class_exists('Trvlr_Template_Registry')) {
-			$returned['presentationTheme'] = Trvlr_Template_Registry::get_active_presentation_theme_slug();
-			$returned['cardTemplate'] = Trvlr_Template_Registry::get_active_card_slug();
-			$returned['attractionPageTemplate'] = Trvlr_Template_Registry::get_active_single_slug();
-		}
+		$returned = Trvlr_Theme_Config::save_settings($settings);
 
 		return rest_ensure_response(array(
 			'success' => true,
@@ -667,7 +636,7 @@ class Trvlr_Admin
 		}
 
 		if (function_exists('trvlr_is_attraction_sync_disabled') && trvlr_is_attraction_sync_disabled()) {
-			wp_send_json_error(__('Attraction syncing is disabled in TRVLR settings.', 'trvlr'));
+			wp_send_json_error(__('Attraction syncing is disabled in Traveloris settings.', 'trvlr'));
 		}
 
 		try {
@@ -762,7 +731,7 @@ class Trvlr_Admin
 		}
 
 		if (function_exists('trvlr_is_attraction_sync_disabled') && trvlr_is_attraction_sync_disabled()) {
-			wp_send_json_error(array('message' => __('Attraction syncing is disabled in TRVLR settings.', 'trvlr')));
+			wp_send_json_error(array('message' => __('Attraction syncing is disabled in Traveloris settings.', 'trvlr')));
 		}
 
 		$post_id = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;
@@ -976,11 +945,11 @@ class Trvlr_Admin
 		}
 
 		$admin_email = get_option('trvlr_notification_email', get_option('admin_email'));
-		$subject = '[TRVLR] Test Notification - ' . get_bloginfo('name');
-		$message = '<h2>TRVLR Test Notification</h2>';
+		$subject = '[Traveloris] Test Notification - ' . get_bloginfo('name');
+		$message = '<h2>Traveloris Test Notification</h2>';
 		$message .= '<p>This is a test email to verify your notification settings are working correctly.</p>';
 		$message .= '<p><strong>Time:</strong> ' . current_time('Y-m-d H:i:s') . '</p>';
-		$message .= '<p><a href="' . admin_url('admin.php?page=trvlr-settings') . '">View TRVLR Settings</a></p>';
+		$message .= '<p><a href="' . admin_url('admin.php?page=trvlr_settings') . '">View Traveloris Settings</a></p>';
 
 		$headers = array(
 			'Content-Type: text/html; charset=UTF-8',

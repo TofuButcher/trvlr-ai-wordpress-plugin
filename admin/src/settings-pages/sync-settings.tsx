@@ -32,13 +32,13 @@ export const SyncSettings = () => {
 
    return (
       <div className="trvlr-sync-settings">
-         <PageHeading text={'Your TRVLR Products'} />
+         <PageHeading text={'Your Traveloris Products'} />
          <div className="trvlr-settings-section-spacer">
             <div style={{ display: 'grid', gap: '20px' }}>
                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
                   {syncStatsElements.map((element) => {
                      return (
-                        <Card style={{ borderLeft: `5px solid ${element.color}` }}>
+                        <Card key={element.key} style={{ borderLeft: `5px solid ${element.color}` }}>
                            <div style={{ display: 'grid', gap: '10px', padding: '20px', textAlign: 'center' }}>
                               <div style={{ fontSize: '36px', fontWeight: 'bold', color: element.color }}>
                                  {syncStats?.[element.key] || 0}

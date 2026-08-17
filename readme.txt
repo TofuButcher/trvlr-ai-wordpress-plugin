@@ -1,52 +1,52 @@
-=== Trvlr AI Booking System ===
+=== Traveloris Wordpress Manager ===
 Contributors: pariswelch
-Tags: booking, reservations, tours, trvlr, booking system
+Tags: booking, reservations, tours, trvlr, traveloris, booking system
 Requires at least: 5.0
 Tested up to: 6.4
-Stable tag: 0.1.91
+Stable tag: 0.2.0
 Requires PHP: 7.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
-WordPress plugin for integrating the trvlr.ai booking platform: synced attractions, a TRVLR settings dashboard, and front-end booking components.
+WordPress plugin for integrating the Traveloris booking platform: synced attractions, a Traveloris settings dashboard, and front-end booking components.
 
 == Description ==
 
-Trvlr AI Booking System connects your WordPress site to **trvlr.ai**. It syncs tours and experiences into the **`trvlr_attraction`** custom post type, lets you adjust copy and media while respecting or overriding remote updates, and provides booking UI (modals, calendars, payment confirmation) you can place with shortcodes and template tags.
+Traveloris Wordpress Manager connects your WordPress site to **Traveloris**. It syncs tours and experiences into the **`trvlr_attraction`** custom post type, lets you adjust copy and media while respecting or overriding remote updates, and provides booking UI (modals, calendars, payment confirmation) you can place with shortcodes and template tags.
 
 **Documentation for maintainers** ships with the plugin in the `docs/` folder (overview, core sync model, admin and public behavior, and optional `docs/reference/` for detailed technical specs).
 
 = Features =
 
-* Sync attractions from trvlr with batched full sync and single-attraction refresh
-* Track local edits per field; optional force-sync for specific fields
+* Sync attractions from Traveloris with batched full sync and single-attraction refresh
+* Track local edits per field (Synced / Custom Edit); Traveloris is source of truth for synced fields
 * Scheduled sync, structured sync logs, optional email notifications
-* TRVLR admin app (Getting Started, Connection, Theme, Sync, Logs) backed by the REST API
+* Traveloris admin app (Getting Started, Connection, Theme, Sync, Logs, Tools) backed by the REST API
 * Theme tokens (colors, spacing, cards) exposed as CSS variables on the front end
 * Default single-attraction template, Splide galleries, booking and checkout iframes
 * Shortcodes for attraction fields, booking calendar, and payment confirmation
-* Payment confirmation page support for return URLs from trvlr checkout
+* Payment confirmation page support for return URLs from Traveloris checkout
 
 = Usage =
 
 1. Install and activate the plugin.
-2. Open **TRVLR** in the WordPress admin and set **Connection** (Organization ID and API key as required by your account).
-3. Run a sync from the **Sync** tab or edit an attraction and use **Sync from TRVLR** in the sidebar when a trvlr ID exists.
+2. Open **Traveloris** in the WordPress admin and set **Connection** (Organization ID and API key as required by your account).
+3. Run a sync from the **Sync** tab or edit an attraction and use **Sync from Traveloris** in the sidebar when a Traveloris ID exists.
 4. Use shortcodes or the default single-attraction template to display content; add booking controls with `attraction-id` and classes such as `trvlr-book-now` or `trvlr-check-availability` (see plugin `docs/public/` for behavior).
 
 == Installation ==
 
 1. Upload the `trvlr` folder to `/wp-content/plugins/`.
 2. Activate the plugin through the **Plugins** screen.
-3. Go to **TRVLR** in the admin menu and complete connection and sync setup.
+3. Go to **Traveloris** in the admin menu and complete connection and sync setup.
 
 The plugin registers the attraction post type, creates log storage, and may create a **Payment Confirmation** page on activation.
 
 == Frequently Asked Questions ==
 
-= How do I get a trvlr.ai account or subdomain? =
+= How do I get a Traveloris account or subdomain? =
 
-Contact trvlr.ai to set up your booking system and obtain Organization ID / API credentials as they apply to your integration.
+Contact Traveloris (traveloris.com) to set up your booking system and obtain Organization ID / API credentials as they apply to your integration.
 
 = What shortcodes are available? =
 
@@ -65,6 +65,36 @@ The front-end booking script listens for elements that include an `attraction-id
 See the `docs/` directory inside the plugin: `README.md` is the index; `reference/` holds optional detailed specs (e.g. REST payloads) when provided.
 
 == Changelog ==
+
+= 0.2.0 =
+Admin
+* Admin menu and plugin chrome rebranded to Traveloris (logo SVGs, dashboard header)
+* New Tools page: feature toggles (CPT, sync, frontend booking, SEO schema) plus theme settings export/import
+* Live attraction card preview on the Theme page (REST preview-card)
+* Connection and sync copy updated for Traveloris as the catalog source
+
+Sync & data
+* Unified field map (`class-trvlr-field-map.php`) driving sync, Custom Edit, and meta UI
+* Custom edits are explicit per field (Synced / Custom Edit); hash auto-detect (`Trvlr_Edit_Tracker`) removed
+* One-time `explicit_v1` migration for existing `_trvlr_edited_fields`
+* FAQs and important-information fields on attractions; term FAQs on taxonomies
+* List `seo_metadata` stored as post meta; JSON-LD (TouristAttraction + FAQPage) on singles by default
+
+Frontend / themes
+* Shared template helpers: `trvlr_section`, gallery `layout` (`nav-bottom` / `nav-right` / `nav-right-2col`), `trvlr_faqs` accordion vs list
+* Presentation themes enqueue `themes/variant-N.css` from `public/dist/css/` — no per-theme JS
+* Icon system (`icons/` + `class-trvlr-icons.php`)
+* Semantic color tokens; `importantColor` → `alertColor` (legacy CSS vars aliased)
+* Compiled public assets moved: `public/css` + `public/js` → `public/dist/css` + `public/dist/js`
+
+Tooling
+* Webpack replaced by Vite (`npm run dev`, `npm run build`, `npm run dist`)
+* Dual zips: production `trvlr-wordpress-manager.zip` and `dev-trvlr-wordpress-manager.zip` (`~dev` only in the latter)
+
+Dev-only (dev zip)
+* `?trvlr_test=true` data debug (unchanged)
+* `?trvlr_components=true` component library
+* `?trvlr_theme_colors=true` theme color page
 
 = 0.1.91 =
 * Version bump to force update - Refer to 0.1.9
@@ -148,6 +178,9 @@ See the `docs/` directory inside the plugin: `README.md` is the index; `referenc
 * Initial public booking integration: modal flow, payment confirmation page, booking calendar shortcode, and base admin settings
 
 == Upgrade Notice ==
+
+= 0.2.0 =
+Custom edits are now explicit (Synced vs Custom Edit); Traveloris is the catalog source of truth. Maintainers: webpack is gone — copy vite.local.example.json to vite.local.json and use npm run dev. Child themes that hardcode public/css/ or public/js/ must switch to public/dist/. JSON-LD schema is on by default (disable under Tools). Gallery helpers now take layout (nav-bottom / nav-right / nav-right-2col) instead of theme-specific args.
 
 = 0.1.4 =
 Maintenance and fixes for attraction card queries, sync tooling, and release metadata.

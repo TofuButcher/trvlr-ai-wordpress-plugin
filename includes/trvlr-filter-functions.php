@@ -124,7 +124,7 @@ function trvlr_attraction_filter($atts = array())
 		$buttons
 	);
 
-	wp_enqueue_script('trvlr-attraction-filter');
+	trvlr_enqueue_front_script('trvlr-attraction-filter');
 	wp_enqueue_style('trvlr-attraction-filter');
 
 	return apply_filters('trvlr_attraction_filter', $html, $atts, $target);
@@ -192,7 +192,7 @@ function trvlr_attraction_sort($atts = array())
 		$buttons
 	);
 
-	wp_enqueue_script('trvlr-attraction-filter');
+	trvlr_enqueue_front_script('trvlr-attraction-filter');
 	wp_enqueue_style('trvlr-attraction-filter');
 
 	return apply_filters('trvlr_attraction_sort', $html, $atts, $target);

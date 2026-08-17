@@ -192,7 +192,7 @@ export const LogsSettings = () => {
       return (
          <div className="trvlr-logs-settings">
             <PageHeading
-               text={'TRVLR Wordpress Manager Logs'}
+               text={'Traveloris Wordpress Manager Logs'}
             />
             <p>{__('Loading logs...', 'trvlr')}</p>
          </div>
@@ -202,7 +202,7 @@ export const LogsSettings = () => {
    return (
       <div className="trvlr-logs-settings">
          <PageHeading
-            text={'TRVLR Wordpress Manager Logs'}
+            text={'Traveloris Wordpress Manager Logs'}
          />
 
          {message && (

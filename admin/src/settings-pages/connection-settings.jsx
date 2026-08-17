@@ -11,7 +11,7 @@ export const ConnectionSettings = () => {
                 <div className="trvlr-settings-section-spacer">
                     <div>
                         <PageHeading
-                            text="Connect with TRVLR"
+                            text="Connect with Traveloris"
                         />
                         <ConnectionSettingsForm />
                     </div>

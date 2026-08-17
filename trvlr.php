@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Plugin Name: Trvlr AI Booking System
- * Description: Wordpress plugin for integrating the trvlr.ai booking system.
- * Version: 0.1.91
+ * Plugin Name: Traveloris Wordpress Manager
+ * Description: Wordpress plugin for integrating the Traveloris booking system.
+ * Version: 0.2.0
  * Author: Paris Welch
  * Text Domain: trvlr
  */
@@ -13,7 +13,7 @@ if (! defined('ABSPATH')) {
 }
 
 // Define Constants
-define('TRVLR_VERSION', '0.1.91');
+define('TRVLR_VERSION', '0.2.0');
 define('TRVLR_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('TRVLR_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -44,6 +44,7 @@ register_deactivation_hook(__FILE__, 'deactivate_trvlr');
  * The core plugin class that is used to define internationalization,
  * admin-specific hooks, and public-facing site hooks.
  */
+require_once plugin_dir_path(__FILE__) . 'includes/trvlr-vite.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-trvlr.php';
 
 /**
@@ -85,10 +86,6 @@ add_filter('upgrader_source_selection', function ($source, $remote_source) {
 	}
 	return $source;
 }, 10, 2);
-
-if (file_exists(TRVLR_PLUGIN_DIR . 'test-api.php')) {
-	require_once TRVLR_PLUGIN_DIR . 'test-api.php';
-}
 
 // Data testing (access with ?trvlr_test=true) — wp hook so main query exists on frontend (init is too early)
 add_action('wp', function () {

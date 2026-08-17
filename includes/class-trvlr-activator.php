@@ -29,6 +29,9 @@ class Trvlr_Activator
 		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-notifier.php';
 		Trvlr_Notifier::schedule_weekly_summary();
 
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-trvlr-icons.php';
+		Trvlr_Icons::rebuild();
+
 		flush_rewrite_rules();
 	}
 

@@ -17,21 +17,21 @@ Built-in card markup and single-attraction layouts live under:
 
 `includes/class-trvlr-template-registry.php` registers card and single templates, runs the `trvlr_register_templates` action so more can be added from outside the plugin, and **presentation themes** bundle a card + single + their theme CSS. The active presentation theme is stored in the option `trvlr_presentation_theme` (e.g. `theme-1`, `theme-2`); the registry maps each to a card slug and a single-attraction slug, syncs the legacy options `trvlr_card_template` and `trvlr_single_attraction_template` to match, and can migrate from older per-field values when a matching pair is found. Use `trvlr_register_presentation_themes` to register additional paired themes after registering the underlying card/single files. The Theme admin screen only exposes the presentation choice; the REST payload includes `presentationTheme` plus derived `cardTemplate` and `attractionPageTemplate` for debugging or integrations. `trvlr_card()` loads the card file; the single shell loads the single file. Root nodes expose `data-trvlr-card-template` / `data-trvlr-single-template` (and BEM-style `--template-{slug}` classes) for scoped styling.
 
-- **Per-template theme CSS** (card and single each use `themes-{slug}.css` for their respective slugs, e.g. `themes-card-1.css` and `themes-page-1.css` from `public/src/styles/themes/`), enqueued for the **active** card and single slugs when those files exist.
+- **Per-theme CSS** — each presentation theme enqueues `themes/variant-N.css` from `public/dist/css/` (compiled from `public/src/styles/themes/variant-N.scss`). Built-in themes have **no** per-theme JS.
 
 ## Styles
 
-- **Compiled CSS** in `public/css/` (`trvlr-public.css`, `trvlr-cards.css`, `trvlr-single-attraction.css`) is what WordPress enqueues. For the **active card and single slugs** (from the selected presentation theme), `Trvlr_Public` also enqueues each matching **`themes-{slug}.css`** when that file exists (built from `public/src/styles/themes/` via webpack), after the base card / single CSS.
-- **Source** SCSS lives under `public/src/styles/` and should be compiled to those CSS files when you change styling.
-- **Splide** carousel assets ship under `public/dist/` (minified JS + CSS) for image galleries.
+- **Compiled CSS** in `public/dist/css/` (`trvlr-public.css`, `trvlr-cards.css`, `trvlr-gallery.css`, …) is what WordPress enqueues. For the active presentation theme, `Trvlr_Public` also enqueues `themes/variant-N.css` from `public/dist/css/themes/`, after the base card CSS.
+- **Source** SCSS lives under `public/src/styles/` and is compiled with Vite (`npm run build`). Mixins live in `trvlr-mixins.scss`; single-page rules in `trvlr-single.scss` (imported by `trvlr-public.scss`).
+- **Splide / masonry** gallery assets ship under `public/dist/js/` + `public/dist/css/`.
 
 The admin settings screen optionally loads the same public card/shell CSS so **theme previews** in the dashboard match the front end.
 
 ## Scripts
 
-- **`trvlr-public.js`** — jQuery + Splide: gallery sync (main + vertical nav), back-link behavior, and an in-file **SimpleAccordion** implementation for attraction accordions.
-- **`trvlr-bookings.js`** — Standalone booking UI: modal dialog, checkout iframe container, `postMessage` handling, cart/update flows, and delegation for `.trvlr-book-now` / `.trvlr-check-availability` controls. Localized as `trvlrConfig` with base iframe URL and home URL. Not enqueued when **`trvlr_disable_frontend_booking`** is enabled (Connection → TRVLR features); see [feature flags](../reference/feature-flags.md).
-- **`simple-accordion.js`** — Duplicate accordion helper exists as a separate file; the active single template path relies on the accordion class embedded in `trvlr-public.js` unless you enqueue the standalone file separately.
+- **`trvlr-public.js`** (`public/dist/js/`) — jQuery + Splide: gallery sync, back-link behavior, and an in-file **SimpleAccordion** implementation for attraction accordions.
+- **`trvlr-bookings.js`** — Standalone booking UI: modal dialog, checkout iframe container, `postMessage` handling, cart/update flows, and delegation for `.trvlr-book-now` / `.trvlr-check-availability` controls. Localized as `trvlrConfig` with base iframe URL and home URL. Not enqueued when **`trvlr_disable_frontend_booking`** is enabled (Tools → Traveloris features); see [feature flags](../reference/feature-flags.md).
+- Accordion helper is embedded in `trvlr-public.js`. There is no standalone `simple-accordion.js`.
 
 ## Theme variables
 

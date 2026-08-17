@@ -79,7 +79,10 @@ class Trvlr_Scheduler
 		$sync->start_sync();
 	}
 
-	public static function run_sync_batch()
+	/**
+	 * @param string|null $session_id Optional session from queued action args.
+	 */
+	public static function run_sync_batch($session_id = null)
 	{
 		if (function_exists('trvlr_is_attraction_sync_disabled') && trvlr_is_attraction_sync_disabled()) {
 			return;
@@ -87,7 +90,35 @@ class Trvlr_Scheduler
 
 		require_once plugin_dir_path(dirname(__FILE__)) . 'core/class-trvlr-sync.php';
 		$sync = new Trvlr_Sync();
-		$sync->process_batch();
+		$sync->process_batch(null, is_string($session_id) ? $session_id : null);
+	}
+
+	/**
+	 * Loopback runner endpoint (admin-ajax, token-gated, works logged-out).
+	 * Lets batches chain without WP-Cron on low-resource hosts.
+	 */
+	public static function ajax_run_sync_batch()
+	{
+		$token = isset($_REQUEST['token']) ? sanitize_text_field(wp_unslash($_REQUEST['token'])) : '';
+		$session = isset($_REQUEST['session']) ? sanitize_text_field(wp_unslash($_REQUEST['session'])) : '';
+
+		if ($token === '' || !Trvlr_Async::verify_runner_token($token)) {
+			status_header(403);
+			wp_die('', '', array('response' => 403));
+		}
+
+		ignore_user_abort(true);
+
+		// Release the HTTP connection early so the caller never blocks on us.
+		if (function_exists('fastcgi_finish_request')) {
+			status_header(200);
+			echo 'ok';
+			fastcgi_finish_request();
+		}
+
+		self::run_sync_batch($session !== '' ? $session : null);
+
+		wp_die('ok');
 	}
 
 	/**

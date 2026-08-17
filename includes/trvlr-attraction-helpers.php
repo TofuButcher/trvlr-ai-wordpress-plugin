@@ -89,6 +89,7 @@ function get_trvlr_section_heading($section, $post_id = null)
 		'inclusions' => __('Inclusions', 'trvlr'),
 		'description' => __('Description', 'trvlr'),
 		'additional_info' => __('Additional Information', 'trvlr'),
+		'faqs' => __('Frequently Asked Questions', 'trvlr'),
 	);
 
 	$heading = isset($defaults[$section]) ? $defaults[$section] : '';
@@ -184,25 +185,89 @@ function get_trvlr_attraction_is_on_sale($post_id = null)
 	return get_trvlr_is_on_sale($post_id);
 }
 
+/**
+ * Returns the "best" advertised price row for an attraction.
+ * Order of preference (case-insensitive, trimmed):
+ * 1. Type is exactly "Adult" or "Adults"
+ * 2. Type is exactly "Per Person"
+ * 3. Shortest type that contains "adult" or "per person"
+ * 4. First pricing row
+ *
+ * @param int|null $post_id
+ * @return array|null
+ */
+function get_trvlr_advertised_price_row($post_id = null) {
+	$post_id = $post_id ?: get_the_ID();
+
+	$pricing = get_post_meta($post_id, 'trvlr_pricing', true);
+	if (empty($pricing) || !is_array($pricing)) {
+		return null;
+	}
+
+	$normalize_type = static function ($type) {
+		$type = html_entity_decode((string) $type, ENT_QUOTES, 'UTF-8');
+		$type = str_replace("\xc2\xa0", ' ', $type);
+		$type = preg_replace('/\s+/u', ' ', $type);
+		return strtolower(trim((string) $type));
+	};
+
+	$adult_row = null;
+	$per_person_row = null;
+	$shortest_partial = null;
+
+	foreach ($pricing as $price) {
+		if (!isset($price['type'])) {
+			continue;
+		}
+
+		$type = $normalize_type($price['type']);
+		if ($type === '') {
+			continue;
+		}
+
+		if ($adult_row === null && ($type === 'adult' || $type === 'adults')) {
+			$adult_row = $price;
+			continue;
+		}
+
+		if ($per_person_row === null && $type === 'per person') {
+			$per_person_row = $price;
+			continue;
+		}
+
+		if (strpos($type, 'adult') !== false || strpos($type, 'per person') !== false) {
+			if (
+				$shortest_partial === null ||
+				strlen($type) < strlen($normalize_type($shortest_partial['type']))
+			) {
+				$shortest_partial = $price;
+			}
+		}
+	}
+
+	if ($adult_row !== null) {
+		return $adult_row;
+	}
+
+	if ($per_person_row !== null) {
+		return $per_person_row;
+	}
+
+	if ($shortest_partial !== null) {
+		return $shortest_partial;
+	}
+
+	return reset($pricing) ?: null;
+}
+
 function get_trvlr_advertised_price_value($post_id = null)
 {
 	$post_id = $post_id ?: get_the_ID();
 	$value = get_post_meta($post_id, 'trvlr_advertised_price_value', true);
 	if (empty($value)) {
-		$pricing = get_trvlr_pricing($post_id);
-		if (empty($pricing)) {
-			return apply_filters('trvlr_advertised_price_value', '', $post_id);
-		}
-
-		$adult_price = array_values(array_filter($pricing, function ($price) {
-			return stripos($price['type'], 'adult') !== false ||
-				stripos($price['type'], 'per person') !== false;
-		}));
-
-		if (!empty($adult_price) && isset($adult_price[0]['price'])) {
-			$value = $adult_price[0]['price'];
-		} elseif (!empty($pricing[0]['price'])) {
-			$value = $pricing[0]['price'];
+		$row = get_trvlr_advertised_price_row($post_id);
+		if ($row && isset($row['price'])) {
+			$value = $row['price'];
 		}
 	}
 	return apply_filters('trvlr_advertised_price_value', $value ?: '', $post_id);
@@ -211,25 +276,14 @@ function get_trvlr_advertised_price_value($post_id = null)
 function get_trvlr_advertised_price_type($post_id = null)
 {
 	$post_id = $post_id ?: get_the_ID();
-	$value = get_post_meta($post_id, 'trvlr_advertised_price_type', true);
-	if (empty($value)) {
-		$pricing = get_trvlr_pricing($post_id);
-		if (empty($pricing)) {
-			return apply_filters('trvlr_advertised_price_type', '', $post_id);
-		}
-
-		$adult_type = array_values(array_filter($pricing, function ($price) {
-			return stripos($price['type'], 'adult') !== false ||
-				stripos($price['type'], 'per person') !== false;
-		}));
-
-		if (!empty($adult_type) && isset($adult_type[0]['type'])) {
-			$value = $adult_type[0]['type'];
-		} elseif (!empty($pricing[0]['type'])) {
-			$value = $pricing[0]['type'];
+	$type = get_post_meta($post_id, 'trvlr_advertised_price_type', true);
+	if (empty($type)) {
+		$row = get_trvlr_advertised_price_row($post_id);
+		if ($row && isset($row['type'])) {
+			$type = $row['type'];
 		}
 	}
-	return apply_filters('trvlr_advertised_price_type', $value ?: '', $post_id);
+	return apply_filters('trvlr_advertised_price_type', $type ?: '', $post_id);
 }
 
 function get_trvlr_advertised_price($post_id = null)
@@ -275,6 +329,55 @@ function get_trvlr_faqs($post_id = null)
 	$value = get_post_meta($post_id, 'trvlr_faqs', true);
 	$faqs = is_array($value) ? $value : array();
 	return apply_filters('trvlr_faqs', $faqs, $post_id);
+}
+
+/**
+ * Decoded API seo_metadata for an attraction, or null when missing/empty.
+ *
+ * @param int|null $post_id
+ * @return array|null
+ */
+function get_trvlr_seo_metadata($post_id = null)
+{
+	$post_id = $post_id ?: get_the_ID();
+	$raw = get_post_meta($post_id, 'trvlr_seo_metadata', true);
+
+	if (empty($raw)) {
+		return apply_filters('trvlr_seo_metadata', null, $post_id);
+	}
+
+	if (is_array($raw)) {
+		$value = $raw;
+	} else {
+		$decoded = json_decode((string) $raw, true);
+		$value = is_array($decoded) ? $decoded : null;
+	}
+
+	return apply_filters('trvlr_seo_metadata', $value, $post_id);
+}
+
+/**
+ * FAQs stored on a location or category term.
+ *
+ * @param int|WP_Term|null $term Term object, term ID, or null.
+ * @return array<int, array{question?: string, answer?: string}>
+ */
+function get_trvlr_term_faqs($term = null)
+{
+	if ($term instanceof WP_Term) {
+		$term_id = (int) $term->term_id;
+	} else {
+		$term_id = (int) $term;
+	}
+
+	if ($term_id <= 0) {
+		return array();
+	}
+
+	$value = get_term_meta($term_id, 'trvlr_faqs', true);
+	$faqs  = is_array($value) ? $value : array();
+
+	return apply_filters('trvlr_term_faqs', $faqs, $term_id);
 }
 
 function get_trvlr_media($post_id = null, $include_featured = true)

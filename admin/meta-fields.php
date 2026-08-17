@@ -38,7 +38,7 @@ function trvlr_register_meta_boxes()
 {
     add_meta_box(
         'trvlr_sync_actions',
-        'TRVLR Sync',
+        'Traveloris Sync',
         'trvlr_render_sync_actions_meta_box',
         'trvlr_attraction',
         'side',
@@ -142,7 +142,7 @@ function trvlr_render_sync_actions_meta_box($post)
     <div id="trvlr-sync-actions" style="padding: 10px 0;">
         <?php if ($trvlr_id): ?>
             <p style="margin: 0 0 10px 0; font-size: 12px; color: #666;">
-                <strong>TRVLR ID:</strong> <?php echo esc_html($trvlr_id); ?>
+                <strong>Traveloris ID:</strong> <?php echo esc_html($trvlr_id); ?>
             </p>
 
             <div id="trvlr-custom-edits-sidebar" style="background: #fff3cd; border: 1px solid #ffc107; padding: 8px; margin-bottom: 10px; border-radius: 3px; font-size: 12px;<?php echo empty($edited_fields) ? ' display:none;' : ''; ?>">
@@ -159,13 +159,13 @@ function trvlr_render_sync_actions_meta_box($post)
 
             <button type="button" id="trvlr-sync-single-btn" class="button button-primary" style="width: 100%;">
                 <span class="dashicons dashicons-update" style="vertical-align: middle;"></span>
-                Sync from TRVLR
+                Sync from Traveloris
             </button>
 
             <div id="trvlr-sync-message" style="margin-top: 10px; padding: 8px; border-radius: 3px; display: none;"></div>
         <?php else: ?>
             <p style="color: #999; font-size: 12px; margin: 0;">
-                This attraction is not synced with TRVLR.
+                This attraction is not synced with Traveloris.
             </p>
         <?php endif; ?>
     </div>
@@ -432,7 +432,7 @@ function trvlr_render_details_meta_box($post)
 ?>
     <div class="trvlr-meta-fields-grid">
         <div class="trvlr-meta-readonly trvlr-row">
-            <label>TRVLR ID</label>
+            <label>Traveloris ID</label>
             <input type="text" class="regular-text" value="<?php echo esc_attr($trvlr_id); ?>" readonly disabled>
             <span class="description">System ID (Read Only)</span>
         </div>

@@ -1,6 +1,6 @@
-# Trvlr AI Booking System (WordPress plugin)
+# Traveloris Wordpress Manager
 
-WordPress integration for **[trvlr.ai](https://trvlr.ai)**: sync tours and experiences into a custom post type, manage them from the block/classic editor and a React settings hub, and embed the trvlr booking flow (modals, calendars, payment confirmation) on the front end.
+WordPress integration for **[Traveloris](https://traveloris.com)**: sync tours and experiences into a custom post type, manage them from the block/classic editor and a React settings hub, and embed the Traveloris booking flow (modals, calendars, payment confirmation) on the front end.
 
 ## Documentation
 
@@ -15,8 +15,8 @@ WordPress integration for **[trvlr.ai](https://trvlr.ai)**: sync tours and exper
 ## Installation
 
 1. Copy the `trvlr` folder into `wp-content/plugins/`.
-2. Activate **Trvlr AI Booking System** under Plugins.
-3. Open **TRVLR** in the admin menu and complete **Getting Started** / **Connection** (Organization ID and API credentials as required by your trvlr account).
+2. Activate **Traveloris Wordpress Manager** under Plugins.
+3. Open **Traveloris** in the admin menu and complete **Getting Started** / **Connection** (Organization ID and API credentials as required by your Traveloris account).
 
 Activation registers the `trvlr_attraction` post type, creates sync log storage, and can create a **Payment Confirmation** page used by the booking return flow.
 
@@ -24,20 +24,21 @@ Activation registers the `trvlr_attraction` post type, creates sync log storage,
 
 | Area | Purpose |
 |------|--------|
-| **Connection** | Organisation ID and API key so sync and iframes target the correct trvlr tenant. |
-| **Theme** | Colors, spacing, and card variables (surfaced as CSS custom properties on the front end). |
-| **Sync** | Manual full sync, schedule, per-attraction sync from the editor, custom-edit and force-sync tooling. |
+| **Connection** | Organisation ID and API key so sync and iframes target the correct Traveloris tenant. |
+| **Theme** | Colors, spacing, and card variables (surfaced as CSS custom properties on the front end); live card preview. |
+| **Sync** | Manual full sync, schedule, per-attraction sync from the editor, Custom Edit tooling. |
 | **Logs** | Sync and system log entries with export/clear options. |
+| **Tools** | Feature toggles (CPT, sync, booking, SEO schema) and theme settings export/import. |
 
 ## Front end
 
 - **Single attraction** — Default template under `public/partials/`; theme CSS variables from **Theme** settings.
-- **Booking script** — Listens for elements with `attraction-id` and classes such as **`trvlr-book-now`** and **`trvlr-check-availability`** (see `public/js/trvlr-bookings.js`).
+- **Booking script** — Listens for elements with `attraction-id` and classes such as **`trvlr-book-now`** and **`trvlr-check-availability`** (see `public/src/scripts/trvlr-bookings.js` → `public/dist/js/`).
 - **Shortcodes** — Many attraction fields are available as shortcodes (see `includes/trvlr-shortcodes.php`), including booking calendar and payment confirmation.
 
 ## Features
 
-- Sync attractions from trvlr with batched runs and conflict detection against local edits  
+- Sync attractions from Traveloris with batched runs and conflict detection against local edits  
 - Custom post type `trvlr_attraction` with meta boxes, repeaters (pricing, locations), and media gallery  
 - REST API (`trvlr/v1`) for the admin React app: settings, sync, logs, setup  
 - Scheduled sync, structured logging, optional email notifications  
@@ -46,7 +47,7 @@ Activation registers the `trvlr_attraction` post type, creates sync log storage,
 ## Development
 
 - Admin UI is built from `admin/src/` (WordPress scripts, React/WordPress Element). Run your usual `npm` build to produce `admin/build/`.
-- Public SCSS sources: `public/src/styles/` → compiled CSS in `public/css/`.
+- Public sources: `public/src/styles/` + `public/src/scripts/` → `public/dist/css/` + `public/dist/js/`.
 
 ## License
 

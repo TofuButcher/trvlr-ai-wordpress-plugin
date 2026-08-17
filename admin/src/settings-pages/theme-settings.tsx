@@ -66,6 +66,11 @@ export const ThemeSettings = () => {
       });
    };
 
+   const presentationTheme = String((settings as Record<string, string>).presentationTheme ?? '');
+   const presentationThemeMeta = (templateChoices.presentationThemes || []).find(
+      (theme: { slug: string; stylesheetUrl?: string }) => theme.slug === presentationTheme
+   );
+
    const renderFieldOrGroup = (item: any) => {
       if (item.type === 'group') {
          return (
@@ -114,7 +119,7 @@ export const ThemeSettings = () => {
                      <PanelBody
                         key={groupKey}
                         title={group.label}
-                        initialOpen={false}
+                        initialOpen={groupKey === 'colors'}
                      >
                         {group.description && (
                            <p style={{ marginTop: 0, color: '#666', fontSize: '13px' }}>
@@ -134,7 +139,7 @@ export const ThemeSettings = () => {
                   <PanelBody title={__('Presentation theme', 'trvlr')} initialOpen={true}>
                   <RadioControl
                      label={__('Theme (card, attraction page, and styles)', 'trvlr')}
-                     selected={String((settings as Record<string, string>).presentationTheme ?? '')}
+                     selected={presentationTheme}
                      options={(templateChoices.presentationThemes || []).map((c: { slug: string; label: string }) => ({
                         label: c.label,
                         value: c.slug,
@@ -168,7 +173,10 @@ export const ThemeSettings = () => {
                text="Preview"
             />
             <div id="trvlr-preview-card" style={{ display: 'flex', position: 'sticky', top: '50px' }}>
-               <AttractionCardPreview />
+               <AttractionCardPreview
+                  presentationTheme={presentationTheme}
+                  stylesheetUrl={presentationThemeMeta?.stylesheetUrl || ''}
+               />
             </div>
          </div>
       </div>

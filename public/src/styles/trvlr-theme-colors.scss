@@ -1,0 +1,189 @@
+/**
+
+ * Theme color tokens — CSS-first derivation.
+ * Only cores are hardcoded; hover/foreground/scales are derived.
+ * Scales are normalized to L=0.5 before generating 50–950.
+ *
+ * Naming: --trvlr-color-{name}[-{variant}]
+ */
+
+$trvlr-scale-steps: (
+	50: 0.97,
+	100: 0.93,
+	200: 0.86,
+	300: 0.78,
+	400: 0.70,
+	500: 0.60,
+	600: 0.49,
+	700: 0.38,
+	800: 0.27,
+	900: 0.18,
+	950: 0.10,
+);
+
+$trvlr-core-names: ("primary", "secondary", "accent", "alert");
+
+@mixin trvlr-core-color-tokens($name) {
+	--trvlr-color-#{$name}-hover: color-mix(in oklch, var(--trvlr-color-#{$name}) 82%, black);
+	--trvlr-color-#{$name}-foreground: contrast-color(var(--trvlr-color-#{$name}));
+
+	// $mode: "oklch";
+	// $mode: "hsl";
+	$mode: "oklch-alt";
+
+	@if $mode == "oklch" or $mode == "oklch-alt" {
+	--trvlr-color-#{$name}-normalized: oklch(from var(--trvlr-color-#{$name}) 0.5 c h);
+
+		@if $mode == "oklch" {
+		@each $step, $l in $trvlr-scale-steps {
+				--trvlr-color-#{$name}-#{$step}: oklch(from var(--trvlr-color-#{$name}-normalized) #{$l} c h);
+			}
+		}
+
+		@if $mode == "oklch-alt" {
+			@each $step, $l in $trvlr-scale-steps {
+				// --trvlr-color-#{$name}-#{$step}: oklch(from var(--trvlr-color-#{$name}-normalized) #{$l} min(c, calc(c * l + (0.08 / #{$l}) - 0.05)) h);
+				// --trvlr-color-#{$name}-#{$step}: oklch(from var(--trvlr-color-#{$name}-normalized) #{$l} calc(c * l) h);
+				--trvlr-color-#{$name}-#{$step}: oklch(from var(--trvlr-color-#{$name}-normalized) #{$l} c h);
+			}
+		}
+	}
+
+	// @if $mode == "hsl" {
+	// 	--trvlr-color-#{$name}-normalized: hsl(from var(--trvlr-color-#{$name}) h s 50% );
+
+	// 	@each $step, $l in $trvlr-scale-steps {
+	// 		--trvlr-color-#{$name}-#{$step}: hsl(from var(--trvlr-color-#{$name}-normalized) h s #{$l * 100%} );
+	// 	}
+	// }
+
+	$trvlr-muted-scale-steps: (
+		5: 95%,
+		10: 90%,
+		15: 85%,
+		20: 80%,
+		30: 70%,
+		40: 60%,
+		50: 50%,
+		60: 40%,
+		70: 30%,
+		80: 20%,
+		90: 10%,
+		95: 05%,
+	);
+
+	// Muted Colors. Normalized then mixed percentage with background.
+	@each $step, $mix in $trvlr-muted-scale-steps {
+		--trvlr-color-#{$name}-muted-#{$step}: color-mix(
+			in oklch,
+			var(--trvlr-color-background) #{$mix},
+			var(--trvlr-color-#{$name}-normalized)
+		);
+	}
+}
+
+@layer base {
+
+	:root {
+		--trvlr-color-primary: oklch(73.618% 0.15116 166.869);
+		--trvlr-color-secondary: oklch(76.76% 0.11437 347.39);
+		--trvlr-color-accent: oklch(86.682% 0.20673 156.93);
+		--trvlr-color-alert: oklch(66.796% 0.19719 24.155);
+	}
+
+	:root, .trvlr-card {
+		--trvlr-color-background: #fff;
+		--trvlr-color-foreground: #000;
+
+		@each $name in $trvlr-core-names {
+			@include trvlr-core-color-tokens($name);
+		}
+
+		--trvlr-color-foreground-text: color-mix(
+			in oklch,
+			var(--trvlr-color-foreground) 90%,
+			var(--trvlr-color-background)
+		);
+		--trvlr-color-foreground-muted: color-mix(
+			in oklch,
+			var(--trvlr-color-foreground) 70%,
+			transparent
+		);
+		--trvlr-color-border: color-mix(
+			in oklch,
+			var(--trvlr-color-background) 95%,
+			var(--trvlr-color-foreground)
+		);
+
+		/* Backwards compatibility — old --trvlr-*-color names */
+		--trvlr-primary-color: var(--trvlr-color-primary);
+		--trvlr-secondary-color: var(--trvlr-color-secondary);
+		--trvlr-accent-color: var(--trvlr-color-accent);
+		--trvlr-alert-color: var(--trvlr-color-alert);
+		--trvlr-important-color: var(--trvlr-color-alert);
+		--trvlr-color-important: var(--trvlr-color-alert);
+		--trvlr-color-important-hover: var(--trvlr-color-alert-hover);
+		--trvlr-color-important-foreground: var(--trvlr-color-alert-foreground);
+
+		--trvlr-primary-hover-color: var(--trvlr-color-primary-hover);
+		--trvlr-secondary-hover-color: var(--trvlr-color-secondary-hover);
+		--trvlr-accent-hover-color: var(--trvlr-color-accent-hover);
+		--trvlr-alert-hover-color: var(--trvlr-color-alert-hover);
+		--trvlr-important-hover-color: var(--trvlr-color-alert-hover);
+
+		--trvlr-primary-foreground-color: var(--trvlr-color-primary-foreground);
+		--trvlr-secondary-foreground-color: var(--trvlr-color-secondary-foreground);
+		--trvlr-accent-foreground-color: var(--trvlr-color-accent-foreground);
+		--trvlr-alert-foreground-color: var(--trvlr-color-alert-foreground);
+		--trvlr-important-foreground-color: var(--trvlr-color-alert-foreground);
+		--trvlr-text-on-primary-color: var(--trvlr-color-primary-foreground);
+		--trvlr-text-on-secondary-color: var(--trvlr-color-secondary-foreground);
+
+		--trvlr-primary-active-color: var(--trvlr-color-primary-hover);
+		--trvlr-secondary-active-color: var(--trvlr-color-secondary-hover);
+		--trvlr-accent-active-color: var(--trvlr-color-accent-hover);
+		--trvlr-alert-active-color: var(--trvlr-color-alert-hover);
+		--trvlr-important-active-color: var(--trvlr-color-alert-hover);
+
+		--trvlr-background-color: var(--trvlr-color-background);
+		--trvlr-foreground-color: var(--trvlr-color-foreground);
+		--trvlr-foreground-text-color: var(--trvlr-color-foreground-text);
+		--trvlr-foreground-muted-color: var(--trvlr-color-foreground-muted);
+		--trvlr-border-color: var(--trvlr-color-border);
+
+		--trvlr-text-muted-color: var(--trvlr-color-foreground-muted);
+		--trvlr-heading-color: var(--trvlr-color-foreground);
+		--trvlr-text-color: var(--trvlr-color-foreground);
+
+		@each $name in $trvlr-core-names {
+			@each $step, $_ in $trvlr-scale-steps {
+				--trvlr-#{$name}-#{$step}-color: var(--trvlr-color-#{$name}-#{$step});
+			}
+		}
+
+		@each $step, $_ in $trvlr-scale-steps {
+			--trvlr-important-#{$step}-color: var(--trvlr-color-alert-#{$step});
+			--trvlr-color-important-#{$step}: var(--trvlr-color-alert-#{$step});
+		}
+	}
+
+	@supports not (color: contrast-color(red)) {
+		:root {
+			@each $name in $trvlr-core-names {
+				--trvlr-color-#{$name}-foreground: oklch(
+					from var(--trvlr-color-#{$name}) clamp(0, (0.65 - l) * 1000, 1) 0 0
+				);
+			}
+		}
+	}
+
+	[data-trvlr-theme="light"] {
+		--trvlr-color-background: #fff;
+		--trvlr-color-foreground: #000;
+	}
+
+	[data-trvlr-theme="dark"] {
+		--trvlr-color-background: #000;
+		--trvlr-color-foreground: #fff;
+	}
+}

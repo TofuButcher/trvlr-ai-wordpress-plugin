@@ -29,7 +29,7 @@ if (isset($_GET['org_id'])) {
 
 if (!$trvlr_id) {
 	echo '<h1>TRVLR Debug</h1>';
-	echo '<p>No TRVLR ID found. Use <code>?trvlr_test=true&amp;trvlr_id=123</code>, open from a TRVLR Attraction edit URL (<code>post.php?post=…</code>), or view a single TRVLR Attraction on the frontend with <code>?trvlr_test=true</code>.</p>';
+	echo '<p>No Traveloris ID found. Use <code>?trvlr_test=true&amp;trvlr_id=123</code>, open from a Traveloris Attraction edit URL (<code>post.php?post=…</code>), or view a single Traveloris Attraction on the frontend with <code>?trvlr_test=true</code>.</p>';
 	die();
 }
 

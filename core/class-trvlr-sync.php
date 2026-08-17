@@ -16,14 +16,20 @@ class Trvlr_Sync
     const SYNC_STATE_OPTION = 'trvlr_sync_state';
     const SYNC_QUEUE_OPTION = 'trvlr_sync_queue';
     const BATCH_LOCK_TRANSIENT = 'trvlr_sync_batch_lock';
+    const SYNC_NOTICE_TRANSIENT = 'trvlr_sync_notice';
     const ATTRACTIONS_LIST_TRANSIENT_PREFIX = 'trvlr_attractions_list_';
     const ATTRACTIONS_LIST_TTL = 900;
     const BATCH_CRON_HOOK = 'trvlr_process_sync_batch';
     const DEFAULT_BATCH_SIZE = 2;
     const STALE_TIMEOUT = 600;
+    const ACTIVE_WINDOW = 120;
+    const STARTING_WINDOW = 600;
+    const STALL_TIMEOUT = 180;
     const BATCH_LOCK_TTL = 130;
+    const SYNC_STATE_SCHEMA = 3;
 
     private $attractions_list_memory = null;
+    private $time_budget_override = null;
 
     /**
      * Sync one attraction by WordPress post ID.
@@ -37,7 +43,7 @@ class Trvlr_Sync
         if (function_exists('trvlr_is_attraction_sync_disabled') && trvlr_is_attraction_sync_disabled()) {
             return array(
                 'success' => false,
-                'message' => 'Attraction syncing is disabled in TRVLR settings.',
+                'message' => 'Attraction syncing is disabled in Traveloris settings.',
             );
         }
 
@@ -110,7 +116,7 @@ class Trvlr_Sync
                 'success' => false,
                 'synced'   => 0,
                 'errors'   => 0,
-                'message'  => 'Attraction syncing is disabled in TRVLR settings.',
+                'message'  => 'Attraction syncing is disabled in Traveloris settings.',
             );
         }
 
@@ -186,14 +192,13 @@ class Trvlr_Sync
     }
 
     /**
-     * Cron entry: start a full sync unless one is already in progress.
+     * Cron entry: start a full sync unless one is already active.
      *
      * @return void
      */
     public function sync_all()
     {
-        $state = $this->get_sync_state();
-        if ($state && $state['status'] === 'in_progress' && (time() - $state['last_batch_at']) < self::STALE_TIMEOUT) {
+        if ($this->is_sync_active()) {
             return;
         }
         $this->start_sync();
@@ -220,42 +225,44 @@ class Trvlr_Sync
     }
 
     /**
-     * Cancel an in-progress sync and clear queue/locks.
+     * Hard-reset any sync bookkeeping. Always succeeds.
+     *
+     * Prefer this over preserving zombie/stale/legacy state — recoverability
+     * beats continuity when the sync engine changes.
      *
      * @return array{success: bool, message: string}
      */
     public function cancel_sync(): array
     {
-        $state = $this->get_sync_state();
+        $state = $this->read_raw_sync_state();
+        $session_id = is_array($state) ? ($state['session_id'] ?? null) : null;
+        $processed = is_array($state) ? ($state['current_index'] ?? 0) : 0;
+        $total = is_array($state) ? ($state['total'] ?? 0) : 0;
+        $had_state = is_array($state);
 
-        if (!$state || $state['status'] !== 'in_progress') {
-            return array(
-                'success' => false,
-                'message' => 'No sync is currently in progress.',
-            );
+        $this->nuke_sync_state('cancel');
+
+        if ($had_state) {
+            Trvlr_Logger::log('sync_cancelled', 'Sync state nuked by user cancel', array(
+                'user_id'   => get_current_user_id(),
+                'processed' => $processed,
+                'total'     => $total,
+                'driver'    => Trvlr_Async::driver(),
+            ), $session_id);
         }
-
-        $state['status'] = 'cancelled';
-        $state['message'] = 'Sync cancelled.';
-        $this->save_sync_state($state);
-        $this->delete_queue();
-        $this->unschedule_batches();
-        delete_transient(self::BATCH_LOCK_TRANSIENT);
-
-        Trvlr_Logger::log('sync_cancelled', 'Sync cancelled by user', array(
-            'user_id'       => get_current_user_id(),
-            'processed'     => $state['current_index'],
-            'total'         => $state['total'],
-        ), $state['session_id']);
 
         return array(
             'success' => true,
-            'message' => 'Sync cancelled.',
+            'message' => $had_state ? 'Sync cancelled.' : 'No sync is currently in progress.',
+            'nuked'   => true,
         );
     }
 
     /**
      * Shared start path for full sync and no-media sync.
+     *
+     * Claims the sync slot before the slow list fetch so progress polls stop
+     * reporting the previous stalled run mid-request.
      *
      * @param bool $skip_media When true, detail payloads drop images/list_image.
      * @return array{success: bool, message: string, total?: int, skip_media?: bool}
@@ -265,24 +272,78 @@ class Trvlr_Sync
         if (function_exists('trvlr_is_attraction_sync_disabled') && trvlr_is_attraction_sync_disabled()) {
             return array(
                 'success' => false,
-                'message' => 'Attraction syncing is disabled in TRVLR settings.',
+                'message' => 'Attraction syncing is disabled in Traveloris settings.',
             );
         }
 
         $state = $this->get_sync_state();
-        if ($state && $state['status'] === 'in_progress' && (time() - $state['last_batch_at']) < self::STALE_TIMEOUT) {
+        if ($this->is_sync_active($state)) {
+            $processed = isset($state['current_index']) ? (int) $state['current_index'] : 0;
+            $total = isset($state['total']) ? (int) $state['total'] : 0;
             return array(
-                'success' => false,
-                'message' => 'A sync is already in progress.',
+                'success'             => false,
+                'already_in_progress' => true,
+                'message'             => 'A sync is already in progress.',
+                'session_id'          => $state['session_id'] ?? null,
+                'progress'            => array(
+                    'processed'  => $processed,
+                    'total'      => $total,
+                    'percentage' => $total > 0 ? (int) round(($processed / $total) * 100) : 0,
+                    'message'    => $state['message'] ?? 'Sync in progress…',
+                ),
             );
         }
 
-        $session_id = 'sync_' . date('YmdHis') . '_' . substr(md5(uniqid()), 0, 8);
+        if ($state) {
+            $this->nuke_sync_state('takeover');
+        } else {
+            $this->clear_sync_runtime();
+        }
+
+        $session_id = 'sync_' . date('YmdHis') . '_' . substr(md5(uniqid('', true)), 0, 8);
+        $now = time();
+
+        $claim = array(
+            'schema'        => self::SYNC_STATE_SCHEMA,
+            'session_id'    => $session_id,
+            'current_index' => 0,
+            'total'         => 0,
+            'created'       => 0,
+            'updated'       => 0,
+            'skipped'       => 0,
+            'errors'        => 0,
+            'status'        => 'in_progress',
+            'phase'         => 'starting',
+            'skip_media'    => $skip_media,
+            'started_at'    => $now,
+            'last_batch_at' => $now,
+            'percentage'    => 0,
+            'message'       => 'Fetching attractions list...',
+        );
+        $this->save_sync_state($claim);
 
         $api_data = $this->get_attractions_list(true);
 
+        // Keep the claim alive across slow list fetches on shared hosting.
+        $claim = $this->read_raw_sync_state();
+        if (is_array($claim) && ($claim['session_id'] ?? null) === $session_id) {
+            $claim['last_batch_at'] = time();
+            $claim['message'] = 'Fetching attractions list...';
+            $this->save_sync_state($claim);
+        }
+
+        if (!$this->session_still_active($session_id)) {
+            return array(
+                'success' => false,
+                'message' => 'Sync was cancelled while starting.',
+            );
+        }
+
         if (is_wp_error($api_data)) {
-            Trvlr_Logger::log('error', 'API fetch failed: ' . $api_data->get_error_message());
+            $this->fail_claimed_sync($session_id, 'Failed to fetch attractions: ' . $api_data->get_error_message());
+            Trvlr_Logger::log('error', 'API fetch failed: ' . $api_data->get_error_message(), array(
+                'driver' => Trvlr_Async::driver(),
+            ), $session_id);
             return array(
                 'success' => false,
                 'message' => 'Failed to fetch attractions: ' . $api_data->get_error_message(),
@@ -290,16 +351,29 @@ class Trvlr_Sync
         }
 
         if (empty($api_data['results'])) {
-            Trvlr_Logger::log('error', 'No attractions found in API response');
+            $this->fail_claimed_sync($session_id, 'No attractions found in API response');
+            Trvlr_Logger::log('error', 'No attractions found in API response', array(
+                'driver' => Trvlr_Async::driver(),
+            ), $session_id);
             return array(
                 'success' => false,
                 'message' => 'No attractions found in API response',
             );
         }
 
+        if (!$this->session_still_active($session_id)) {
+            return array(
+                'success' => false,
+                'message' => 'Sync was cancelled while starting.',
+            );
+        }
+
         $total = count($api_data['results']);
 
+        $this->save_queue($api_data['results']);
+
         $sync_state = array(
+            'schema'        => self::SYNC_STATE_SCHEMA,
             'session_id'    => $session_id,
             'current_index' => 0,
             'total'         => $total,
@@ -308,15 +382,13 @@ class Trvlr_Sync
             'skipped'       => 0,
             'errors'        => 0,
             'status'        => 'in_progress',
+            'phase'         => 'processing',
             'skip_media'    => $skip_media,
-            'started_at'    => time(),
+            'started_at'    => $now,
             'last_batch_at' => time(),
             'percentage'    => 0,
             'message'       => 'Starting sync...',
         );
-
-        $this->save_queue($api_data['results']);
-        delete_transient(self::BATCH_LOCK_TRANSIENT);
         $this->save_sync_state($sync_state);
 
         $label = $skip_media ? 'Sync (no media) initiated' : 'Sync initiated';
@@ -324,15 +396,20 @@ class Trvlr_Sync
             'user_id'    => get_current_user_id(),
             'total'      => $total,
             'skip_media' => $skip_media,
+            'driver'     => Trvlr_Async::driver(),
+            'schema'     => self::SYNC_STATE_SCHEMA,
         ), $session_id);
 
-        $this->schedule_next_batch();
+        Trvlr_Async::create_runner_token();
+        $this->schedule_next_batch($session_id);
+        Trvlr_Async::queue_batch_now($session_id);
 
         $mode_note = $skip_media ? ' (media skipped)' : '';
         return array(
             'success'    => true,
             'total'      => $total,
             'skip_media' => $skip_media,
+            'session_id' => $session_id,
             'message'    => "Sync started{$mode_note}. Processing {$total} attractions in batches.",
         );
     }
@@ -342,10 +419,11 @@ class Trvlr_Sync
      *
      * Yields early on memory/time budget; guarded by BATCH_LOCK_TRANSIENT.
      *
-     * @param int|null $batch_size Null uses get_adaptive_batch_size().
+     * @param int|null    $batch_size  Null uses get_adaptive_batch_size().
+     * @param string|null $session_id  Optional session from queued action; mismatch no-ops.
      * @return void
      */
-    public function process_batch(?int $batch_size = null): void
+    public function process_batch(?int $batch_size = null, ?string $session_id = null): void
     {
         if (function_exists('trvlr_is_attraction_sync_disabled') && trvlr_is_attraction_sync_disabled()) {
             return;
@@ -359,16 +437,47 @@ class Trvlr_Sync
             return;
         }
 
+        $batch_session = null;
+        $continue_session = null;
+
         try {
             $state = $this->get_sync_state();
 
-            if (!$state || $state['status'] !== 'in_progress') {
+            if (!$state || ($state['status'] ?? '') !== 'in_progress') {
                 return;
             }
 
+            if ($session_id !== null && $session_id !== '' && ($state['session_id'] ?? '') !== $session_id) {
+                Trvlr_Logger::log('sync_cancel_race', 'Batch skipped: session mismatch on queue args', array(
+                    'queued_session' => $session_id,
+                    'current_session' => $state['session_id'] ?? null,
+                    'driver' => Trvlr_Async::driver(),
+                ), $session_id);
+                return;
+            }
+
+            $batch_session = $state['session_id'] ?? null;
             $queue = $this->get_queue();
             if (empty($queue)) {
-                $state['status'] = 'completed';
+                $total = (int) ($state['total'] ?? 0);
+                $index = (int) ($state['current_index'] ?? 0);
+
+                // Claim/starting phase has no queue yet — never mark complete.
+                if ($total === 0 || ($state['phase'] ?? '') === 'starting') {
+                    return;
+                }
+
+                // Queue lost mid-run (cache/DB); do not fake a successful complete.
+                if ($index < $total) {
+                    Trvlr_Logger::log('error', 'Sync queue missing mid-run; abandoning', array(
+                        'index'  => $index,
+                        'total'  => $total,
+                        'driver' => Trvlr_Async::driver(),
+                    ), $batch_session);
+                    $this->abandon_stalled_sync('missing_queue');
+                    return;
+                }
+
                 $state['message'] = 'Sync ended early: work queue was unavailable.';
                 $this->complete_sync($state);
                 return;
@@ -376,7 +485,13 @@ class Trvlr_Sync
 
             $skip_media = !empty($state['skip_media']);
 
-            $GLOBALS['trvlr_current_sync_session'] = $state['session_id'];
+            $GLOBALS['trvlr_current_sync_session'] = $batch_session;
+
+            Trvlr_Logger::log('sync_batch_start', 'Processing sync batch', array(
+                'index'  => $state['current_index'] ?? 0,
+                'total'  => $state['total'] ?? 0,
+                'driver' => Trvlr_Async::driver(),
+            ), $batch_session);
 
             @set_time_limit(120);
 
@@ -384,12 +499,16 @@ class Trvlr_Sync
             $memory_limit = $this->get_memory_limit_bytes();
             $batch_start = microtime(true);
             $time_budget = $this->get_batch_time_budget();
+            $aborted = false;
 
             while ($state['current_index'] < $state['total'] && $processed_in_batch < $batch_size) {
-                $fresh_state = $this->get_sync_state();
-                if (!$fresh_state || $fresh_state['status'] !== 'in_progress') {
-                    unset($GLOBALS['trvlr_current_sync_session']);
-                    return;
+                if (!$this->session_still_active($batch_session)) {
+                    Trvlr_Logger::log('sync_cancel_race', 'Batch aborted mid-loop: sync no longer active for session', array(
+                        'index'  => $state['current_index'] ?? 0,
+                        'driver' => Trvlr_Async::driver(),
+                    ), $batch_session);
+                    $aborted = true;
+                    break;
                 }
 
                 if ($processed_in_batch > 0 && $memory_limit > 0 && memory_get_usage(true) > $memory_limit * 0.8) {
@@ -406,7 +525,10 @@ class Trvlr_Sync
                     $state['errors']++;
                     $state['current_index']++;
                     $processed_in_batch++;
-                    $this->save_progress_state($state);
+                    if (!$this->save_progress_state($state)) {
+                        $aborted = true;
+                        break;
+                    }
                     continue;
                 }
 
@@ -416,7 +538,10 @@ class Trvlr_Sync
                     $state['errors']++;
                     $state['current_index']++;
                     $processed_in_batch++;
-                    $this->save_progress_state($state);
+                    if (!$this->save_progress_state($state)) {
+                        $aborted = true;
+                        break;
+                    }
                     continue;
                 }
 
@@ -427,7 +552,10 @@ class Trvlr_Sync
                     $state['errors']++;
                     $state['current_index']++;
                     $processed_in_batch++;
-                    $this->save_progress_state($state);
+                    if (!$this->save_progress_state($state)) {
+                        $aborted = true;
+                        break;
+                    }
                     continue;
                 }
 
@@ -450,7 +578,10 @@ class Trvlr_Sync
 
                 $state['current_index']++;
                 $processed_in_batch++;
-                $this->save_progress_state($state);
+                if (!$this->save_progress_state($state)) {
+                    $aborted = true;
+                    break;
+                }
 
                 unset($attraction_data);
                 $cache_post = $this->get_post_by_trvlr_id($attraction_id);
@@ -464,27 +595,47 @@ class Trvlr_Sync
                 $this->refresh_batch_lock();
             }
 
-            if ($state['current_index'] >= $state['total']) {
-                $this->complete_sync($state);
-            } else {
-                $this->save_progress_state($state);
-                $this->schedule_next_batch();
+            if (!$aborted && $this->session_still_active($batch_session)) {
+                if ($state['current_index'] >= $state['total']) {
+                    $this->complete_sync($state);
+                } else {
+                    if ($this->save_progress_state($state)) {
+                        $this->schedule_next_batch($batch_session);
+                        $continue_session = $batch_session;
+                    }
+                }
             }
+
+            Trvlr_Logger::log('sync_batch_end', 'Finished sync batch', array(
+                'index'            => $state['current_index'] ?? 0,
+                'processed_batch'  => $processed_in_batch,
+                'aborted'          => $aborted,
+                'driver'           => Trvlr_Async::driver(),
+            ), $batch_session);
 
             unset($GLOBALS['trvlr_current_sync_session']);
         } catch (\Throwable $e) {
             error_log('TRVLR process_batch error: ' . $e->getMessage());
             if (class_exists('Trvlr_Logger')) {
-                Trvlr_Logger::log('error', 'Batch processing error: ' . $e->getMessage());
+                Trvlr_Logger::log('error', 'Batch processing error: ' . $e->getMessage(), array(
+                    'driver' => Trvlr_Async::driver(),
+                ), $batch_session);
             }
-            $state = $this->get_sync_state();
-            if ($state && $state['status'] === 'in_progress') {
-                $this->save_progress_state($state);
-                $this->schedule_next_batch();
+            if ($batch_session && $this->session_still_active($batch_session)) {
+                $fresh = $this->get_sync_state();
+                if ($fresh && $this->save_progress_state($fresh)) {
+                    $this->schedule_next_batch($batch_session);
+                    $continue_session = $batch_session;
+                }
             }
             unset($GLOBALS['trvlr_current_sync_session']);
         } finally {
             $this->release_batch_lock();
+            if ($continue_session !== null) {
+                // Kick the next batch after the lock is free so the spawned
+                // runner can acquire it — no reliance on WP-Cron traffic.
+                Trvlr_Async::loopback_runner($continue_session);
+            }
         }
     }
 
@@ -496,6 +647,16 @@ class Trvlr_Sync
      */
     private function complete_sync(array $state): void
     {
+        $session_id = $state['session_id'] ?? null;
+        $fresh = $this->get_sync_state();
+        if (
+            !$fresh
+            || ($fresh['status'] ?? '') !== 'in_progress'
+            || ($fresh['session_id'] ?? null) !== $session_id
+        ) {
+            return;
+        }
+
         $state['status'] = 'completed';
         $state['percentage'] = 100;
 
@@ -512,7 +673,8 @@ class Trvlr_Sync
             'updated' => $state['updated'],
             'skipped' => $state['skipped'],
             'errors'  => $state['errors'],
-        ), $state['session_id']);
+            'driver'  => Trvlr_Async::driver(),
+        ), $session_id);
 
         Trvlr_Notifier::notify_sync_complete(
             $state['created'],
@@ -523,12 +685,17 @@ class Trvlr_Sync
 
         $this->delete_queue();
         $this->unschedule_batches();
+        Trvlr_Async::delete_runner_token();
         $this->save_sync_state($state);
     }
 
-    private function schedule_next_batch(): void
+    private function schedule_next_batch(?string $session_id = null): void
     {
-        Trvlr_Async::queue_batch();
+        if ($session_id === null || $session_id === '') {
+            $state = $this->get_sync_state();
+            $session_id = is_array($state) ? ($state['session_id'] ?? null) : null;
+        }
+        Trvlr_Async::queue_batch($session_id);
     }
 
     private function unschedule_batches(): void
@@ -537,47 +704,241 @@ class Trvlr_Sync
     }
 
     /**
-     * Reschedule a stuck in-progress sync when no batch is queued or locked.
+     * Whether a batch lock transient is currently held.
+     */
+    public function is_batch_lock_held(): bool
+    {
+        return (bool) get_transient(self::BATCH_LOCK_TRANSIENT);
+    }
+
+    /**
+     * Seconds since last_batch_at (or started_at).
+     *
+     * @param array|null $state
+     */
+    public function heartbeat_age(?array $state = null): int
+    {
+        $state = $state ?? $this->get_sync_state();
+        if (!$state) {
+            return PHP_INT_MAX;
+        }
+        $last = isset($state['last_batch_at']) ? (int) $state['last_batch_at'] : (int) ($state['started_at'] ?? 0);
+        return max(0, time() - $last);
+    }
+
+    /**
+     * Truly running: lock held, or heartbeat still within the active window.
+     * Starting claims (total=0) get a longer window for slow list fetches.
+     *
+     * @param array|null $state
+     */
+    public function is_sync_active(?array $state = null): bool
+    {
+        $state = $state ?? $this->get_sync_state();
+        if (!$state || ($state['status'] ?? '') !== 'in_progress') {
+            return false;
+        }
+        if ($this->is_batch_lock_held()) {
+            return true;
+        }
+        $window = ((int) ($state['total'] ?? 0) === 0 || ($state['phase'] ?? '') === 'starting')
+            ? self::STARTING_WINDOW
+            : self::ACTIVE_WINDOW;
+        return $this->heartbeat_age($state) < $window;
+    }
+
+    /**
+     * in_progress but not active (zombie / stalled).
+     *
+     * @param array|null $state
+     */
+    public function is_sync_stalled(?array $state = null): bool
+    {
+        $state = $state ?? $this->get_sync_state();
+        if (!$state || ($state['status'] ?? '') !== 'in_progress') {
+            return false;
+        }
+        return !$this->is_sync_active($state);
+    }
+
+    /**
+     * Drop a non-active sync entirely (no sticky stale status).
+     *
+     * @param string $reason takeover|stale_poll|schema|cancel|manual
+     */
+    public function abandon_stalled_sync(string $reason = 'stale_poll'): void
+    {
+        $state = $this->read_raw_sync_state();
+        if (!is_array($state)) {
+            $this->clear_sync_runtime();
+            return;
+        }
+
+        $session_id = $state['session_id'] ?? null;
+        $event = strpos($reason, 'takeover') === 0 ? 'sync_takeover' : 'sync_stale_cleared';
+        $processed = $state['current_index'] ?? 0;
+        $total = $state['total'] ?? 0;
+        $heartbeat = $this->heartbeat_age($state);
+
+        $this->nuke_sync_state($reason);
+
+        set_transient(self::SYNC_NOTICE_TRANSIENT, array(
+            'type'    => 'cleared',
+            'reason'  => $reason,
+            'message' => 'A previous sync was cleared so a new one can start.',
+        ), 120);
+
+        Trvlr_Logger::log($event, 'Sync state nuked', array(
+            'reason'    => $reason,
+            'processed' => $processed,
+            'total'     => $total,
+            'heartbeat' => $heartbeat,
+            'driver'    => Trvlr_Async::driver(),
+            'schema'    => self::SYNC_STATE_SCHEMA,
+        ), $session_id);
+    }
+
+    /**
+     * Delete sync state option + queue + lock + pending batches + runner token.
+     *
+     * @param string $reason
+     */
+    public function nuke_sync_state(string $reason = 'manual'): void
+    {
+        $this->delete_sync_state_row();
+        $this->clear_sync_runtime();
+        Trvlr_Async::delete_runner_token();
+    }
+
+    /**
+     * Clear queue, batch lock, and pending batch jobs.
+     */
+    private function clear_sync_runtime(): void
+    {
+        $this->delete_queue();
+        $this->unschedule_batches();
+        delete_transient(self::BATCH_LOCK_TRANSIENT);
+        $this->bust_sync_option_cache();
+    }
+
+    /**
+     * Roll back a claimed start session after list fetch failure.
+     */
+    private function fail_claimed_sync(string $session_id, string $message): void
+    {
+        $fresh = $this->read_raw_sync_state();
+        if (!$fresh || ($fresh['session_id'] ?? null) !== $session_id) {
+            return;
+        }
+        $this->nuke_sync_state('start_failed');
+        set_transient(self::SYNC_NOTICE_TRANSIENT, array(
+            'type'    => 'error',
+            'message' => $message,
+        ), 120);
+    }
+
+    /**
+     * @param string|null $session_id
+     */
+    private function session_still_active(?string $session_id): bool
+    {
+        if ($session_id === null || $session_id === '') {
+            return false;
+        }
+        $fresh = $this->read_raw_sync_state();
+        return is_array($fresh)
+            && ($fresh['status'] ?? '') === 'in_progress'
+            && ($fresh['session_id'] ?? null) === $session_id
+            && (int) ($fresh['schema'] ?? 0) === self::SYNC_STATE_SCHEMA;
+    }
+
+    /**
+     * Keep an in-progress sync moving when the batch chain has gone quiet.
+     *
+     * Nudges the runner (loopback + spawn_cron) whenever the lock is free and
+     * the heartbeat is aging — even if a batch event is pending, since pending
+     * events never fire on hosts without cron traffic. As a last resort,
+     * processes a small batch inline so progress continues while the admin
+     * page is polling.
      *
      * @return void
      */
     public function maybe_resume_sync(): void
     {
         $state = $this->get_sync_state();
-        if (!$state || $state['status'] !== 'in_progress') {
+        if (!$state || ($state['status'] ?? '') !== 'in_progress') {
             return;
         }
 
-        $last_batch = isset($state['last_batch_at']) ? $state['last_batch_at'] : ($state['started_at'] ?? 0);
-        if ((time() - $last_batch) > self::STALE_TIMEOUT) {
+        if ($this->is_batch_lock_held()) {
             return;
         }
 
-        if (get_transient(self::BATCH_LOCK_TRANSIENT)) {
+        // Starting claim: the list fetch request is still running; leave it alone.
+        if (((int) ($state['total'] ?? 0)) === 0 || ($state['phase'] ?? '') === 'starting') {
             return;
         }
 
-        if (!Trvlr_Async::has_batch()) {
-            Trvlr_Async::queue_batch_now();
+        $age = $this->heartbeat_age($state);
+        if ($age < 8) {
+            return;
+        }
+
+        $session = $state['session_id'] ?? null;
+
+        Trvlr_Async::queue_batch_now($session);
+
+        if ($age >= 30) {
+            // Cron and loopback both appear dead — advance inline in this request.
+            $this->run_inline_batch($session);
+        }
+    }
+
+    /**
+     * Process a small, time-boxed batch inside the current request (progress
+     * poll fallback when no background runner is available).
+     *
+     * @param string|null $session
+     * @return void
+     */
+    public function run_inline_batch(?string $session = null): void
+    {
+        $this->time_budget_override = 8.0;
+        try {
+            $this->process_batch(3, $session);
+        } finally {
+            $this->time_budget_override = null;
         }
     }
 
     /**
      * Progress payload for the REST sync status endpoint.
      *
-     * @return array{in_progress: bool, progress: array|null, status: string|null, results: array|null}
+     * @return array
      */
     public function get_progress_status(): array
     {
         $state = $this->get_sync_state();
+        $driver = Trvlr_Async::driver();
+        $notice = get_transient(self::SYNC_NOTICE_TRANSIENT);
+        if ($notice) {
+            delete_transient(self::SYNC_NOTICE_TRANSIENT);
+        }
+
+        $base = array(
+            'in_progress' => false,
+            'is_active'   => false,
+            'can_start'   => true,
+            'progress'    => null,
+            'status'      => null,
+            'results'     => null,
+            'driver'      => $driver,
+            'schema'      => self::SYNC_STATE_SCHEMA,
+            'notice'      => is_array($notice) ? $notice : null,
+        );
 
         if (!is_array($state)) {
-            return array(
-                'in_progress' => false,
-                'progress'    => null,
-                'status'      => null,
-                'results'     => null,
-            );
+            return $base;
         }
 
         $status = isset($state['status']) ? $state['status'] : null;
@@ -588,6 +949,8 @@ class Trvlr_Sync
             : ($total > 0 ? (int) round(($processed / $total) * 100) : 0);
 
         $results = null;
+        $is_active = false;
+
         if ($status === 'completed') {
             $results = array(
                 'created' => isset($state['created']) ? (int) $state['created'] : 0,
@@ -596,68 +959,251 @@ class Trvlr_Sync
                 'errors'  => isset($state['errors']) ? (int) $state['errors'] : 0,
             );
         } elseif ($status === 'in_progress') {
-            $last_batch = isset($state['last_batch_at']) ? $state['last_batch_at'] : ($state['started_at'] ?? 0);
-            if ((time() - $last_batch) > self::STALE_TIMEOUT) {
-                $status = 'stale';
-            } else {
-                $this->maybe_resume_sync();
+            if ($this->is_sync_stalled($state) || $this->heartbeat_age($state) > self::STALE_TIMEOUT) {
+                $this->abandon_stalled_sync('stale_poll');
+                $notice = get_transient(self::SYNC_NOTICE_TRANSIENT);
+                if ($notice) {
+                    delete_transient(self::SYNC_NOTICE_TRANSIENT);
+                }
+                return array_merge($base, array(
+                    'notice' => is_array($notice) ? $notice : array(
+                        'type'    => 'cleared',
+                        'message' => 'A previous sync was cleared so a new one can start.',
+                    ),
+                ));
             }
+            $is_active = true;
+            $this->maybe_resume_sync();
+        } elseif (in_array($status, array('stale', 'cancelled'), true)) {
+            $this->nuke_sync_state('legacy_' . $status);
+            return array_merge($base, array(
+                'notice' => array(
+                    'type'    => 'cleared',
+                    'message' => 'Cleared leftover sync state. You can start a new sync.',
+                ),
+            ));
         }
 
+        $in_progress = $status === 'in_progress' && $is_active;
+        $can_start = !$in_progress;
+
         return array(
-            'in_progress' => $status === 'in_progress',
+            'in_progress' => $in_progress,
+            'is_active'   => $is_active,
+            'can_start'   => $can_start,
             'progress'    => array(
                 'processed'  => $processed,
                 'total'      => $total,
                 'percentage' => $percentage,
                 'message'    => isset($state['message']) ? $state['message'] : '',
             ),
-            'status'      => $status,
+            'status'      => $in_progress ? 'in_progress' : $status,
             'results'     => $results,
+            'driver'      => $driver,
+            'schema'      => self::SYNC_STATE_SCHEMA,
+            'notice'      => is_array($notice) ? $notice : null,
         );
+    }
+
+    /**
+     * Raw option read via SQL (avoids object-cache ghosts on shared hosts).
+     */
+    private function read_raw_sync_state(): ?array
+    {
+        global $wpdb;
+        $this->bust_sync_option_cache();
+        $row = $wpdb->get_var($wpdb->prepare(
+            "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s LIMIT 1",
+            self::SYNC_STATE_OPTION
+        ));
+        if ($row === null || $row === false) {
+            return null;
+        }
+        $state = maybe_unserialize($row);
+        return is_array($state) ? $state : null;
     }
 
     private function get_sync_state(): ?array
     {
-        $state = get_option(self::SYNC_STATE_OPTION, null);
-        return is_array($state) ? $state : null;
+        $state = $this->read_raw_sync_state();
+        if (!$state) {
+            return null;
+        }
+
+        $schema = isset($state['schema']) ? (int) $state['schema'] : 0;
+        if ($schema !== self::SYNC_STATE_SCHEMA) {
+            $this->nuke_sync_state('schema_mismatch');
+            set_transient(self::SYNC_NOTICE_TRANSIENT, array(
+                'type'    => 'cleared',
+                'reason'  => 'schema_mismatch',
+                'message' => 'Cleared sync state from an older plugin version. You can start a new sync.',
+            ), 120);
+            Trvlr_Logger::log('sync_stale_cleared', 'Nuked sync state due to schema mismatch', array(
+                'found_schema'   => $schema,
+                'current_schema' => self::SYNC_STATE_SCHEMA,
+                'driver'         => Trvlr_Async::driver(),
+            ), $state['session_id'] ?? null);
+            return null;
+        }
+
+        return $state;
     }
 
     private function save_sync_state(array $state): void
     {
-        update_option(self::SYNC_STATE_OPTION, $state, false);
+        global $wpdb;
+        if (!isset($state['schema'])) {
+            $state['schema'] = self::SYNC_STATE_SCHEMA;
+        }
+        $value = maybe_serialize($state);
+        $this->bust_sync_option_cache();
+
+        $exists = $wpdb->get_var($wpdb->prepare(
+            "SELECT option_id FROM {$wpdb->options} WHERE option_name = %s LIMIT 1",
+            self::SYNC_STATE_OPTION
+        ));
+
+        if ($exists) {
+            $wpdb->update(
+                $wpdb->options,
+                array(
+                    'option_value' => $value,
+                    'autoload'     => 'no',
+                ),
+                array('option_name' => self::SYNC_STATE_OPTION),
+                array('%s', '%s'),
+                array('%s')
+            );
+        } else {
+            $wpdb->insert(
+                $wpdb->options,
+                array(
+                    'option_name'  => self::SYNC_STATE_OPTION,
+                    'option_value' => $value,
+                    'autoload'     => 'no',
+                ),
+                array('%s', '%s', '%s')
+            );
+        }
+
+        $this->bust_sync_option_cache();
+    }
+
+    private function delete_sync_state_row(): void
+    {
+        global $wpdb;
+        $this->bust_sync_option_cache();
+        $wpdb->query($wpdb->prepare(
+            "DELETE FROM {$wpdb->options} WHERE option_name = %s",
+            self::SYNC_STATE_OPTION
+        ));
+        $this->bust_sync_option_cache();
+    }
+
+    private function bust_sync_option_cache(): void
+    {
+        wp_cache_delete(self::SYNC_STATE_OPTION, 'options');
+        wp_cache_delete(self::SYNC_QUEUE_OPTION, 'options');
+        wp_cache_delete('notoptions', 'options');
+        wp_cache_delete('alloptions', 'options');
     }
 
     /**
-     * Persist sync counters, percentage, and message (no queue payload).
+     * Persist sync counters when the session is still the active in-progress run.
      *
      * @param array $state Sync state (modified in place).
-     * @return void
+     * @return bool False if cancel/takeover won the race.
      */
-    private function save_progress_state(array &$state): void
+    private function save_progress_state(array &$state): bool
     {
+        $session_id = $state['session_id'] ?? null;
+        $fresh = $this->read_raw_sync_state();
+
+        if (
+            !$fresh
+            || ($fresh['status'] ?? '') !== 'in_progress'
+            || ($fresh['session_id'] ?? null) !== $session_id
+        ) {
+            Trvlr_Logger::log('sync_cancel_race', 'Batch aborted progress write: sync no longer in progress for session', array(
+                'fresh_status'  => is_array($fresh) ? ($fresh['status'] ?? null) : null,
+                'fresh_session' => is_array($fresh) ? ($fresh['session_id'] ?? null) : null,
+                'driver'        => Trvlr_Async::driver(),
+            ), $session_id);
+            return false;
+        }
+
+        $state['schema'] = self::SYNC_STATE_SCHEMA;
+        $state['phase'] = 'processing';
         $state['last_batch_at'] = time();
         $state['percentage'] = $state['total'] > 0
             ? (int) round(($state['current_index'] / $state['total']) * 100)
             : 0;
         $state['message'] = "Synced {$state['current_index']} of {$state['total']}";
         $this->save_sync_state($state);
+        return true;
     }
 
     private function get_queue(): array
     {
-        $queue = get_option(self::SYNC_QUEUE_OPTION, array());
+        global $wpdb;
+        $this->bust_sync_option_cache();
+        $row = $wpdb->get_var($wpdb->prepare(
+            "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s LIMIT 1",
+            self::SYNC_QUEUE_OPTION
+        ));
+        if ($row === null || $row === false) {
+            return array();
+        }
+        $queue = maybe_unserialize($row);
         return is_array($queue) ? $queue : array();
     }
 
     private function save_queue(array $queue): void
     {
-        update_option(self::SYNC_QUEUE_OPTION, $queue, false);
+        global $wpdb;
+        $value = maybe_serialize($queue);
+        $this->bust_sync_option_cache();
+
+        $exists = $wpdb->get_var($wpdb->prepare(
+            "SELECT option_id FROM {$wpdb->options} WHERE option_name = %s LIMIT 1",
+            self::SYNC_QUEUE_OPTION
+        ));
+
+        if ($exists) {
+            $wpdb->update(
+                $wpdb->options,
+                array(
+                    'option_value' => $value,
+                    'autoload'     => 'no',
+                ),
+                array('option_name' => self::SYNC_QUEUE_OPTION),
+                array('%s', '%s'),
+                array('%s')
+            );
+        } else {
+            $wpdb->insert(
+                $wpdb->options,
+                array(
+                    'option_name'  => self::SYNC_QUEUE_OPTION,
+                    'option_value' => $value,
+                    'autoload'     => 'no',
+                ),
+                array('%s', '%s', '%s')
+            );
+        }
+
+        $this->bust_sync_option_cache();
     }
 
     private function delete_queue(): void
     {
-        delete_option(self::SYNC_QUEUE_OPTION);
+        global $wpdb;
+        $this->bust_sync_option_cache();
+        $wpdb->query($wpdb->prepare(
+            "DELETE FROM {$wpdb->options} WHERE option_name = %s",
+            self::SYNC_QUEUE_OPTION
+        ));
+        $this->bust_sync_option_cache();
     }
 
     private function acquire_batch_lock(): bool
@@ -722,6 +1268,10 @@ class Trvlr_Sync
      */
     private function get_batch_time_budget(): float
     {
+        if ($this->time_budget_override !== null) {
+            return (float) $this->time_budget_override;
+        }
+
         $max_exec = (int) ini_get('max_execution_time');
         $effective = $max_exec > 0 ? min($max_exec, 120) : 60;
 
@@ -828,6 +1378,10 @@ class Trvlr_Sync
 
         if (array_key_exists('group_id', $list_item)) {
             $attraction_data['group_id'] = $list_item['group_id'];
+        }
+
+        if (array_key_exists('seo_metadata', $list_item)) {
+            $attraction_data['seo_metadata'] = $list_item['seo_metadata'];
         }
 
         $list_title = '';
@@ -1006,6 +1560,19 @@ class Trvlr_Sync
             ),
             Trvlr_Field_Map::build_sync_meta_from_api($data)
         );
+
+        if (array_key_exists('seo_metadata', $data)) {
+            $seo_metadata = $data['seo_metadata'];
+            if ($seo_metadata === null || $seo_metadata === '') {
+                $meta_input['trvlr_seo_metadata'] = '';
+            } elseif (is_array($seo_metadata)) {
+                $meta_input['trvlr_seo_metadata'] = wp_json_encode($seo_metadata);
+            } elseif (is_string($seo_metadata)) {
+                $meta_input['trvlr_seo_metadata'] = $seo_metadata;
+            } else {
+                $meta_input['trvlr_seo_metadata'] = '';
+            }
+        }
 
         $meta_input['trvlr_pricing'] = Trvlr_Data_Transform::build_pricing_rows_from_api(
             isset($data['pricing']) && is_array($data['pricing']) ? $data['pricing'] : array()

@@ -76,7 +76,7 @@ export const DebuggingComponent = () => {
 
    return (
       <div style={{ padding: '20px', maxWidth: '1200px' }}>
-         <h1>TRVLR REST API Debugging</h1>
+         <h1>Traveloris REST API Debugging</h1>
 
          <Card style={{ marginBottom: '20px' }}>
             <CardBody>
@@ -104,7 +104,7 @@ export const DebuggingComponent = () => {
                      onClick={testAllEndpoints}
                      disabled={loading}
                   >
-                     Test All TRVLR Endpoints
+                     Test All Traveloris Endpoints
                   </Button>
                   <Button
                      variant="secondary"
