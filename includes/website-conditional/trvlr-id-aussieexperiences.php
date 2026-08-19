@@ -11,6 +11,7 @@ function trvlr_website_conditional_aussieexperiences_styles()
   $css = <<<'CSS'
   @layer trvlr.custom {
   :root {
+    --trvlr-content-max-width: 1280px;
     --trvlr-font-family: "Instrument Sans", serif;
     --trvlr-heading-font-family: "DM Serif Display", serif;
     --trvlr-heading-font-weight: 400;
