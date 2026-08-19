@@ -110,6 +110,7 @@ function trvlr_duration($post_id = null, $args = array())
 	$args = wp_parse_args(
 		$args,
 		array(
+			'class' => '',
 			'icon' => true,
 			'icon_element' => '',
 		)
@@ -127,9 +128,14 @@ function trvlr_duration($post_id = null, $args = array())
 		$icon_html = trvlr_component_icon($args['icon'], 'clock', 'trvlr-duration__icon');
 	}
 
+	$classes = array();
+
+	$classes[] = $icon_html ? 'trvlr-icon-text' : '';
+	$classes[] = $args['class'];
+
 	ob_start();
 ?>
-	<div class="trvlr-duration <?php echo $icon_html ? 'trvlr-icon-text' : ''; ?>">
+	<div class="trvlr-duration <?php echo implode(' ', $classes); ?>">
 		<?php echo $icon_html; ?>
 		<span class="trvlr-duration__value"><?php echo esc_html($duration); ?></span>
 	</div>
@@ -914,10 +920,12 @@ function trvlr_section($args = array())
 	do_action($before_action, $args['post_id']);
 	?>
 	<section class="<?php echo esc_attr(implode(' ', $classes)); ?>"<?php echo $id_attr; ?>>
-		<?php if ($title !== '') : ?>
-			<<?php echo esc_attr($title_tag); ?> class="trvlr-heading trvlr-section__title"><?php echo esc_html($title); ?></<?php echo esc_attr($title_tag); ?>>
-		<?php endif; ?>
-		<?php echo $content; ?>
+		<div class="trvlr-container">
+			<?php if ($title !== '') : ?>
+				<<?php echo esc_attr($title_tag); ?> class="trvlr-heading trvlr-section__title"><?php echo esc_html($title); ?></<?php echo esc_attr($title_tag); ?>>
+			<?php endif; ?>
+			<?php echo $content; ?>
+		</div>
 	</section>
 	<?php
 	do_action($after_action, $args['post_id']);
@@ -935,12 +943,26 @@ function trvlr_advertised_price($post_id = null)
 		return '';
 	}
 
+	$per_person_types = [
+		'adult',
+		'adults',
+		'per person',
+		'per adult',
+		'adult udw',
+	];
+
+	$type_text = trim((string) $type);
+
+	if (in_array(strtolower($type), $per_person_types, true)) {
+		$type_text = __('per person', 'trvlr');
+	}
+
 	ob_start();
 ?>
 	<div class="trvlr-price">
 		<span class="trvlr-price__value">from $<?php echo esc_html($value); ?></span>
-		<?php if ($type) : ?>
-			<span class="trvlr-price__type"><?php echo esc_html($type); ?></span>
+		<?php if ($type_text !== '') : ?>
+			<span class="trvlr-price__type"><?php echo esc_html($type_text); ?></span>
 		<?php endif; ?>
 	</div>
 <?php

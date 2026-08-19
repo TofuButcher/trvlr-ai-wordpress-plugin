@@ -99,6 +99,8 @@ class Trvlr
 
 		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/trvlr-shortcodes.php';
 
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/website-conditional/website-conditional-code.php';
+
 		$this->loader = new Trvlr_Loader();
 	}
 

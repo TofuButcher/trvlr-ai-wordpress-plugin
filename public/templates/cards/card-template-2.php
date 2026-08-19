@@ -41,7 +41,7 @@ $popular_markup = trvlr_popular_badge($post_id);
 			</div>
 			<div class="trvlr-card__footer">
 				<?php echo trvlr_duration($post_id, array('icon' => false, 'class' => 'trvlr-card__duration')); ?>
-				<?php echo trvlr_sale_badge($post_id, false); ?>
+				<?php echo trvlr_sale_badge($post_id, false, false); ?>
 				<?php if ($price) : ?>
 					<div class="trvlr-card__price">
 						<?php echo esc_html__('From ', 'trvlr') . ' A$' . esc_html($price); ?>

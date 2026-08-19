@@ -1,7 +1,9 @@
-:root {
-  // --trvlr-gallery-media-radius: 0;
-  --trvlr-gallery-thumb-radius: var(--trvlr-gallery-media-radius);
-  --trvlr-gallery-thumb-opacity: 0.6;
+@layer trvlr.tokens {
+  :root {
+    --trvlr-gallery-media-radius: 0;
+    --trvlr-gallery-thumb-radius: var(--trvlr-gallery-media-radius);
+    --trvlr-gallery-thumb-opacity: 0.6;
+  }
 }
 
 .trvlr {
@@ -180,7 +182,7 @@
 
     &--nav-right {
       flex-direction: row;
-      aspect-ratio: 1.6;
+      aspect-ratio: 1.7;
       max-height: max(500px, 80vh);
 
       .trvlr-gallery__nav {

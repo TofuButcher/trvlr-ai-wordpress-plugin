@@ -138,7 +138,7 @@ function getNavOptions(layout, compact) {
 			fixedHeight: '80px',
 			fixedWidth: '100px',
 			gap: '10px',
-			focus: 'center',
+			// focus: 'center',
 			pagination: false,
 			arrows: false,
 			isNavigation: true,
@@ -158,8 +158,8 @@ function getNavOptions(layout, compact) {
 			pagination: false,
 			arrows: false,
 			isNavigation: true,
-			wheel: true,
-			drag: false,
+			wheel: false,
+			drag: true,
 		};
 	}
 

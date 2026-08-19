@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) {
 
 $post_id = isset($post_id) ? absint($post_id) : get_the_ID();
 $hero_image = wp_get_attachment_image(get_post_thumbnail_id($post_id), 'full');
-$price_value = get_trvlr_advertised_price_value($post_id);
+$advertised_price = get_trvlr_advertised_price($post_id);
 $duration_raw = get_trvlr_duration($post_id);
 $duration_text = $duration_raw ? apply_filters('trvlr_duration', $duration_raw, $post_id) : '';
 $sale_badge_out = trvlr_sale_badge($post_id, false, false);
@@ -59,16 +59,16 @@ $tabs = array(
 ?>
 <article
 	id="attraction-<?php echo esc_attr((string) $post_id); ?>"
-	class="trvlr-single-attraction trvlr-single-attraction--tabs-sidebar">
+	class="trvlr-single-attraction">
 	<div class="trvlr-single-attraction__inner trvlr-sidebar-layout">
 		<div class="trvlr-single-attraction__main trvlr-sidebar-main">
-			<section class="trvlr-single-attraction__hero">
+			<section class="trvlr-single-attraction__hero trvlr-hero">
 				<?php if ($hero_image) : ?>
-					<div class="trvlr-single-attraction__hero-image">
+					<div class="trvlr-single-attraction__hero-image trvlr-hero__image">
 						<?php echo $hero_image; ?>
 					</div>
 				<?php endif; ?>
-				<div class="trvlr-single-attraction__hero-container">
+				<div class="trvlr-single-attraction__hero-container trvlr-hero__inner trvlr-container">
 					<?php echo trvlr_back_link(); ?>
 					<div class="trvlr-single-attraction__hero-title-wrap">
 						<?php echo trvlr_title($post_id, 1); ?>
@@ -84,13 +84,11 @@ $tabs = array(
 				</div>
 			</section>
 			<div class="trvlr-single-attraction__content">
-				<div class="trvlr-single-attraction__content-container">
+				<div class="trvlr-container">
 					<div class="trvlr-single-attraction__intro">
-						<?php if ($price_value) : ?>
-							<div class="trvlr-single-attraction__price">
-								<?php echo esc_html__('from', 'trvlr'); ?> A$<?php echo esc_html($price_value); ?>
-							</div>
-						<?php endif; ?>
+						<?php
+							echo trvlr_advertised_price($post_id);
+						?>
 						<?php if ($duration_text !== '') : ?>
 							<div class="trvlr-single-attraction__duration"><?php echo esc_html($duration_text); ?></div>
 						<?php endif; ?>

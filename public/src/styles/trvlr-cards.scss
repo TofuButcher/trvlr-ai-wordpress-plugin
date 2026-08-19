@@ -4,12 +4,13 @@
  * ----------------------------------------
  */
 
-@layer base {
-  :root {
+@layer trvlr.tokens {  
+:root {
     --trvlr-cards-gap: 40px;
     --trvlr-cards-row-gap: var(--trvlr-cards-gap);
     --trvlr-cards-columns: repeat(4, 1fr);
 
+    --trvlr-card-font-family: var(--trvlr-font-family);
     --trvlr-card-background: var(--trvlr-color-background);
     --trvlr-card-foreground: var(--trvlr-color-foreground);
     --trvlr-card-border-color: var(--trvlr-color-border);
@@ -19,21 +20,25 @@
     --trvlr-card-border-radius: 0px;
     --trvlr-card-height: auto;
 
-    --trvlr-card-image-border-radius: 0px;
     --trvlr-card-image-aspect-ratio: 1.6;
+    --trvlr-card-image-border-radius: 0px;
 
     --trvlr-card-badge-left: 0;
     --trvlr-card-badge-top: 0;
     --trvlr-card-badge-padding: 0.125em 0.625em;
-    --trvlr-card-badge-border-radius: 0;
     --trvlr-card-badge-font-size: 0.75em;
-    --trvlr-card-badge-font-weight: 600;
-    --trvlr-card-badge-gap: var(--trvlr-badge-gap, 0.3125em);
-    --trvlr-card-badge-background: var(--trvlr-color-primary);
-    --trvlr-card-badge-color: var(--trvlr-color-primary-foreground);
+    --trvlr-card-badge-background: var(--trvlr-badge-background);
+    --trvlr-card-badge-foreground: var(--trvlr-badge-foreground);
+    --trvlr-card-badge-font-weight: var(--trvlr-badge-font-weight);
+    --trvlr-card-badge-border-radius: var(--trvlr-badge-border-radius);
+    --trvlr-card-badge-line-height: var(--trvlr-badge-line-height);
+    --trvlr-card-badge-gap: var(--trvlr-badge-gap);
+    --trvlr-card-badge-text-transform: var(--trvlr-badge-text-transform);
+    --trvlr-card-badge-icon-size: var(--trvlr-badge-icon-size);
 
+    --trvlr-card-title-font-family: var(--trvlr-card-font-family, var(--trvlr-heading-font-family));
     --trvlr-card-title-font-size: 1em;
-    --trvlr-card-title-font-weight: 600;
+    --trvlr-card-title-font-weight: var(--trvlr-heading-font-weight);
     --trvlr-card-title-line-height: 1.2;
     --trvlr-card-title-margin: 0 0 0.8em;
     --trvlr-card-title-color: var(--trvlr-color-foreground);
@@ -51,6 +56,7 @@
     --trvlr-card-meta-margin-bottom: 0px;
     --trvlr-card-meta-gap: 1em 1.5em;
     --trvlr-card-footer-padding: 16px 0 0;
+    --trvlr-card-footer-gap: 2px;
     --trvlr-card-price-font-size: 12px;
     --trvlr-card-price-font-weight: 500;
     --trvlr-card-price-line-height: 1.28;
@@ -79,7 +85,7 @@
     --trvlr-card-compact-image-aspect-ratio: 0.75;
     --trvlr-card-compact-image-width: 33vw;
     --trvlr-card-compact-image-max-height: 150px;
-  }
+}
 }
 
 .trvlr-cards-container {
@@ -118,12 +124,14 @@
   box-sizing: border-box;
   position: relative;
   display: grid;
+  overflow: hidden;
+  text-align: left;
+  font-family: var(--trvlr-card-font-family);
   background: var(--trvlr-card-background, var(--trvlr-color-background));
   color: var(--trvlr-card-foreground, var(--trvlr-color-foreground));
   font-family: var(--trvlr-font-family);
   letter-spacing: var(--trvlr-body-letter-spacing);
-  overflow: hidden;
-  padding: var(--trvlr-card-padding, 0px);
+  padding: var(--trvlr-card-padding);
   min-height: var(--trvlr-card-height);
   border-radius: var(--trvlr-card-border-radius);
 
@@ -190,8 +198,8 @@
 
     &-wrap {
       position: relative;
-      aspect-ratio: var(--trvlr-card-image-aspect-ratio, 1.6);
-      border-radius: var(--trvlr-card-image-border-radius, 0px);
+      aspect-ratio: var(--trvlr-card-image-aspect-ratio);
+      border-radius: var(--trvlr-card-image-border-radius);
       overflow: hidden;
     }
 
@@ -206,14 +214,14 @@
     display: inline-flex;
     &-on-image {
       position: absolute;
-      left: var(--trvlr-card-badge-left, 0);
-      top: var(--trvlr-card-badge-top, 0);
       z-index: 1;
       display: flex;
+      left: var(--trvlr-card-badge-left);
+      top: var(--trvlr-card-badge-top);
     }
   }
 
-  .trvlr-popular-badge {
+  .trvlr-badge {
     gap: var(--trvlr-card-badge-gap);
     padding: var(--trvlr-card-badge-padding);
     border-radius: var(--trvlr-card-badge-border-radius);
@@ -221,10 +229,63 @@
     color: var(--trvlr-card-badge-color);
     font-size: var(--trvlr-card-badge-font-size);
     font-weight: var(--trvlr-card-badge-font-weight);
+    line-height: var(--trvlr-card-badge-line-height);
+    text-transform: var(--trvlr-card-badge-text-transform);
+
+    .trvlr-icon {
+      width: var(--trvlr-card-badge-icon-size);
+      height: var(--trvlr-card-badge-icon-size);
+    }
   }
 
   .trvlr-sale__badge {
-    gap: var(--trvlr-card-badge-gap);
+    background: var(
+      --trvlr-card-sale-badge-background,
+      var(--trvlr-card-badge-background)
+    );
+    color: var(--trvlr-card-sale-badge-foreground, var(--trvlr-card-badge-foreground));
+    font-size: var(
+      --trvlr-card-sale-badge-font-size,
+      var(--trvlr-card-badge-font-size)
+    );
+    font-weight: var(
+      --trvlr-card-sale-badge-font-weight,
+      var(--trvlr-card-badge-font-weight)
+    );
+    letter-spacing: var(
+      --trvlr-card-sale-badge-letter-spacing,
+      var(--trvlr-card-badge-letter-spacing)
+    );
+    padding: var(--trvlr-card-sale-badge-padding, var(--trvlr-card-badge-padding));
+    gap: var(--trvlr-card-sale-badge-gap, var(--trvlr-card-badge-gap));
+    border-radius: var(--trvlr-card-sale-badge-radius, var(--trvlr-card-badge-radius));
+    line-height: var(--trvlr-card-sale-badge-line-height, var(--trvlr-card-badge-line-height));
+    text-transform: var(--trvlr-card-sale-badge-text-transform, var(--trvlr-card-badge-text-transform));
+  }
+
+  .trvlr-popular-badge {
+    background: var(
+      --trvlr-card-popular-badge-background,
+      var(--trvlr-card-badge-background)
+    );
+    color: var(--trvlr-card-popular-badge-foreground, var(--trvlr-card-badge-foreground));
+    font-size: var(
+      --trvlr-card-popular-badge-font-size,
+      var(--trvlr-card-badge-font-size)
+    );
+    font-weight: var(
+      --trvlr-card-popular-badge-font-weight,
+      var(--trvlr-card-badge-font-weight)
+    );
+    letter-spacing: var(
+      --trvlr-card-popular-badge-letter-spacing,
+      var(--trvlr-card-badge-letter-spacing)
+    );
+    padding: var(--trvlr-card-popular-badge-padding, var(--trvlr-card-badge-padding));
+    gap: var(--trvlr-card-popular-badge-gap, var(--trvlr-card-badge-gap));
+    border-radius: var(--trvlr-card-popular-badge-radius, var(--trvlr-card-badge-radius));
+    line-height: var(--trvlr-card-popular-badge-line-height, var(--trvlr-card-badge-line-height));
+    text-transform: var(--trvlr-card-popular-badge-text-transform, var(--trvlr-card-badge-text-transform));
   }
 
   &__content {
@@ -240,6 +301,7 @@
     font-weight: var(--trvlr-card-title-font-weight);
     font-size: var(--trvlr-card-title-font-size);
     line-height: var(--trvlr-card-title-line-height);
+    font-family: var(--trvlr-card-title-font-family);
 
     a {
       color: inherit;
@@ -262,18 +324,19 @@
     display: flex;
     flex-wrap: wrap;
     font-size: 0.75em;
-    gap: var(--trvlr-card-meta-gap);
     line-height: 1;
+    gap: var(--trvlr-card-meta-gap);
     margin-bottom: var(--trvlr-card-meta-margin-bottom);
   }
 
   &__footer {
     margin-top: auto;
-    padding: var(--trvlr-card-footer-padding);
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: flex-end;
+    padding: var(--trvlr-card-footer-padding);
+    gap: var(--trvlr-card-footer-gap);
 
     .trvlr-card__price {
       flex: 1;
@@ -300,6 +363,7 @@
     }
 
     ul {
+      padding-left: 0;
       font-size: var(--trvlr-card-highlights-font-size);
     }
   }
@@ -326,12 +390,12 @@
   }
 
   .trvlr-icon-text {
-    font-weight: var(--trvlr-card-icon-text-font-weight, 500);
-    font-size: var(--trvlr-card-icon-text-font-size, 12px);
+    font-weight: var(--trvlr-card-icon-text-font-weight);
+    font-size: var(--trvlr-card-icon-text-font-size);
 
     .trvlr-icon {
-      width: var(--trvlr-card-icon-size, 14px);
-      height: var(--trvlr-card-icon-size, 14px);
+      width: var(--trvlr-card-icon-size);
+      height: var(--trvlr-card-icon-size);
       color: var(--trvlr-card-icon-color, var(--trvlr-color-primary));
     }
   }

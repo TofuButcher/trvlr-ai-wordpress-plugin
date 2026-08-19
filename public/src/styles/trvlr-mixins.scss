@@ -91,11 +91,11 @@
   flex-direction: column;
   min-height: unset;
 
-  &__main-content {
+  .trvlr-card__main-content {
     flex-direction: row;
   }
 
-  &__image-wrap {
+  .trvlr-card__image-wrap {
     min-height: 100%;
     aspect-ratio: var(--trvlr-card-compact-image-aspect-ratio);
     width: var(--trvlr-card-compact-image-width);
@@ -103,11 +103,7 @@
   }
 }
 
-/**
-* ----------------------------------------
-* Responsive Framework Variables
-* ----------------------------------------
-*/
+// Responsive Framework Variables
 
 // Outputs CSS var that smoothly transitions between px values
 // set at minimum viewport (screen) width and maximum width

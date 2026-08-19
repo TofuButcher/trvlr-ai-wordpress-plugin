@@ -20,24 +20,27 @@ $group_id = get_trvlr_group_id($post_id);
 ?>
 <article
 	id="attraction-<?php echo esc_attr((string) $post_id); ?>"
-	class="trvlr-single-attraction trvlr-single-attraction--hero-sidebar">
-	<div class="trvlr-single-attraction__inner">
-		<div class="trvlr-single-attraction__main">
-			<section class="trvlr-single-attraction__hero">
+	class="trvlr-single-attraction">
+	<div class="trvlr-single-attraction__inner trvlr-sidebar-layout">
+		<div class="trvlr-single-attraction__main trvlr-sidebar-main">
+			<section class="trvlr-single-attraction__hero trvlr-hero trvlr-hero--cover">
 				<?php if ($hero_image) : ?>
-					<div class="trvlr-single-attraction__hero-image">
+					<div class="trvlr-single-attraction__hero-image trvlr-hero__image">
 						<?php echo $hero_image; ?>
 					</div>
 				<?php endif; ?>
-				<div class="trvlr-single-attraction__hero-inner">
-					<?php echo trvlr_back_link(); ?>
-					<h1 class="trvlr-title"><?php echo esc_html(get_trvlr_title($post_id)); ?></h1>
+				<div class="trvlr-single-attraction__hero-inner-wrap">
+					<div class="trvlr-single-attraction__hero-inner trvlr-hero__inner trvlr-container">
+						<?php echo trvlr_back_link(); ?>
+						<h1 class="trvlr-title"><?php echo esc_html(get_trvlr_title($post_id)); ?></h1>
+					</div>
 				</div>
-				<div class="trvlr-single-attraction__summary-container">
-					<div class="trvlr-single-attraction__summary">
+				<div class="trvlr-single-attraction__summary-outer">
+					<div class="trvlr-single-attraction__summary-container trvlr-summary-wrap trvlr-container">
+					<div class="trvlr-single-attraction__summary trvlr-summary">
 						<?php if ($price_value) : ?>
-							<div class="trvlr-single-attraction__summary-item trvlr-icon-text">
-								<?php echo trvlr_icon('dollar-sign', true, array('class' => 'trvlr-single-attraction__summary-icon')); ?>
+							<div class="trvlr-single-attraction__summary-item trvlr-summary-item trvlr-icon-text">
+								<?php echo trvlr_icon('dollar-sign', true, array('class' => 'trvlr-single-attraction__summary-icon trvlr-summary-icon')); ?>
 								<span><?php echo esc_html__('from', 'trvlr'); ?> A$<?php echo esc_html($price_value); ?></span>
 							</div>
 						<?php endif; ?>
@@ -47,48 +50,49 @@ $group_id = get_trvlr_group_id($post_id);
 						<?php echo trvlr_cancellation_policy($post_id); ?>
 					</div>
 				</div>
+			</div>
 			</section>
 			<div class="trvlr-single-attraction__content">
-				<div class="trvlr-single-attraction__content-container">
-					<?php if ($has_gallery) : ?>
-						<section class="trvlr-single-attraction__gallery">
+				<?php if ($has_gallery) : ?>
+					<section class="trvlr-single-attraction__gallery trvlr-section">
+						<div class="trvlr-container">
 							<?php echo $gallery_out; ?>
-						</section>
-					<?php endif; ?>
-					<?php
-					echo trvlr_section(array(
-						'section' => 'short_description',
-						'post_id' => $post_id,
-						'title' => '',
-					));
-					echo trvlr_section(array(
-						'section' => 'important_information',
-						'post_id' => $post_id,
-						'title' => '',
-					));
-					echo trvlr_section(array(
-						'section' => 'highlights',
-						'post_id' => $post_id,
-					));
-					echo trvlr_section(array(
-						'section' => 'inclusions',
-						'post_id' => $post_id,
-					));
-					echo trvlr_section(array(
-						'section' => 'description',
-						'post_id' => $post_id,
-					));
-					echo trvlr_section(array(
-						'section' => 'additional_info',
-						'post_id' => $post_id,
-						'content' => $additional_info_content,
-					));
-					echo trvlr_section(array(
-						'section' => 'faqs',
-						'post_id' => $post_id,
-					));
-					?>
-				</div>
+						</div>
+					</section>
+				<?php endif; ?>
+				<?php
+				echo trvlr_section(array(
+					'section' => 'short_description',
+					'post_id' => $post_id,
+					'title' => '',
+				));
+				echo trvlr_section(array(
+					'section' => 'important_information',
+					'post_id' => $post_id,
+					'title' => '',
+				));
+				echo trvlr_section(array(
+					'section' => 'highlights',
+					'post_id' => $post_id,
+				));
+				echo trvlr_section(array(
+					'section' => 'inclusions',
+					'post_id' => $post_id,
+				));
+				echo trvlr_section(array(
+					'section' => 'description',
+					'post_id' => $post_id,
+				));
+				echo trvlr_section(array(
+					'section' => 'additional_info',
+					'post_id' => $post_id,
+					'content' => $additional_info_content,
+				));
+				echo trvlr_section(array(
+					'section' => 'faqs',
+					'post_id' => $post_id,
+				));
+				?>
 			</div>
 		</div>
 		<aside class="trvlr-single-attraction__sidebar trvlr-sidebar" aria-label="<?php esc_attr_e('Booking', 'trvlr'); ?>">
@@ -100,7 +104,7 @@ $group_id = get_trvlr_group_id($post_id);
 	</div>
 	<button
 		type="button"
-		class="trvlr-single-attraction__mobile-availability trvlr-check-availability"
+		class="trvlr-single-attraction__mobile-availability trvlr-mobile-cta trvlr-check-availability"
 		attraction-id="<?php echo esc_attr($attraction_id); ?>"
 		<?php if ($group_id) : ?>attraction-group-id="<?php echo esc_attr($group_id); ?>" <?php endif; ?>>
 		<span><?php esc_html_e('Check availability', 'trvlr'); ?></span>

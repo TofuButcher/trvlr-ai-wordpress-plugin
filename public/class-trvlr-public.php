@@ -44,15 +44,19 @@ class Trvlr_Public
 	 */
 	public function enqueue_styles()
 	{
+
+		// $css_layers = "@layer trvlr.utilities, trvlr.tokens, trvlr.base, trvlr.theme, trvlr.custom;";
+		// wp_add_inline_style('trvlr-css-layers', $css_layers);
+
 		if (trvlr_is_vite_hot()) {
 			wp_register_style('trvlr-attraction-filter', false);
 			return;
 		}
 
-		wp_enqueue_style($this->plugin_name, plugin_dir_url(__FILE__) . 'dist/css/trvlr-public.css', array(), $this->version, 'all');
+		wp_enqueue_style('trvlr-public', plugin_dir_url(__FILE__) . 'dist/css/trvlr-public.css', array(), $this->version, 'all');
 
-		wp_enqueue_style('trvlr-cards-styles', plugin_dir_url(__FILE__) . 'dist/css/trvlr-cards.css', array(), $this->version, 'all');
-		wp_enqueue_style('trvlr-gallery-styles', plugin_dir_url(__FILE__) . 'dist/css/trvlr-gallery.css', array(), $this->version, 'all');
+		// wp_enqueue_style('trvlr-cards-styles', plugin_dir_url(__FILE__) . 'dist/css/trvlr-cards.css', array(), $this->version, 'all');
+		// wp_enqueue_style('trvlr-gallery-styles', plugin_dir_url(__FILE__) . 'dist/css/trvlr-gallery.css', array(), $this->version, 'all');
 
 		if (class_exists('Trvlr_Template_Registry')) {
 			$presentation_theme_css = Trvlr_Template_Registry::get_active_presentation_theme_stylesheet_basename();
@@ -62,7 +66,7 @@ class Trvlr_Public
 					wp_enqueue_style(
 						'trvlr-presentation-theme',
 						plugin_dir_url(__FILE__) . 'dist/css/' . $presentation_theme_css,
-						array(),
+						array('trvlr-public'),
 						filemtime($presentation_theme_path) ? (string) filemtime($presentation_theme_path) : $this->version,
 						'all'
 					);
