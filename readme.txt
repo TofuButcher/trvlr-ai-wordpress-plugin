@@ -71,6 +71,7 @@ Hotfix for 0.2.0.
 * Check availability modal uses `group_id` when `attraction-group-id` is set (same as Book now)
 * Fix MutationObserver timing issue when public JS loads in the head
 * Single layout tweaks (sidebar/calendar width, gallery height)
+* Fix for incorrect booking calendar height after book now modal opened then closed
 
 = 0.2.0 =
 Admin
