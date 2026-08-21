@@ -40,7 +40,7 @@ function trvlr_website_conditional_reefinfo_styles()
     --trvlr-badge-background: var(--trvlr-color-accent);
     --trvlr-badge-foreground: var(--trvlr-color-accent-foreground);
     --trvlr-card-font-family: var(--trvlr-heading-font-family);
-    --trvlr-card-title-font-weight: 700;
+    --trvlr-card-title-font-weight: 600;
     --trvlr-badge-padding: 0.4em 1em;
     --trvlr-badge-font-size: 12px;
     --trvlr-badge-font-weight: 600;

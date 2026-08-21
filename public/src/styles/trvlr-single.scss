@@ -12,7 +12,7 @@
       --trvlr-single-main-margin-bottom: 30px;
 
       --trvlr-single-sidebar-sticky-top: 70px;
-      --trvlr-single-sidebar-width: clamp(340px, calc(0.28 * var(--trvlr-single-content-max-width-variable)), 460px);
+      --trvlr-single-sidebar-width: clamp(420px, calc(0.3 * var(--trvlr-single-content-max-width-variable)), 460px);
       --trvlr-single-sidebar-content-max-width: min(100vw, 540px);
       --trvlr-single-sidebar-background: transparent;
       --trvlr-single-sidebar-padding-top: 30px;
@@ -43,7 +43,7 @@
       --trvlr-single-summary-background: var(--trvlr-color-secondary);
       --trvlr-single-summary-foreground: var(--trvlr-color-secondary-foreground);
       --trvlr-single-summary-radius: 4px;
-      --trvlr-single-summary-gap: 20px;
+      --trvlr-single-summary-gap: 14px 20px;
       --trvlr-single-summary-padding: 14px 20px;
       --trvlr-single-summary-margin: 0;
 

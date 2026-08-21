@@ -3,7 +3,7 @@ Contributors: pariswelch
 Tags: booking, reservations, tours, trvlr, traveloris, booking system
 Requires at least: 5.0
 Tested up to: 6.4
-Stable tag: 0.2.0
+Stable tag: 0.2.01
 Requires PHP: 7.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
@@ -65,6 +65,12 @@ The front-end booking script listens for elements that include an `attraction-id
 See the `docs/` directory inside the plugin: `README.md` is the index; `reference/` holds optional detailed specs (e.g. REST payloads) when provided.
 
 == Changelog ==
+
+= 0.2.01 =
+Hotfix for 0.2.0.
+* Check availability modal uses `group_id` when `attraction-group-id` is set (same as Book now)
+* Fix MutationObserver timing issue when public JS loads in the head
+* Single layout tweaks (sidebar/calendar width, gallery height)
 
 = 0.2.0 =
 Admin
@@ -178,6 +184,9 @@ Dev-only (dev zip)
 * Initial public booking integration: modal flow, payment confirmation page, booking calendar shortcode, and base admin settings
 
 == Upgrade Notice ==
+
+= 0.2.01 =
+Hotfix for 0.2.0: grouped check-availability, list-trim JS crash, and per-site CSS so existing branded sites keep their look.
 
 = 0.2.0 =
 Custom edits are now explicit (Synced vs Custom Edit); Traveloris is the catalog source of truth. Maintainers: webpack is gone — copy vite.local.example.json to vite.local.json and use npm run dev. Child themes that hardcode public/css/ or public/js/ must switch to public/dist/. JSON-LD schema is on by default (disable under Tools). Gallery helpers now take layout (nav-bottom / nav-right / nav-right-2col) instead of theme-specific args.

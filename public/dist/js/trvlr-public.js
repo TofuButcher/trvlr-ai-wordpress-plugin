@@ -326,15 +326,11 @@ class SimpleTabs {
 
 	function init() {
 		document.querySelectorAll('.trvlr-list-items-trim').forEach(observe);
+		if (document.body) {
+			mo.observe(document.body, { childList: true, subtree: true });
+		}
 	}
 
-	if (document.readyState === 'loading') {
-		document.addEventListener('DOMContentLoaded', init);
-	} else {
-		init();
-	}
-
-	// Pick up cards injected later (AJAX pagination, filtering, etc.)
 	var mo = new MutationObserver(function (mutations) {
 		mutations.forEach(function (m) {
 			m.addedNodes.forEach(function (node) {
@@ -346,7 +342,12 @@ class SimpleTabs {
 			});
 		});
 	});
-	mo.observe(document.body, { childList: true, subtree: true });
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', init);
+	} else {
+		init();
+	}
 
 	window.trvlrTrimOverflowLists = function () {
 		document.querySelectorAll('.trvlr-list-items-trim').forEach(observe);

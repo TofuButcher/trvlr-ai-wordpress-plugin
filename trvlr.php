@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Traveloris Wordpress Manager
  * Description: Wordpress plugin for integrating the Traveloris booking system.
- * Version: 0.2.0
+ * Version: 0.2.01
  * Author: Paris Welch
  * Text Domain: trvlr
  */
@@ -13,7 +13,7 @@ if (! defined('ABSPATH')) {
 }
 
 // Define Constants
-define('TRVLR_VERSION', '0.2.0');
+define('TRVLR_VERSION', '0.2.01');
 define('TRVLR_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('TRVLR_PLUGIN_URL', plugin_dir_url(__FILE__));
 

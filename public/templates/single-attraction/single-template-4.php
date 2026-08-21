@@ -28,22 +28,26 @@ $group_id = get_trvlr_group_id($post_id);
 						<?php echo $hero_image; ?>
 					</div>
 				<?php endif; ?>
-				<div class="trvlr-single-attraction__hero-inner trvlr-hero__inner trvlr-container">
-					<?php echo trvlr_back_link(); ?>
-					<h1 class="trvlr-title"><?php echo esc_html(get_trvlr_title($post_id)); ?></h1>
+				<div class="trvlr-single-attraction__hero-inner-wrap">
+					<div class="trvlr-single-attraction__hero-inner trvlr-hero__inner trvlr-container">
+						<?php echo trvlr_back_link(); ?>
+						<h1 class="trvlr-title"><?php echo esc_html(get_trvlr_title($post_id)); ?></h1>
+					</div>
 				</div>
-				<div class="trvlr-single-attraction__summary-container trvlr-summary-wrap trvlr-container">
-					<div class="trvlr-single-attraction__summary trvlr-summary">
-						<?php if ($price_value) : ?>
-							<div class="trvlr-single-attraction__summary-item trvlr-summary-item trvlr-icon-text">
-								<?php echo trvlr_icon('dollar-sign', true, array('class' => 'trvlr-single-attraction__summary-icon trvlr-summary-icon')); ?>
-								<span><?php echo esc_html__('from', 'trvlr'); ?> A$<?php echo esc_html($price_value); ?></span>
-							</div>
-						<?php endif; ?>
-						<?php echo trvlr_duration($post_id); ?>
-						<?php echo trvlr_simple_location($post_id); ?>
-						<?php echo trvlr_suitable_ages($post_id); ?>
-						<?php echo trvlr_cancellation_policy($post_id); ?>
+				<div class="trvlr-single-attraction__summary-outer">
+					<div class="trvlr-single-attraction__summary-container trvlr-summary-wrap trvlr-container">
+						<div class="trvlr-single-attraction__summary trvlr-summary">
+							<?php if ($price_value) : ?>
+								<div class="trvlr-single-attraction__summary-item trvlr-summary-item trvlr-icon-text">
+									<?php echo trvlr_icon('dollar-sign', true, array('class' => 'trvlr-single-attraction__summary-icon trvlr-summary-icon')); ?>
+									<span><?php echo esc_html__('from', 'trvlr'); ?> A$<?php echo esc_html($price_value); ?></span>
+								</div>
+							<?php endif; ?>
+							<?php echo trvlr_duration($post_id); ?>
+							<?php echo trvlr_simple_location($post_id); ?>
+							<?php echo trvlr_suitable_ages($post_id); ?>
+							<?php echo trvlr_cancellation_policy($post_id); ?>
+						</div>
 					</div>
 				</div>
 			</section>

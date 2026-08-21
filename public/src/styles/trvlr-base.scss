@@ -398,6 +398,8 @@
           display: flex;
           align-items: center;
           justify-content: center;
+          min-width: var(--trvlr-accordion-icon-size);
+          min-height: var(--trvlr-accordion-icon-size);
           width: var(--trvlr-accordion-icon-size);
           height: var(--trvlr-accordion-icon-size);
     

@@ -84,6 +84,41 @@
 }
 
 .trvlr--theme-4 .trvlr-single-attraction {
+
+  &__hero  {
+    &-inner-wrap {
+      padding-left: var(--trvlr-content-gutter);
+      flex: 1;
+      display: flex;
+    }
+    &-inner {
+      padding-right: var(--trvlr-content-gutter);
+    }
+  }
+
+  &__summary-outer {
+    padding-left: var(--trvlr-content-gutter);
+  }
+
+  @media (max-width: 600px) {
+    &__hero {
+      &-inner {
+        padding-bottom: 30px;
+      }
+    }
+
+    &__summary {
+      justify-content: center;
+      &-outer {
+        padding-left: 0;
+      }
+      &-container {
+        padding-right: 0;
+      }
+    }
+  }
+
+  
   .trvlr-hero,
   .trvlr-single-attraction__intro {
     --trvlr-single-section-gap: 0px;

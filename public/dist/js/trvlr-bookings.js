@@ -4,7 +4,8 @@ class TrvlrBookingSystem {
       this.state = {
          defaultFormCheckAvailability: false,
          dateSelectedInfo: {},
-         currentAttractionId: null
+         currentAttractionId: null,
+         currentGroupId: null
       };
       this.elements = {};
    }
@@ -58,11 +59,13 @@ class TrvlrBookingSystem {
    }
 
    loadInitialView() {
-      if (document.querySelector('[attraction-id].trvlr-check-availability')) {
-         const attractionId = document.querySelector('[attraction-id].trvlr-check-availability').getAttribute('attraction-id');
+      const availabilityBtn = document.querySelector('[attraction-id].trvlr-check-availability');
+      if (availabilityBtn) {
+         const attractionId = availabilityBtn.getAttribute('attraction-id');
          if (attractionId) {
             this.state.currentAttractionId = attractionId;
-            this.loadCheckAvailabilityForm(attractionId);
+            this.state.currentGroupId = availabilityBtn.getAttribute('attraction-group-id') || null;
+            this.loadCheckAvailabilityForm();
             this.state.defaultFormCheckAvailability = true;
          }
       }
@@ -115,8 +118,10 @@ class TrvlrBookingSystem {
       const attractionId = button.getAttribute('attraction-id');
       if (attractionId === '' || attractionId === null || attractionId === undefined) return;
       this.state.currentAttractionId = attractionId;
-      if (!this.elements.modalContent.querySelector(`iframe[src="${this.config.baseIframeUrl}/date-picker2/index.html?attr_id=${attractionId}"]`)) {
-         this.loadCheckAvailabilityForm(attractionId);
+      this.state.currentGroupId = button.getAttribute('attraction-group-id') || null;
+      const src = `${this.config.baseIframeUrl}/date-picker2/index.html?${this.getBookingQuery()}`;
+      if (!this.elements.modalContent.querySelector(`iframe[src="${src}"]`)) {
+         this.loadCheckAvailabilityForm();
       }
       this.elements.modal.showModal();
    }
@@ -131,35 +136,39 @@ class TrvlrBookingSystem {
       }
    }
 
-   loadCheckAvailabilityForm(attractionId = this.state.currentAttractionId) {
+   getBookingQuery() {
+      return this.state.currentGroupId
+         ? `group_id=${this.state.currentGroupId}`
+         : `attr_id=${this.state.currentAttractionId}`;
+   }
+
+   loadCheckAvailabilityForm() {
       this.elements.modalContent.innerHTML = `
          <iframe
             style="width: 100%; height: 100%;"
             frameborder="0"
-            src="${this.config.baseIframeUrl}/date-picker2/index.html?attr_id=${attractionId}"
+            src="${this.config.baseIframeUrl}/date-picker2/index.html?${this.getBookingQuery()}"
             title="Check Availability"
             class="iframe-cont"
             id="check-availability-modal-iframe"
          ></iframe>
       `;
    }
-
+   
    showBookNowForm() {
-      const query = this.state.currentGroupId
-         ? `group_id=${this.state.currentGroupId}`
-         : `attr_id=${this.state.currentAttractionId}`;
+      const query = this.getBookingQuery();
       this.elements.modalContent.innerHTML = `
-         <iframe
-            style="width: 100%; height: 100%;"
-            frameborder="0"
-            src="${this.config.baseIframeUrl}/book-now/index.html?${query}"
-            title="Book Now"
-            class="iframe-cont"
-            id="book-now-modal-iframe"
-         ></iframe>
+      <iframe
+      style="width: 100%; height: 100%;"
+      frameborder="0"
+      src="${this.config.baseIframeUrl}/book-now/index.html?${query}"
+      title="Book Now"
+      class="iframe-cont"
+      id="book-now-modal-iframe"
+      ></iframe>
       `;
    }
-
+   
    showCheckoutForm() {
       this.elements.modalContent.innerHTML = `
          <iframe
